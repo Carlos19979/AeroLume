@@ -84,7 +84,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
             />
           </div>
 
@@ -171,7 +171,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-2 bg-[var(--accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
+            className="px-6 py-2 bg-[var(--color-accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
           >
             {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>

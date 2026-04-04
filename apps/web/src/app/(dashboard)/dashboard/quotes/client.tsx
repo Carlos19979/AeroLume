@@ -64,7 +64,7 @@ export function QuotesClient({ initialQuotes }: { initialQuotes: QuoteRow[] }) {
             onClick={() => setFilter(f.value)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium ${
               filter === f.value
-                ? 'bg-[var(--accent)] text-white'
+                ? 'bg-[var(--color-accent)] text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -160,7 +160,7 @@ export function QuotesClient({ initialQuotes }: { initialQuotes: QuoteRow[] }) {
                         )}
                         <button
                           onClick={() => router.push(`/dashboard/quotes/${quote.id}`)}
-                          className="text-[var(--accent)] hover:underline text-xs"
+                          className="text-[var(--color-accent)] hover:underline text-xs"
                         >
                           Ver
                         </button>

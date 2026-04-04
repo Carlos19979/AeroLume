@@ -114,7 +114,7 @@ export function BoatsClient() {
           placeholder="Buscar barcos por nombre..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 max-w-md border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+          className="flex-1 max-w-md border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
         />
         <span className="text-sm text-gray-400">
           {pagination.total.toLocaleString('es')} barcos
@@ -158,7 +158,7 @@ export function BoatsClient() {
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => handleViewBoat(boat.id)}
-                      className="text-[var(--accent)] hover:underline text-xs"
+                      className="text-[var(--color-accent)] hover:underline text-xs"
                     >
                       Ver detalle
                     </button>

@@ -145,7 +145,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-2 bg-[var(--accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
+            className="px-6 py-2 bg-[var(--color-accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
           >
             {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>

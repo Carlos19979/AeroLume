@@ -79,7 +79,7 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
                         <span className="text-xs text-gray-400 ml-2">({item.sailType})</span>
                       </div>
                       {item.unitPrice && (
-                        <span className="font-semibold text-[var(--accent)]">
+                        <span className="font-semibold text-[var(--color-accent)]">
                           {Number(item.unitPrice).toFixed(0)} {quote.currency || 'EUR'}
                         </span>
                       )}

@@ -98,13 +98,13 @@ export function ApiKeysClient({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
               placeholder="Nombre (ej: Producción, Staging...)"
               value={newKeyName}
               onChange={(e) => setNewKeyName(e.target.value)}
-              className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
               onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
             />
             <button
               onClick={handleCreate}
               disabled={loading || !newKeyName.trim()}
-              className="px-4 py-2 bg-[var(--accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
+              className="px-4 py-2 bg-[var(--color-accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
             >
               {loading ? 'Creando...' : 'Crear'}
             </button>
@@ -119,7 +119,7 @@ export function ApiKeysClient({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
       ) : (
         <button
           onClick={() => setShowCreate(true)}
-          className="px-4 py-2 bg-[var(--accent)] text-white text-sm rounded-lg hover:opacity-90"
+          className="px-4 py-2 bg-[var(--color-accent)] text-white text-sm rounded-lg hover:opacity-90"
         >
           + Nueva API Key
         </button>

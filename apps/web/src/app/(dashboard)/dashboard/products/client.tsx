@@ -81,13 +81,13 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
               placeholder="Nombre del producto"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
               onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
             />
             <select
               value={newSailType}
               onChange={(e) => setNewSailType(e.target.value)}
-              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
             >
               {Object.entries(SAIL_TYPE_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
@@ -96,7 +96,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
             <button
               onClick={handleCreate}
               disabled={loading || !newName.trim()}
-              className="px-4 py-2 bg-[var(--accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
+              className="px-4 py-2 bg-[var(--color-accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
             >
               {loading ? 'Creando...' : 'Crear'}
             </button>
@@ -111,7 +111,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
       ) : (
         <button
           onClick={() => setShowCreate(true)}
-          className="px-4 py-2 bg-[var(--accent)] text-white text-sm rounded-lg hover:opacity-90"
+          className="px-4 py-2 bg-[var(--color-accent)] text-white text-sm rounded-lg hover:opacity-90"
         >
           + Nuevo producto
         </button>
@@ -139,7 +139,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
                   <td className="px-4 py-3">
                     <button
                       onClick={() => router.push(`/dashboard/products/${product.id}`)}
-                      className="text-gray-900 hover:text-[var(--accent)] font-medium"
+                      className="text-gray-900 hover:text-[var(--color-accent)] font-medium"
                     >
                       {product.name}
                     </button>
@@ -169,7 +169,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
                   <td className="px-4 py-3 text-right space-x-2">
                     <button
                       onClick={() => router.push(`/dashboard/products/${product.id}`)}
-                      className="text-[var(--accent)] hover:underline text-xs"
+                      className="text-[var(--color-accent)] hover:underline text-xs"
                     >
                       Editar
                     </button>

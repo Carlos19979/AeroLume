@@ -156,7 +156,7 @@ export function ProductEditClient({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
             />
           </div>
 
@@ -166,7 +166,7 @@ export function ProductEditClient({
               <select
                 value={sailType}
                 onChange={(e) => setSailType(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
               >
                 {Object.entries(SAIL_TYPE_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>{label}</option>
@@ -180,7 +180,7 @@ export function ProductEditClient({
                 step="0.01"
                 value={basePrice}
                 onChange={(e) => setBasePrice(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                 placeholder="45.00"
               />
             </div>
@@ -192,7 +192,7 @@ export function ProductEditClient({
               value={descriptionShort}
               onChange={(e) => setDescriptionShort(e.target.value)}
               rows={3}
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
             />
           </div>
 
@@ -212,7 +212,7 @@ export function ProductEditClient({
             <button
               onClick={handleSaveProduct}
               disabled={saving}
-              className="px-4 py-2 bg-[var(--accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
+              className="px-4 py-2 bg-[var(--color-accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
             >
               {saving ? 'Guardando...' : 'Guardar cambios'}
             </button>
@@ -227,7 +227,7 @@ export function ProductEditClient({
             <h3 className="font-medium text-gray-900">Campos de configuración</h3>
             <button
               onClick={() => setShowAddField(true)}
-              className="text-sm text-[var(--accent)] hover:underline"
+              className="text-sm text-[var(--color-accent)] hover:underline"
             >
               + Añadir campo
             </button>
@@ -270,7 +270,7 @@ export function ProductEditClient({
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setEditingFieldId(isEditing ? null : field.id)}
-                            className="text-[var(--accent)] hover:underline text-xs"
+                            className="text-[var(--color-accent)] hover:underline text-xs"
                           >
                             {isEditing ? 'Cerrar' : 'Precios'}
                           </button>
@@ -462,7 +462,7 @@ function FieldEditor({
         <button
           onClick={handleSave}
           disabled={saving || !key.trim() || !label.trim()}
-          className="px-3 py-1.5 bg-[var(--accent)] text-white text-xs rounded-lg hover:opacity-90 disabled:opacity-50"
+          className="px-3 py-1.5 bg-[var(--color-accent)] text-white text-xs rounded-lg hover:opacity-90 disabled:opacity-50"
         >
           {saving ? 'Guardando...' : mode === 'create' ? 'Añadir campo' : 'Guardar cambios'}
         </button>
