@@ -73,16 +73,28 @@ export function Navigation() {
                         ))}
                     </div>
 
-                    <Link
-                        href="/contact"
-                        className={`hidden lg:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-300 hover:-translate-y-0.5 ${
-                            isDark
-                                ? 'bg-white text-[#0a2540] hover:shadow-lg hover:shadow-white/15'
-                                : 'bg-[#0a2540] text-white hover:shadow-lg hover:shadow-black/10'
-                        }`}
-                    >
-                        Solicitar demo
-                    </Link>
+                    <div className="hidden lg:flex items-center gap-3">
+                        <Link
+                            href="/login"
+                            className={`px-4 py-2 text-[13px] tracking-[0.05em] transition-all duration-300 rounded-lg ${
+                                isDark
+                                    ? 'text-white/60 hover:text-white'
+                                    : 'text-gray-500 hover:text-gray-900'
+                            }`}
+                        >
+                            Acceder
+                        </Link>
+                        <Link
+                            href="/contact"
+                            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-300 hover:-translate-y-0.5 ${
+                                isDark
+                                    ? 'bg-white text-[#0a2540] hover:shadow-lg hover:shadow-white/15'
+                                    : 'bg-[#0a2540] text-white hover:shadow-lg hover:shadow-black/10'
+                            }`}
+                        >
+                            Solicitar demo
+                        </Link>
+                    </div>
 
                     <button
                         type="button"
