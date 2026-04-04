@@ -7,9 +7,15 @@ type Tenant = {
   name: string;
   slug: string;
   themeAccent: string | null;
+  themeAccentDim: string | null;
+  themeNavy: string | null;
+  themeText: string | null;
+  themeFontDisplay: string | null;
+  themeFontBody: string | null;
   themeColorMain: string | null;
   themeColorHead: string | null;
   themeColorSpi: string | null;
+  logoUrl: string | null;
   locale: string | null;
   currency: string | null;
 };
@@ -107,6 +113,10 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
   const [submitting, setSubmitting] = useState(false);
 
   const accent = tenant.themeAccent || '#0b5faa';
+  const navy = tenant.themeNavy || '#0a2540';
+  const textColor = tenant.themeText || '#0a1e3d';
+  const fontDisplay = tenant.themeFontDisplay || 'Cormorant';
+  const fontBody = tenant.themeFontBody || 'Manrope';
   const groupColors: Record<SailGroup, string> = {
     main: tenant.themeColorMain || SAIL_GROUPS.main.defaultColor,
     head: tenant.themeColorHead || SAIL_GROUPS.head.defaultColor,
@@ -197,8 +207,8 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
 
   return (
     <div
-      className="max-w-2xl mx-auto px-5 py-8 font-sans"
-      style={{ '--ac': accent, '--ac-light': `${accent}12`, '--ac-mid': `${accent}30` } as React.CSSProperties}
+      className="max-w-2xl mx-auto px-5 py-8"
+      style={{ fontFamily: `${fontBody}, system-ui, sans-serif`, color: textColor } as React.CSSProperties}
     >
       {/* ── HEADER ── */}
       <div className="flex items-center justify-between mb-8">
@@ -211,11 +221,16 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M10 4L6 8L10 12" /></svg>
             </button>
           )}
-          <div>
-            <h1 className="text-lg font-bold tracking-tight" style={{ color: '#0a2540' }}>
-              Configurador de Velas
-            </h1>
-            <p className="text-xs text-gray-400 -mt-0.5">por {tenant.name}</p>
+          <div className="flex items-center gap-2.5">
+            {tenant.logoUrl && (
+              <img src={tenant.logoUrl} alt={tenant.name} className="h-7 object-contain" />
+            )}
+            <div>
+              <h1 className="text-lg font-bold tracking-tight" style={{ color: textColor, fontFamily: `${fontDisplay}, serif` }}>
+                Configurador de Velas
+              </h1>
+              <p className="text-xs -mt-0.5" style={{ color: `${textColor}60` }}>por {tenant.name}</p>
+            </div>
           </div>
         </div>
         {/* Stepper pills */}
@@ -308,7 +323,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
                     <SailIcon size={16} color="#3b82f6" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors truncate">{boat.model}</p>
+                    <p className="text-sm font-semibold transition-colors truncate" style={{ color: textColor }}>{boat.model}</p>
                   </div>
                   {boat.length && (
                     <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-gray-100 text-gray-500 shrink-0">{boat.length}m</span>
@@ -384,7 +399,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <p className="font-semibold text-gray-900 text-sm leading-tight">{product.name}</p>
+                              <p className="font-semibold text-sm leading-tight" style={{ color: textColor }}>{product.name}</p>
                               <p className="text-xs text-gray-400 mt-1">{SAIL_TYPE_LABELS[product.sailType] || product.sailType}</p>
                               {area && (
                                 <p className="text-xs mt-1 font-medium" style={{ color: gc }}>{area.toFixed(1)} m² para tu barco</p>
@@ -419,7 +434,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
           <div className="rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
             {/* Card header */}
             <div className="px-6 py-4 border-b border-gray-50" style={{ background: `linear-gradient(135deg, ${accent}08, transparent)` }}>
-              <h3 className="font-bold text-gray-900">Configurar {selectedProduct.name}</h3>
+              <h3 className="font-bold" style={{ color: textColor }}>Configurar {selectedProduct.name}</h3>
               {(() => {
                 const area = getBoatSailArea(selectedBoat, selectedProduct.sailType);
                 return area ? <p className="text-xs text-gray-400 mt-0.5">Superficie calculada: {area.toFixed(2)} m²</p> : null;
@@ -510,7 +525,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
         <div className="space-y-5">
           <div className="rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
             <div className="px-6 py-4 border-b border-gray-50" style={{ background: `linear-gradient(135deg, ${accent}08, transparent)` }}>
-              <h3 className="font-bold text-gray-900">Datos de contacto</h3>
+              <h3 className="font-bold" style={{ color: textColor }}>Datos de contacto</h3>
               <p className="text-xs text-gray-400 mt-0.5">Para enviarte el presupuesto detallado.</p>
             </div>
 
@@ -613,7 +628,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
               <path d="M20 6L9 17l-5-5" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 anim-text">Presupuesto solicitado</h3>
+          <h3 className="text-xl font-bold anim-text" style={{ color: textColor }}>Presupuesto solicitado</h3>
           <p className="text-sm text-gray-500 mt-2 max-w-sm mx-auto anim-text">
             Hemos recibido tu solicitud. Te contactaremos a <strong className="text-gray-700">{customerEmail}</strong> con el presupuesto detallado.
           </p>
