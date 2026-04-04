@@ -67,6 +67,8 @@ export function ProductEditClient({
   const [newFieldKey, setNewFieldKey] = useState('');
   const [newFieldLabel, setNewFieldLabel] = useState('');
   const [newFieldOptions, setNewFieldOptions] = useState('');
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+  const [savingField, setSavingField] = useState(false);
 
   async function handleSaveProduct() {
     setSaving(true);
@@ -116,6 +118,33 @@ export function ProductEditClient({
     setShowAddField(false);
   }
 
+  async function handleUpdateFieldPrices(fieldId: string, priceModifiers: Record<string, number>) {
+    setSavingField(true);
+    const field = fields.find((f) => f.id === fieldId);
+    if (!field) return;
+
+    await fetch(`/api/internal/products/${product.id}/fields`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: fieldId,
+        key: field.key,
+        label: field.label,
+        fieldType: field.fieldType,
+        options: field.options,
+        sortOrder: field.sortOrder,
+        required: field.required,
+        priceModifiers,
+      }),
+    });
+
+    setFields((prev) =>
+      prev.map((f) => (f.id === fieldId ? { ...f, priceModifiers } : f))
+    );
+    setSavingField(false);
+    setEditingFieldId(null);
+  }
+
   async function handleDeleteField(fieldId: string) {
     if (!confirm('¿Eliminar este campo de configuración?')) return;
 
@@ -155,14 +184,14 @@ export function ProductEditClient({
               </select>
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Precio base (EUR)</label>
+              <label className="block text-sm text-gray-600 mb-1">Precio base (EUR/m²)</label>
               <input
                 type="number"
                 step="0.01"
                 value={basePrice}
                 onChange={(e) => setBasePrice(e.target.value)}
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                placeholder="0.00"
+                placeholder="45.00"
               />
             </div>
           </div>
@@ -270,33 +299,57 @@ export function ProductEditClient({
           {fields.length === 0 ? (
             <p className="text-sm text-gray-400">No hay campos de configuración.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {fields
                 .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-                .map((field) => (
-                  <div
-                    key={field.id}
-                    className="flex items-center justify-between border rounded-lg px-4 py-3"
-                  >
-                    <div>
-                      <span className="text-sm font-medium text-gray-900">
-                        {field.label}
-                      </span>
-                      <span className="text-xs text-gray-400 ml-2">({field.key})</span>
-                      <div className="text-xs text-gray-500 mt-0.5">
-                        {Array.isArray(field.options) && field.options.length > 0
-                          ? `${field.options.length} opciones: ${(field.options as string[]).slice(0, 3).join(', ')}${(field.options as string[]).length > 3 ? '...' : ''}`
-                          : 'Sin opciones'}
+                .map((field) => {
+                  const mods = (field.priceModifiers || {}) as Record<string, number>;
+                  const options = Array.isArray(field.options) ? field.options as string[] : [];
+                  const isEditing = editingFieldId === field.id;
+
+                  return (
+                    <div key={field.id} className="border rounded-lg overflow-hidden">
+                      <div className="flex items-center justify-between px-4 py-3 bg-white">
+                        <div className="flex-1">
+                          <span className="text-sm font-medium text-gray-900">
+                            {field.label}
+                          </span>
+                          <span className="text-xs text-gray-400 ml-2">({field.key})</span>
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            {options.length} opciones
+                            {Object.values(mods).some((v) => v > 0) && (
+                              <span className="text-green-600 ml-2">· precios configurados</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setEditingFieldId(isEditing ? null : field.id)}
+                            className="text-[var(--accent)] hover:underline text-xs"
+                          >
+                            {isEditing ? 'Cerrar' : 'Precios'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteField(field.id)}
+                            className="text-red-500 hover:text-red-700 text-xs"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
                       </div>
+
+                      {isEditing && options.length > 0 && (
+                        <FieldPriceEditor
+                          options={options}
+                          priceModifiers={mods}
+                          saving={savingField}
+                          onSave={(newMods) => handleUpdateFieldPrices(field.id, newMods)}
+                          onCancel={() => setEditingFieldId(null)}
+                        />
+                      )}
                     </div>
-                    <button
-                      onClick={() => handleDeleteField(field.id)}
-                      className="text-red-500 hover:text-red-700 text-xs"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
           )}
         </div>
@@ -328,6 +381,75 @@ export function ProductEditClient({
             </div>
           </dl>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function FieldPriceEditor({
+  options,
+  priceModifiers,
+  saving,
+  onSave,
+  onCancel,
+}: {
+  options: string[];
+  priceModifiers: Record<string, number>;
+  saving: boolean;
+  onSave: (mods: Record<string, number>) => void;
+  onCancel: () => void;
+}) {
+  const [mods, setMods] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    for (const opt of options) {
+      initial[opt] = String(priceModifiers[opt] ?? 0);
+    }
+    return initial;
+  });
+
+  function handleSave() {
+    const parsed: Record<string, number> = {};
+    for (const [key, val] of Object.entries(mods)) {
+      parsed[key] = Number(val) || 0;
+    }
+    onSave(parsed);
+  }
+
+  return (
+    <div className="border-t bg-gray-50 px-4 py-3 space-y-2">
+      <p className="text-xs text-gray-500 mb-2">
+        Extra en EUR por cada opción (0 = sin coste adicional)
+      </p>
+      {options.map((opt) => (
+        <div key={opt} className="flex items-center gap-3">
+          <span className="flex-1 text-sm text-gray-700 truncate">{opt}</span>
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-gray-400">+</span>
+            <input
+              type="number"
+              step="1"
+              value={mods[opt] ?? '0'}
+              onChange={(e) => setMods((prev) => ({ ...prev, [opt]: e.target.value }))}
+              className="w-20 border rounded px-2 py-1 text-sm text-right"
+            />
+            <span className="text-xs text-gray-400">EUR</span>
+          </div>
+        </div>
+      ))}
+      <div className="flex gap-2 pt-2">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-3 py-1.5 bg-[var(--accent)] text-white text-xs rounded-lg hover:opacity-90 disabled:opacity-50"
+        >
+          {saving ? 'Guardando...' : 'Guardar precios'}
+        </button>
+        <button
+          onClick={onCancel}
+          className="px-3 py-1.5 text-xs text-gray-500"
+        >
+          Cancelar
+        </button>
       </div>
     </div>
   );
