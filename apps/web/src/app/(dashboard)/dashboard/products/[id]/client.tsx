@@ -90,35 +90,25 @@ export function ProductEditClient({
     setTimeout(() => setSaved(false), 2000);
   }
 
-  async function handleAddField() {
-    if (!newFieldKey.trim() || !newFieldLabel.trim()) return;
-
-    const options = newFieldOptions
-      .split(',')
-      .map((o) => o.trim())
-      .filter(Boolean);
-
+  async function handleAddField(fieldData: { key: string; label: string; options: string[]; priceModifiers: Record<string, number> }) {
     const res = await fetch(`/api/internal/products/${product.id}/fields`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        key: newFieldKey,
-        label: newFieldLabel,
+        key: fieldData.key,
+        label: fieldData.label,
         fieldType: 'select',
-        options,
+        options: fieldData.options,
         sortOrder: fields.length,
+        priceModifiers: fieldData.priceModifiers,
       }),
     });
     const { data } = await res.json();
-
     setFields((prev) => [...prev, data]);
-    setNewFieldKey('');
-    setNewFieldLabel('');
-    setNewFieldOptions('');
     setShowAddField(false);
   }
 
-  async function handleUpdateFieldPrices(fieldId: string, priceModifiers: Record<string, number>) {
+  async function handleUpdateField(fieldId: string, fieldData: { key: string; label: string; options: string[]; priceModifiers: Record<string, number> }) {
     setSavingField(true);
     const field = fields.find((f) => f.id === fieldId);
     if (!field) return;
@@ -128,18 +118,18 @@ export function ProductEditClient({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         id: fieldId,
-        key: field.key,
-        label: field.label,
+        key: fieldData.key,
+        label: fieldData.label,
         fieldType: field.fieldType,
-        options: field.options,
+        options: fieldData.options,
         sortOrder: field.sortOrder,
         required: field.required,
-        priceModifiers,
+        priceModifiers: fieldData.priceModifiers,
       }),
     });
 
     setFields((prev) =>
-      prev.map((f) => (f.id === fieldId ? { ...f, priceModifiers } : f))
+      prev.map((f) => (f.id === fieldId ? { ...f, ...fieldData } : f))
     );
     setSavingField(false);
     setEditingFieldId(null);
@@ -244,56 +234,11 @@ export function ProductEditClient({
           </div>
 
           {showAddField && (
-            <div className="border rounded-lg p-4 space-y-3 bg-gray-50">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Clave (key)</label>
-                  <input
-                    type="text"
-                    placeholder="ej: surface, fabric"
-                    value={newFieldKey}
-                    onChange={(e) => setNewFieldKey(e.target.value)}
-                    className="w-full border rounded-lg px-3 py-2 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Etiqueta</label>
-                  <input
-                    type="text"
-                    placeholder="ej: Superficie (m²)"
-                    value={newFieldLabel}
-                    onChange={(e) => setNewFieldLabel(e.target.value)}
-                    className="w-full border rounded-lg px-3 py-2 text-sm"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">
-                  Opciones (separadas por coma)
-                </label>
-                <input
-                  type="text"
-                  placeholder="ej: 6.10, 7.50, 9.14, 12.20"
-                  value={newFieldOptions}
-                  onChange={(e) => setNewFieldOptions(e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2 text-sm"
-                />
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleAddField}
-                  className="px-3 py-1.5 bg-[var(--accent)] text-white text-sm rounded-lg hover:opacity-90"
-                >
-                  Añadir
-                </button>
-                <button
-                  onClick={() => setShowAddField(false)}
-                  className="px-3 py-1.5 text-sm text-gray-500"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
+            <FieldEditor
+              mode="create"
+              onSave={(data) => handleAddField(data)}
+              onCancel={() => setShowAddField(false)}
+            />
           )}
 
           {fields.length === 0 ? (
@@ -338,12 +283,15 @@ export function ProductEditClient({
                         </div>
                       </div>
 
-                      {isEditing && options.length > 0 && (
-                        <FieldPriceEditor
-                          options={options}
-                          priceModifiers={mods}
+                      {isEditing && (
+                        <FieldEditor
+                          mode="edit"
+                          initialKey={field.key}
+                          initialLabel={field.label}
+                          initialOptions={options}
+                          initialPriceModifiers={mods}
                           saving={savingField}
-                          onSave={(newMods) => handleUpdateFieldPrices(field.id, newMods)}
+                          onSave={(data) => handleUpdateField(field.id, data)}
                           onCancel={() => setEditingFieldId(null)}
                         />
                       )}
@@ -386,63 +334,137 @@ export function ProductEditClient({
   );
 }
 
-function FieldPriceEditor({
-  options,
-  priceModifiers,
-  saving,
+function FieldEditor({
+  mode,
+  initialKey = '',
+  initialLabel = '',
+  initialOptions = [],
+  initialPriceModifiers = {},
+  saving = false,
   onSave,
   onCancel,
 }: {
-  options: string[];
-  priceModifiers: Record<string, number>;
-  saving: boolean;
-  onSave: (mods: Record<string, number>) => void;
+  mode: 'create' | 'edit';
+  initialKey?: string;
+  initialLabel?: string;
+  initialOptions?: string[];
+  initialPriceModifiers?: Record<string, number>;
+  saving?: boolean;
+  onSave: (data: { key: string; label: string; options: string[]; priceModifiers: Record<string, number> }) => void;
   onCancel: () => void;
 }) {
+  const [key, setKey] = useState(initialKey);
+  const [label, setLabel] = useState(initialLabel);
+  const [optionsText, setOptionsText] = useState(initialOptions.join(', '));
   const [mods, setMods] = useState<Record<string, string>>(() => {
-    const initial: Record<string, string> = {};
-    for (const opt of options) {
-      initial[opt] = String(priceModifiers[opt] ?? 0);
+    const m: Record<string, string> = {};
+    for (const opt of initialOptions) {
+      m[opt] = String(initialPriceModifiers[opt] ?? 0);
     }
-    return initial;
+    return m;
   });
 
+  // Parse current options from text
+  const currentOptions = optionsText.split(',').map((o) => o.trim()).filter(Boolean);
+
+  // Sync mods when options change
+  function handleOptionsChange(text: string) {
+    setOptionsText(text);
+    const newOpts = text.split(',').map((o) => o.trim()).filter(Boolean);
+    setMods((prev) => {
+      const next: Record<string, string> = {};
+      for (const opt of newOpts) {
+        next[opt] = prev[opt] ?? '0';
+      }
+      return next;
+    });
+  }
+
   function handleSave() {
-    const parsed: Record<string, number> = {};
-    for (const [key, val] of Object.entries(mods)) {
-      parsed[key] = Number(val) || 0;
+    if (!key.trim() || !label.trim()) return;
+    const priceModifiers: Record<string, number> = {};
+    for (const opt of currentOptions) {
+      priceModifiers[opt] = Number(mods[opt]) || 0;
     }
-    onSave(parsed);
+    onSave({ key, label, options: currentOptions, priceModifiers });
   }
 
   return (
-    <div className="border-t bg-gray-50 px-4 py-3 space-y-2">
-      <p className="text-xs text-gray-500 mb-2">
-        Extra en EUR por cada opción (0 = sin coste adicional)
-      </p>
-      {options.map((opt) => (
-        <div key={opt} className="flex items-center gap-3">
-          <span className="flex-1 text-sm text-gray-700 truncate">{opt}</span>
-          <div className="flex items-center gap-1">
-            <span className="text-xs text-gray-400">+</span>
-            <input
-              type="number"
-              step="1"
-              value={mods[opt] ?? '0'}
-              onChange={(e) => setMods((prev) => ({ ...prev, [opt]: e.target.value }))}
-              className="w-20 border rounded px-2 py-1 text-sm text-right"
-            />
-            <span className="text-xs text-gray-400">EUR</span>
+    <div className={mode === 'create' ? 'border rounded-lg p-4 space-y-3 bg-gray-50' : 'border-t bg-gray-50 px-4 py-4 space-y-3'}>
+      {/* Key + Label */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Clave (key)</label>
+          <input
+            type="text"
+            placeholder="ej: fabric, rizos"
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+            className="w-full border rounded-lg px-3 py-2 text-sm"
+            disabled={mode === 'edit'}
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Etiqueta</label>
+          <input
+            type="text"
+            placeholder="ej: Elección del tejido"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            className="w-full border rounded-lg px-3 py-2 text-sm"
+          />
+        </div>
+      </div>
+
+      {/* Options */}
+      <div>
+        <label className="block text-xs text-gray-500 mb-1">
+          Opciones (separadas por coma)
+        </label>
+        <input
+          type="text"
+          placeholder="ej: Dacron Newport, Dacron AP, PalmaTec"
+          value={optionsText}
+          onChange={(e) => handleOptionsChange(e.target.value)}
+          className="w-full border rounded-lg px-3 py-2 text-sm"
+        />
+      </div>
+
+      {/* Price modifiers per option */}
+      {currentOptions.length > 0 && (
+        <div>
+          <label className="block text-xs text-gray-500 mb-2">
+            Precio extra por opción (EUR)
+          </label>
+          <div className="space-y-1.5">
+            {currentOptions.map((opt) => (
+              <div key={opt} className="flex items-center gap-3">
+                <span className="flex-1 text-sm text-gray-700 truncate">{opt}</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-gray-400">+</span>
+                  <input
+                    type="number"
+                    step="1"
+                    value={mods[opt] ?? '0'}
+                    onChange={(e) => setMods((prev) => ({ ...prev, [opt]: e.target.value }))}
+                    className="w-20 border rounded px-2 py-1 text-sm text-right"
+                  />
+                  <span className="text-xs text-gray-400">EUR</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      ))}
-      <div className="flex gap-2 pt-2">
+      )}
+
+      {/* Actions */}
+      <div className="flex gap-2 pt-1">
         <button
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || !key.trim() || !label.trim()}
           className="px-3 py-1.5 bg-[var(--accent)] text-white text-xs rounded-lg hover:opacity-90 disabled:opacity-50"
         >
-          {saving ? 'Guardando...' : 'Guardar precios'}
+          {saving ? 'Guardando...' : mode === 'create' ? 'Añadir campo' : 'Guardar cambios'}
         </button>
         <button
           onClick={onCancel}
