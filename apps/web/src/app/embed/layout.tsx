@@ -1,11 +1,13 @@
-/**
- * Embed layout: no navigation, no footer, minimal wrapper.
- * This is loaded inside an iframe by the widget.
- */
+import '../globals.css';
+
 export default function EmbedLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    return <>{children}</>;
+  return (
+    <html lang="es">
+      <body className="bg-white">{children}</body>
+    </html>
+  );
 }

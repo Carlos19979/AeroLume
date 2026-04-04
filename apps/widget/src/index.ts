@@ -26,7 +26,10 @@ interface AerolumeConfig {
   onQuoteCreated?: (quote: unknown) => void;
 }
 
-const EMBED_BASE_URL = 'https://app.aerolume.com/embed';
+const EMBED_BASE_URL =
+  typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:3000/embed'
+    : 'https://app.aerolume.com/embed';
 
 function init(config: AerolumeConfig) {
   const { apiKey, container } = config;

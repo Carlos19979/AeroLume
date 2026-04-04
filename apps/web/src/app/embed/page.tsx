@@ -1,19 +1,70 @@
-/**
- * /embed?key=ak_live_xxx
- *
- * This page is rendered inside an iframe by the widget loader.
- * It displays the configurator with no navigation chrome,
- * themed according to the tenant's settings.
- */
-export default function EmbedPage() {
-    // TODO: Resolve tenant from API key query param
-    // TODO: Load tenant theme and apply CSS variables
-    // TODO: Render configurator components
+import { db, apiKeys, tenants, eq } from '@aerolume/db';
+import { hashApiKey } from '@/lib/api-keys';
+import { EmbedConfigurator } from './configurator';
+
+type Props = { searchParams: Promise<{ key?: string }> };
+
+export default async function EmbedPage({ searchParams }: Props) {
+  const { key } = await searchParams;
+
+  if (!key || !key.startsWith('ak_')) {
     return (
-        <div className="p-4">
-            <p className="text-gray-500 text-sm">
-                Aerolume Embed — configurator will render here once tenant resolution is implemented.
-            </p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen text-gray-400 text-sm">
+        API key inválida o no proporcionada.
+      </div>
     );
+  }
+
+  const keyHash = hashApiKey(key);
+
+  const [found] = await db
+    .select({
+      tenantId: apiKeys.tenantId,
+    })
+    .from(apiKeys)
+    .where(eq(apiKeys.keyHash, keyHash))
+    .limit(1);
+
+  if (!found) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-gray-400 text-sm">
+        API key no reconocida.
+      </div>
+    );
+  }
+
+  const [tenant] = await db
+    .select({
+      id: tenants.id,
+      name: tenants.name,
+      slug: tenants.slug,
+      themeAccent: tenants.themeAccent,
+      themeNavy: tenants.themeNavy,
+      themeText: tenants.themeText,
+      locale: tenants.locale,
+      currency: tenants.currency,
+    })
+    .from(tenants)
+    .where(eq(tenants.id, found.tenantId))
+    .limit(1);
+
+  if (!tenant) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-gray-400 text-sm">
+        Tenant no encontrado.
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        '--accent': tenant.themeAccent || '#0b5faa',
+        '--navy': tenant.themeNavy || '#0a2540',
+        '--text': tenant.themeText || '#0a1e3d',
+      } as React.CSSProperties}
+    >
+      <EmbedConfigurator apiKey={key} tenant={tenant} />
+    </div>
+  );
 }
