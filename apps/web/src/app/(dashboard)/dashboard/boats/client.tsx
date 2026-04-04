@@ -199,108 +199,114 @@ export function BoatsClient() {
       {(selectedBoat || detailLoading) && (
         <>
           <div
-            className="fixed inset-0 bg-black/30 z-40"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
             onClick={() => setSelectedBoat(null)}
           />
-          <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-xl z-50 overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {detailLoading ? 'Cargando...' : selectedBoat?.model}
-                </h3>
-                <button
-                  onClick={() => setSelectedBoat(null)}
-                  className="text-gray-400 hover:text-gray-600 text-xl"
-                >
-                  &times;
-                </button>
-              </div>
-
-              {selectedBoat && (
-                <div className="space-y-6">
-                  {/* General info */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-500 mb-2">Información general</h4>
-                    <dl className="grid grid-cols-2 gap-2 text-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto">
+              {detailLoading ? (
+                <div className="p-12 text-center text-gray-400">Cargando...</div>
+              ) : selectedBoat && (
+                <>
+                  {/* Header */}
+                  <div className="sticky top-0 bg-gradient-to-br from-[var(--color-navy)] to-[var(--color-accent)] text-white p-6 rounded-t-2xl">
+                    <div className="flex items-start justify-between">
                       <div>
-                        <dt className="text-gray-400">Modelo</dt>
-                        <dd className="text-gray-900 font-medium">{selectedBoat.model}</dd>
+                        <h3 className="text-xl font-semibold">{selectedBoat.model}</h3>
+                        <div className="flex items-center gap-3 mt-2 text-sm text-white/70">
+                          {selectedBoat.length && (
+                            <span className="flex items-center gap-1">
+                              <span className="text-white/50">Eslora:</span> {selectedBoat.length}m
+                            </span>
+                          )}
+                          <span className="px-2 py-0.5 rounded-full bg-white/15 text-xs">
+                            {selectedBoat.isMultihull ? 'Multicasco' : 'Monocasco'}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full bg-white/15 text-xs">
+                            {selectedBoat.tenantId ? 'Personalizado' : 'Global'}
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <dt className="text-gray-400">Eslora</dt>
-                        <dd className="text-gray-900">{selectedBoat.length ? `${selectedBoat.length}m` : '—'}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-gray-400">Tipo</dt>
-                        <dd className="text-gray-900">{selectedBoat.isMultihull ? 'Multicasco' : 'Monocasco'}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-gray-400">Origen</dt>
-                        <dd className="text-gray-900">{selectedBoat.tenantId ? 'Personalizado' : 'Global'}</dd>
-                      </div>
-                    </dl>
-                  </div>
-
-                  {/* Rig dimensions */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-500 mb-2">Medidas del aparejo</h4>
-                    <dl className="grid grid-cols-2 gap-2 text-sm">
-                      {Object.entries(RIG_LABELS).map(([key, label]) => {
-                        const val = selectedBoat[key];
-                        if (!val || val === '0.00') return null;
-                        return (
-                          <div key={key}>
-                            <dt className="text-gray-400">{label}</dt>
-                            <dd className="text-gray-900 font-mono">{Number(val).toFixed(2)}m</dd>
-                          </div>
-                        );
-                      })}
-                    </dl>
-                  </div>
-
-                  {/* Sail areas */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-500 mb-2">Áreas de vela (m²)</h4>
-                    <div className="space-y-1.5">
-                      {Object.entries(SAIL_AREA_LABELS).map(([key, label]) => {
-                        const val = selectedBoat[key];
-                        if (!val || val === '0.00') return null;
-                        return (
-                          <div key={key} className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">{label}</span>
-                            <span className="font-mono text-gray-900 font-medium">{Number(val).toFixed(2)} m²</span>
-                          </div>
-                        );
-                      })}
+                      <button
+                        onClick={() => setSelectedBoat(null)}
+                        className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors"
+                      >
+                        <span className="text-lg leading-none">&times;</span>
+                      </button>
                     </div>
                   </div>
 
-                  {/* Raw sail areas */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-500 mb-2">Áreas calculadas</h4>
-                    <dl className="grid grid-cols-2 gap-2 text-sm">
-                      {[
-                        { key: 'mainsailArea', label: 'Mayor' },
-                        { key: 'mainsailFullArea', label: 'Mayor Full' },
-                        { key: 'mainsailFurlerArea', label: 'Mayor Enrollable' },
-                        { key: 'genoaArea', label: 'Génova' },
-                        { key: 'genoaFurlerArea', label: 'Génova Enrollable' },
-                        { key: 'spinnakerArea', label: 'Spinnaker' },
-                        { key: 'spinnakerAsymArea', label: 'Spinnaker Asim.' },
-                        { key: 'sgenArea', label: 'Sgen' },
-                      ].map(({ key, label }) => {
-                        const val = selectedBoat[key];
-                        if (!val || val === '0.00') return null;
-                        return (
-                          <div key={key}>
-                            <dt className="text-gray-400">{label}</dt>
-                            <dd className="text-gray-900 font-mono">{Number(val).toFixed(2)} m²</dd>
-                          </div>
-                        );
-                      })}
-                    </dl>
+                  {/* Body */}
+                  <div className="p-6 space-y-6">
+                    {/* Rig dimensions */}
+                    <div>
+                      <h4 className="text-xs uppercase tracking-wider text-gray-400 font-medium mb-3">Medidas del aparejo</h4>
+                      <div className="grid grid-cols-4 gap-3">
+                        {Object.entries(RIG_LABELS).map(([key, label]) => {
+                          const val = selectedBoat[key];
+                          if (!val || val === '0.00') return null;
+                          return (
+                            <div key={key} className="bg-gray-50 rounded-xl p-3 text-center">
+                              <p className="text-lg font-semibold text-gray-900 font-mono">{Number(val).toFixed(2)}</p>
+                              <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Sail areas */}
+                    <div>
+                      <h4 className="text-xs uppercase tracking-wider text-gray-400 font-medium mb-3">Areas de vela</h4>
+                      <div className="space-y-2">
+                        {(() => {
+                          const areas = Object.entries(SAIL_AREA_LABELS)
+                            .map(([key, label]) => ({ key, label, val: Number(selectedBoat[key]) || 0 }))
+                            .filter((a) => a.val > 0);
+                          const maxArea = Math.max(...areas.map((a) => a.val), 1);
+                          return areas.map(({ key, label, val }) => (
+                            <div key={key} className="flex items-center gap-3">
+                              <span className="text-sm text-gray-600 w-40 shrink-0">{label}</span>
+                              <div className="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-dim,#1a7fd4)]"
+                                  style={{ width: `${(val / maxArea) * 100}%` }}
+                                />
+                              </div>
+                              <span className="text-sm font-mono font-medium text-gray-900 w-20 text-right">{val.toFixed(2)} m²</span>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    </div>
+
+                    {/* Raw areas grid */}
+                    <div>
+                      <h4 className="text-xs uppercase tracking-wider text-gray-400 font-medium mb-3">Areas calculadas</h4>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {[
+                          { key: 'mainsailArea', label: 'Mayor' },
+                          { key: 'mainsailFullArea', label: 'Mayor Full' },
+                          { key: 'mainsailFurlerArea', label: 'Mayor Enroll.' },
+                          { key: 'genoaArea', label: 'Genova' },
+                          { key: 'genoaFurlerArea', label: 'Genova Enroll.' },
+                          { key: 'spinnakerArea', label: 'Spinnaker' },
+                          { key: 'spinnakerAsymArea', label: 'Spi. Asim.' },
+                          { key: 'sgenArea', label: 'Sgen' },
+                        ].map(({ key, label }) => {
+                          const val = selectedBoat[key];
+                          if (!val || val === '0.00') return null;
+                          return (
+                            <div key={key} className="bg-gray-50 rounded-xl p-3 text-center">
+                              <p className="text-base font-semibold text-gray-900 font-mono">{Number(val).toFixed(1)}</p>
+                              <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
           </div>
