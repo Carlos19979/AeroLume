@@ -52,6 +52,7 @@ export async function GET(request: Request) {
         options: productConfigFields.options,
         sortOrder: productConfigFields.sortOrder,
         required: productConfigFields.required,
+        priceModifiers: productConfigFields.priceModifiers,
       })
       .from(productConfigFields)
       .where(inArray(productConfigFields.productId, productIds));

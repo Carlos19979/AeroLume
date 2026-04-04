@@ -38,6 +38,7 @@ type ConfigField = {
   options: string[];
   sortOrder: number | null;
   required: boolean | null;
+  priceModifiers: Record<string, number> | null;
 };
 
 type SailGroup = 'main' | 'head' | 'spi';
@@ -78,6 +79,41 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
   const [submitting, setSubmitting] = useState(false);
 
   const headers = { 'x-api-key': apiKey };
+
+  // Get sail area from boat for a given sail type
+  function getBoatSailArea(boat: Boat | null, sailType: string): number | null {
+    if (!boat) return null;
+    const val = boat[sailType];
+    if (val === null || val === undefined || val === '') return null;
+    const n = Number(val);
+    return isNaN(n) ? null : n;
+  }
+
+  // Calculate total price
+  function calculatePrice(): { base: number; extras: { label: string; amount: number }[]; total: number } | null {
+    if (!selectedProduct || !selectedBoat) return null;
+    const area = getBoatSailArea(selectedBoat, selectedProduct.sailType);
+    const pricePerSqm = Number(selectedProduct.basePrice) || 0;
+    if (!area || !pricePerSqm) return null;
+
+    const base = area * pricePerSqm;
+    const extras: { label: string; amount: number }[] = [];
+
+    for (const field of selectedProduct.configFields) {
+      const selectedOption = config[field.key];
+      if (!selectedOption || !field.priceModifiers) continue;
+      const mod = (field.priceModifiers as Record<string, number>)[selectedOption];
+      if (mod && mod > 0) {
+        extras.push({ label: `${field.label}: ${selectedOption}`, amount: mod });
+      }
+    }
+
+    const total = base + extras.reduce((sum, e) => sum + e.amount, 0);
+    return { base, extras, total };
+  }
+
+  const pricing = calculatePrice();
+  const currency = selectedProduct?.currency || tenant.currency || 'EUR';
 
   function track(eventType: string, extra?: Record<string, any>) {
     fetch('/api/v1/analytics', {
@@ -277,11 +313,22 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
                         <p className="text-xs text-gray-500 mt-1">
                           {SAIL_TYPE_LABELS[product.sailType] || product.sailType}
                         </p>
-                        {product.basePrice && (
-                          <p className="text-sm font-semibold mt-2" style={{ color: 'var(--accent, #0b5faa)' }}>
-                            desde {Number(product.basePrice).toFixed(0)} {product.currency || 'EUR'}
-                          </p>
-                        )}
+                        {product.basePrice && (() => {
+                          const area = getBoatSailArea(selectedBoat, product.sailType);
+                          const pricePerSqm = Number(product.basePrice);
+                          if (area && pricePerSqm) {
+                            return (
+                              <p className="text-sm font-semibold mt-2" style={{ color: 'var(--accent, #0b5faa)' }}>
+                                desde {(area * pricePerSqm).toFixed(0)} {product.currency || currency}
+                              </p>
+                            );
+                          }
+                          return (
+                            <p className="text-sm font-semibold mt-2" style={{ color: 'var(--accent, #0b5faa)' }}>
+                              {pricePerSqm} {product.currency || currency}/m²
+                            </p>
+                          );
+                        })()}
                         {product.descriptionShort && (
                           <p className="text-xs text-gray-400 mt-1 line-clamp-2">
                             {product.descriptionShort}
@@ -302,6 +349,10 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
         <div className="space-y-4">
           <div className="bg-gray-50 rounded-lg px-4 py-2 text-sm text-gray-600">
             Barco: <strong>{selectedBoat?.model}</strong> &middot; Vela: <strong>{selectedProduct.name}</strong>
+            {(() => {
+              const area = getBoatSailArea(selectedBoat, selectedProduct.sailType);
+              return area ? <span className="ml-2">· Superficie: <strong>{area.toFixed(2)} m²</strong></span> : null;
+            })()}
           </div>
 
           <div className="bg-white border rounded-lg p-6 space-y-4">
@@ -309,39 +360,68 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
 
             {selectedProduct.configFields
               .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-              .map((field) => (
-                <div key={field.id}>
-                  <label className="block text-sm text-gray-600 mb-1">
-                    {field.label}
-                    {field.required && <span className="text-red-400 ml-0.5">*</span>}
-                  </label>
-                  {field.fieldType === 'select' && Array.isArray(field.options) ? (
-                    <select
-                      value={config[field.key] || ''}
-                      onChange={(e) =>
-                        setConfig((prev) => ({ ...prev, [field.key]: e.target.value }))
-                      }
-                      className="w-full border rounded-lg px-3 py-2 text-sm"
-                    >
-                      <option value="">Seleccionar...</option>
-                      {field.options.map((opt) => (
-                        <option key={opt} value={opt}>
-                          {opt}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={config[field.key] || ''}
-                      onChange={(e) =>
-                        setConfig((prev) => ({ ...prev, [field.key]: e.target.value }))
-                      }
-                      className="w-full border rounded-lg px-3 py-2 text-sm"
-                    />
-                  )}
+              .map((field) => {
+                const mods = field.priceModifiers as Record<string, number> | null;
+                return (
+                  <div key={field.id}>
+                    <label className="block text-sm text-gray-600 mb-1">
+                      {field.label}
+                      {field.required && <span className="text-red-400 ml-0.5">*</span>}
+                    </label>
+                    {field.fieldType === 'select' && Array.isArray(field.options) ? (
+                      <select
+                        value={config[field.key] || ''}
+                        onChange={(e) =>
+                          setConfig((prev) => ({ ...prev, [field.key]: e.target.value }))
+                        }
+                        className="w-full border rounded-lg px-3 py-2 text-sm"
+                      >
+                        <option value="">Seleccionar...</option>
+                        {field.options.map((opt) => {
+                          const mod = mods?.[opt];
+                          const modLabel = mod && mod > 0 ? ` (+${mod} ${currency})` : '';
+                          return (
+                            <option key={opt} value={opt}>
+                              {opt}{modLabel}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={config[field.key] || ''}
+                        onChange={(e) =>
+                          setConfig((prev) => ({ ...prev, [field.key]: e.target.value }))
+                        }
+                        className="w-full border rounded-lg px-3 py-2 text-sm"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+
+            {/* Price breakdown */}
+            {pricing && (
+              <div className="border-t pt-4 mt-4 space-y-2">
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>
+                    {getBoatSailArea(selectedBoat, selectedProduct.sailType)?.toFixed(2)} m² × {Number(selectedProduct.basePrice).toFixed(0)} {currency}/m²
+                  </span>
+                  <span>{pricing.base.toFixed(0)} {currency}</span>
                 </div>
-              ))}
+                {pricing.extras.map((extra, i) => (
+                  <div key={i} className="flex justify-between text-sm text-gray-500">
+                    <span>{extra.label}</span>
+                    <span>+{extra.amount} {currency}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between text-base font-semibold pt-2 border-t" style={{ color: 'var(--accent, #0b5faa)' }}>
+                  <span>Total estimado</span>
+                  <span>{pricing.total.toFixed(0)} {currency}</span>
+                </div>
+              </div>
+            )}
 
             <button
               onClick={() => setStep('contact')}
