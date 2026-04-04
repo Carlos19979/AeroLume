@@ -291,7 +291,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
                         }}
                       >
                         <p className="text-[10px] font-semibold text-gray-900" style={{ color: text }}>{name}</p>
-                        <p className="text-[9px] mt-0.5" style={{ color: `${text}80` }}>25.9 m²</p>
+                        <p className="text-[9px] mt-0.5" style={{ color: `${text}e6` }}>25.9 m²</p>
                         <p className="text-xs font-bold mt-1" style={{ color: accent }}>{[1165, 1188][i]} EUR</p>
                       </div>
                     ))}
@@ -318,7 +318,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
                         }}
                       >
                         <p className="text-[10px] font-semibold text-gray-900" style={{ color: text }}>{name}</p>
-                        <p className="text-[9px] mt-0.5" style={{ color: `${text}80` }}>31.8 m²</p>
+                        <p className="text-[9px] mt-0.5" style={{ color: `${text}e6` }}>31.8 m²</p>
                         <p className="text-xs font-bold mt-1" style={{ color: accent }}>{[1336, 1398][i]} EUR</p>
                       </div>
                     ))}
@@ -345,7 +345,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
                         }}
                       >
                         <p className="text-[10px] font-semibold text-gray-900" style={{ color: text }}>{name}</p>
-                        <p className="text-[9px] mt-0.5" style={{ color: `${text}80` }}>69.1 m²</p>
+                        <p className="text-[9px] mt-0.5" style={{ color: `${text}e6` }}>69.1 m²</p>
                         <p className="text-xs font-bold mt-1" style={{ color: accent }}>{[2626, 3317][i]} EUR</p>
                       </div>
                     ))}

@@ -402,7 +402,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
                               <p className="font-semibold text-sm leading-tight" style={{ color: textColor }}>{product.name}</p>
                               <p className="text-xs text-gray-400 mt-1">{SAIL_TYPE_LABELS[product.sailType] || product.sailType}</p>
                               {area && (
-                                <p className="text-xs mt-1 font-medium" style={{ color: `${textColor}80` }}>{area.toFixed(1)} m² para tu barco</p>
+                                <p className="text-xs mt-1 font-medium" style={{ color: `${textColor}e6` }}>{area.toFixed(1)} m² para tu barco</p>
                               )}
                             </div>
                             {estimatedPrice && (
