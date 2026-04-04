@@ -39,6 +39,17 @@ export async function POST(request: Request) {
   const tenant = await getTenantForUser(user.id);
   if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
 
+  // Check if tenant already has a key
+  const existing = await db
+    .select({ id: apiKeys.id })
+    .from(apiKeys)
+    .where(eq(apiKeys.tenantId, tenant.id))
+    .limit(1);
+
+  if (existing.length > 0) {
+    return NextResponse.json({ error: 'Ya tienes una API key. Revoca la actual para crear una nueva.' }, { status: 400 });
+  }
+
   const body = await request.json();
   const name = body.name || 'Default';
 

@@ -88,8 +88,8 @@ export function ApiKeysClient({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
         </div>
       )}
 
-      {/* Create new key */}
-      {showCreate ? (
+      {/* Create new key — only if no keys exist */}
+      {keys.length > 0 ? null : showCreate ? (
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <h3 className="font-medium text-gray-900 mb-3">Nueva API Key</h3>
           <div className="flex gap-3">
