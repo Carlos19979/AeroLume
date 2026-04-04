@@ -226,15 +226,22 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
             </div>
             <div>
               <p className="text-sm font-semibold text-gray-900">{quote.customerName || 'Sin nombre'}</p>
-              {quote.customerEmail && <p className="text-xs text-gray-400">{quote.customerEmail}</p>}
             </div>
           </div>
-          {quote.customerPhone && (
-            <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
-              <span className="text-gray-400">Tel:</span>
-              <span>{quote.customerPhone}</span>
-            </div>
-          )}
+          <div className="space-y-2 text-sm">
+            {quote.customerPhone && (
+              <div className="flex items-center gap-2 text-gray-500">
+                <span className="text-gray-400">Tel:</span>
+                <span>{quote.customerPhone}</span>
+              </div>
+            )}
+            {quote.customerEmail && (
+              <div className="flex items-center gap-2 text-gray-500">
+                <span className="text-gray-400">Email:</span>
+                <span>{quote.customerEmail}</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Boat */}
