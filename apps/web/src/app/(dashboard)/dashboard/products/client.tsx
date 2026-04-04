@@ -128,7 +128,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">Nombre</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">Tipo de vela</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Precio base</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500">Precio/m²</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">Estado</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-500"></th>
               </tr>
@@ -151,7 +151,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
                   </td>
                   <td className="px-4 py-3 text-gray-500">
                     {product.basePrice
-                      ? `${Number(product.basePrice).toFixed(2)} ${product.currency || 'EUR'}`
+                      ? `${Number(product.basePrice).toFixed(0)} ${product.currency || 'EUR'}/m²`
                       : '—'}
                   </td>
                   <td className="px-4 py-3">
@@ -166,7 +166,13 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
                       {product.active ? 'Activo' : 'Inactivo'}
                     </button>
                   </td>
-                  <td className="px-4 py-3 text-right space-x-2">
+                  <td className="px-4 py-3 text-right space-x-3">
+                    <button
+                      onClick={() => handleToggleActive(product.id, product.active)}
+                      className="text-xs text-gray-400 hover:text-gray-600"
+                    >
+                      {product.active ? 'Desactivar' : 'Activar'}
+                    </button>
                     <button
                       onClick={() => router.push(`/dashboard/products/${product.id}`)}
                       className="text-[var(--color-accent)] hover:underline text-xs"
