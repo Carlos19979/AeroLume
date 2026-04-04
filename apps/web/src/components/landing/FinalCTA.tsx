@@ -26,10 +26,10 @@ export function FinalCTA() {
           viewport={{ once: true }}
           className="text-center"
         >
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.1] font-[family-name:var(--font-cormorant)]">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.15] font-[family-name:var(--font-cormorant)]">
             ¿Listo para vender
             <br />
-            <span className="italic bg-gradient-to-r from-blue-300 via-cyan-300 to-blue-400 bg-clip-text text-transparent">mas velas?</span>
+            <span className="italic" style={{ color: '#7dd3fc' }}>mas velas?</span>
           </h2>
           <p className="mt-6 text-lg text-white/40 max-w-md mx-auto leading-relaxed">
             Empieza hoy. Tu configurador estara listo en 48 horas.
