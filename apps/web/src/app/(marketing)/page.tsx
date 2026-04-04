@@ -10,7 +10,6 @@ export default function HomePage() {
     return (
         <>
             <Hero />
-            <LogoBar />
             <ProductPillars />
             <HowItWorks />
             <Results />
