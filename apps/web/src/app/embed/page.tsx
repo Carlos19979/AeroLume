@@ -41,6 +41,9 @@ export default async function EmbedPage({ searchParams }: Props) {
       themeAccent: tenants.themeAccent,
       themeNavy: tenants.themeNavy,
       themeText: tenants.themeText,
+      themeColorMain: tenants.themeColorMain,
+      themeColorHead: tenants.themeColorHead,
+      themeColorSpi: tenants.themeColorSpi,
       locale: tenants.locale,
       currency: tenants.currency,
     })

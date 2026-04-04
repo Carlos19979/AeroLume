@@ -9,6 +9,9 @@ const DEMO_TENANT = {
   name: 'Tu Veleria',
   slug: 'demo',
   themeAccent: '#0b5faa',
+  themeColorMain: '#3b82f6',
+  themeColorHead: '#10b981',
+  themeColorSpi: '#a855f7',
   locale: 'es',
   currency: 'EUR',
 };

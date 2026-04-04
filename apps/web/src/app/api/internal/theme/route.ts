@@ -19,6 +19,9 @@ export async function GET() {
       themeText: tenants.themeText,
       themeFontDisplay: tenants.themeFontDisplay,
       themeFontBody: tenants.themeFontBody,
+      themeColorMain: tenants.themeColorMain,
+      themeColorHead: tenants.themeColorHead,
+      themeColorSpi: tenants.themeColorSpi,
       logoUrl: tenants.logoUrl,
     })
     .from(tenants)
@@ -47,6 +50,9 @@ export async function PUT(request: Request) {
       themeText: body.themeText,
       themeFontDisplay: body.themeFontDisplay,
       themeFontBody: body.themeFontBody,
+      themeColorMain: body.themeColorMain,
+      themeColorHead: body.themeColorHead,
+      themeColorSpi: body.themeColorSpi,
       logoUrl: body.logoUrl,
       updatedAt: new Date(),
     })
@@ -58,6 +64,9 @@ export async function PUT(request: Request) {
       themeText: tenants.themeText,
       themeFontDisplay: tenants.themeFontDisplay,
       themeFontBody: tenants.themeFontBody,
+      themeColorMain: tenants.themeColorMain,
+      themeColorHead: tenants.themeColorHead,
+      themeColorSpi: tenants.themeColorSpi,
       logoUrl: tenants.logoUrl,
     });
 

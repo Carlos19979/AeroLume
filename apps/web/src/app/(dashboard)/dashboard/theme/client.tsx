@@ -9,6 +9,9 @@ type ThemeData = {
   themeText: string | null;
   themeFontDisplay: string | null;
   themeFontBody: string | null;
+  themeColorMain: string | null;
+  themeColorHead: string | null;
+  themeColorSpi: string | null;
   logoUrl: string | null;
 };
 
@@ -81,6 +84,30 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
               label="Texto principal"
               value={theme.themeText || '#0a1e3d'}
               onChange={(v) => updateField('themeText', v)}
+            />
+          </div>
+        </div>
+
+        {/* Sail group colors */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+          <h3 className="font-medium text-gray-900">Colores del configurador</h3>
+          <p className="text-xs text-gray-400">Colores para cada grupo de vela en el widget.</p>
+
+          <div className="grid grid-cols-3 gap-4">
+            <ColorField
+              label="Vela mayor"
+              value={theme.themeColorMain || '#3b82f6'}
+              onChange={(v) => updateField('themeColorMain', v)}
+            />
+            <ColorField
+              label="Vela de proa"
+              value={theme.themeColorHead || '#10b981'}
+              onChange={(v) => updateField('themeColorHead', v)}
+            />
+            <ColorField
+              label="Portantes"
+              value={theme.themeColorSpi || '#a855f7'}
+              onChange={(v) => updateField('themeColorSpi', v)}
             />
           </div>
         </div>

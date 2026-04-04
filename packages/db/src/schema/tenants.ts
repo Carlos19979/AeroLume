@@ -15,6 +15,11 @@ export const tenants = pgTable('tenants', {
   themeFontDisplay: text('theme_font_display').default('Cormorant'),
   themeFontBody: text('theme_font_body').default('Manrope'),
 
+  // Sail group colors
+  themeColorMain: text('theme_color_main').default('#3b82f6'),
+  themeColorHead: text('theme_color_head').default('#10b981'),
+  themeColorSpi: text('theme_color_spi').default('#a855f7'),
+
   // Localization
   locale: text('locale').default('es'),
   currency: text('currency').default('EUR'),

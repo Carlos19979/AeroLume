@@ -7,6 +7,9 @@ type Tenant = {
   name: string;
   slug: string;
   themeAccent: string | null;
+  themeColorMain: string | null;
+  themeColorHead: string | null;
+  themeColorSpi: string | null;
   locale: string | null;
   currency: string | null;
 };
@@ -44,11 +47,19 @@ type ConfigField = {
 type Step = 'boat' | 'products' | 'configure' | 'contact' | 'done';
 type SailGroup = 'main' | 'head' | 'spi';
 
-const SAIL_GROUPS: Record<SailGroup, { label: string; types: string[]; tint: string }> = {
-  main: { label: 'Vela mayor', types: ['gvstd', 'gvfull', 'gve'], tint: '59, 130, 246' },
-  head: { label: 'Vela de proa', types: ['gse', 'gn'], tint: '16, 185, 129' },
-  spi: { label: 'Portantes', types: ['spiasy', 'spisym', 'furling', 'gen'], tint: '168, 85, 247' },
+const SAIL_GROUPS: Record<SailGroup, { label: string; types: string[]; defaultColor: string }> = {
+  main: { label: 'Vela mayor', types: ['gvstd', 'gvfull', 'gve'], defaultColor: '#3b82f6' },
+  head: { label: 'Vela de proa', types: ['gse', 'gn'], defaultColor: '#10b981' },
+  spi: { label: 'Portantes', types: ['spiasy', 'spisym', 'furling', 'gen'], defaultColor: '#a855f7' },
 };
+
+function hexToRgb(hex: string): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `${r}, ${g}, ${b}`;
+}
 
 const SAIL_TYPE_LABELS: Record<string, string> = {
   gvstd: 'Mayor Clasica', gvfull: 'Mayor Full Batten', gve: 'Mayor Enrollable',
@@ -96,6 +107,11 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
   const [submitting, setSubmitting] = useState(false);
 
   const accent = tenant.themeAccent || '#0b5faa';
+  const groupColors: Record<SailGroup, string> = {
+    main: tenant.themeColorMain || SAIL_GROUPS.main.defaultColor,
+    head: tenant.themeColorHead || SAIL_GROUPS.head.defaultColor,
+    spi: tenant.themeColorSpi || SAIL_GROUPS.spi.defaultColor,
+  };
   const headers = { 'x-api-key': apiKey };
 
   function getBoatSailArea(boat: Boat | null, sailType: string): number | null {
@@ -333,15 +349,17 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
             Object.entries(SAIL_GROUPS).map(([groupKey, group]) => {
               const groupProducts = products.filter((p) => group.types.includes(p.sailType));
               if (groupProducts.length === 0) return null;
+              const gc = groupColors[groupKey as SailGroup];
+              const tint = hexToRgb(gc);
               return (
                 <div key={groupKey}>
                   {/* Group header */}
                   <div className="flex items-center gap-3 mb-3">
                     <div
                       className="w-8 h-8 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: `rgba(${group.tint}, 0.1)` }}
+                      style={{ backgroundColor: `rgba(${tint}, 0.1)` }}
                     >
-                      <SailIcon size={16} color={`rgb(${group.tint})`} />
+                      <SailIcon size={16} color={gc} />
                     </div>
                     <h3 className="text-sm font-bold text-gray-800">{group.label}</h3>
                     <div className="flex-1 h-px bg-gray-100" />
@@ -358,18 +376,18 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
                           onClick={() => selectProduct(product)}
                           className="text-left rounded-2xl p-5 transition-all duration-200 group border border-transparent hover:shadow-lg hover:shadow-black/[0.04] hover:-translate-y-0.5"
                           style={{
-                            background: `linear-gradient(135deg, rgba(${group.tint}, 0.04), rgba(${group.tint}, 0.01))`,
-                            borderColor: `rgba(${group.tint}, 0.12)`,
+                            background: `linear-gradient(135deg, rgba(${tint}, 0.04), rgba(${tint}, 0.01))`,
+                            borderColor: `rgba(${tint}, 0.12)`,
                           }}
-                          onMouseEnter={(e) => { (e.currentTarget.style.borderColor = `rgba(${group.tint}, 0.35)`); }}
-                          onMouseLeave={(e) => { (e.currentTarget.style.borderColor = `rgba(${group.tint}, 0.12)`); }}
+                          onMouseEnter={(e) => { (e.currentTarget.style.borderColor = `rgba(${tint}, 0.35)`); }}
+                          onMouseLeave={(e) => { (e.currentTarget.style.borderColor = `rgba(${tint}, 0.12)`); }}
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <p className="font-semibold text-gray-900 text-sm leading-tight">{product.name}</p>
                               <p className="text-xs text-gray-400 mt-1">{SAIL_TYPE_LABELS[product.sailType] || product.sailType}</p>
                               {area && (
-                                <p className="text-xs mt-1 font-medium" style={{ color: `rgb(${group.tint})` }}>{area.toFixed(1)} m² para tu barco</p>
+                                <p className="text-xs mt-1 font-medium" style={{ color: gc }}>{area.toFixed(1)} m² para tu barco</p>
                               )}
                             </div>
                             {estimatedPrice && (
