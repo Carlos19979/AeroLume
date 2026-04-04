@@ -32,7 +32,7 @@ export function FinalCTA() {
             <span className="italic" style={{ color: '#7dd3fc' }}>mas velas?</span>
           </h2>
           <p className="mt-6 text-lg text-white/40 max-w-md mx-auto leading-relaxed">
-            Empieza hoy. Tu configurador estara listo en 48 horas.
+            Contacta con nosotros y te enseñamos como funciona.
           </p>
           <div className="mt-10">
             <a
