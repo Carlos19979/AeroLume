@@ -2,19 +2,25 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 
 const NAV_LINKS = [
     { href: '/#producto', label: 'Producto' },
-    { href: '/demo', label: 'Demo' },
-    { href: '/#pricing', label: 'Pricing' },
+    { href: '/#como-funciona', label: 'Como funciona' },
+    { href: '/about', label: 'Nosotros' },
     { href: '/contact', label: 'Contacto' },
 ];
 
 export function Navigation() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const pathname = usePathname();
+
+    // Only the home page has a dark hero — all other pages are white
+    const hasDarkHero = pathname === '/';
+    const isDark = hasDarkHero && !scrolled;
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 40);
@@ -26,7 +32,7 @@ export function Navigation() {
         <>
             <header
                 className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-                    scrolled
+                    scrolled || !hasDarkHero
                         ? 'bg-white/95 backdrop-blur-xl border-b border-gray-200/50 shadow-[0_1px_20px_rgba(0,0,0,0.04)]'
                         : 'bg-transparent'
                 }`}
@@ -35,7 +41,7 @@ export function Navigation() {
                     <Link href="/" className="group flex items-center gap-2">
                         <div
                             className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-300"
-                            style={{ backgroundColor: scrolled ? '#0b5faa' : 'rgba(255,255,255,0.12)' }}
+                            style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : '#0b5faa' }}
                         >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M12 2L4 20h16L12 2z" opacity="0.3" fill="white" />
@@ -44,7 +50,7 @@ export function Navigation() {
                         </div>
                         <span
                             className={`text-lg font-bold tracking-[0.15em] uppercase transition-colors duration-300 font-[family-name:var(--font-cormorant)] ${
-                                scrolled ? 'text-[#0a2540]' : 'text-white'
+                                isDark ? 'text-white' : 'text-[#0a2540]'
                             }`}
                         >
                             Aerolume
@@ -56,10 +62,10 @@ export function Navigation() {
                             <Link
                                 key={link.href}
                                 href={link.href}
-                                className={`px-4 py-2 text-[13px] tracking-[0.05em] transition-all duration-300 rounded-lg hover:bg-white/8 ${
-                                    scrolled
-                                        ? 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
-                                        : 'text-white/60 hover:text-white'
+                                className={`px-4 py-2 text-[13px] tracking-[0.05em] transition-all duration-300 rounded-lg ${
+                                    isDark
+                                        ? 'text-white/60 hover:text-white hover:bg-white/8'
+                                        : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
                                 }`}
                             >
                                 {link.label}
@@ -68,11 +74,11 @@ export function Navigation() {
                     </div>
 
                     <Link
-                        href="/signup"
+                        href="/contact"
                         className={`hidden lg:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-300 hover:-translate-y-0.5 ${
-                            scrolled
-                                ? 'bg-[#0a2540] text-white hover:shadow-lg hover:shadow-black/10'
-                                : 'bg-white text-[#0a2540] hover:shadow-lg hover:shadow-white/15'
+                            isDark
+                                ? 'bg-white text-[#0a2540] hover:shadow-lg hover:shadow-white/15'
+                                : 'bg-[#0a2540] text-white hover:shadow-lg hover:shadow-black/10'
                         }`}
                     >
                         Solicitar demo
@@ -81,7 +87,7 @@ export function Navigation() {
                     <button
                         type="button"
                         onClick={() => setMobileOpen(!mobileOpen)}
-                        className={`lg:hidden p-2 transition-colors ${scrolled ? 'text-gray-600' : 'text-white/70'}`}
+                        className={`lg:hidden p-2 transition-colors ${isDark ? 'text-white/70' : 'text-gray-600'}`}
                     >
                         {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                     </button>
@@ -120,7 +126,7 @@ export function Navigation() {
                                 transition={{ delay: 0.4 }}
                             >
                                 <Link
-                                    href="/signup"
+                                    href="/contact"
                                     onClick={() => setMobileOpen(false)}
                                     className="mt-4 inline-flex px-8 py-3 rounded-xl bg-white text-[#0a2540] text-sm font-semibold"
                                 >

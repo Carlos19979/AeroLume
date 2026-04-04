@@ -36,7 +36,7 @@ export function FinalCTA() {
           </p>
           <div className="mt-10">
             <a
-              href="/signup"
+              href="/contact"
               className="group inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl text-sm font-semibold bg-white text-[#0a2540] transition-all duration-300 hover:shadow-[0_8px_40px_rgba(255,255,255,0.15)] hover:-translate-y-0.5"
             >
               Solicitar demo

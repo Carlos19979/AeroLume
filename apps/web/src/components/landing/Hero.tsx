@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowRight, Play } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export function Hero() {
   return (
@@ -39,18 +39,10 @@ export function Hero() {
               <span className="text-xs text-white/50 tracking-wide">Plataforma SaaS para el sector nautico</span>
             </motion.div>
 
-            <h1 className="text-[2.75rem] sm:text-6xl lg:text-7xl font-bold text-white leading-[1.05] tracking-tight font-[family-name:var(--font-cormorant)]">
-              El configurador
-              <br />
-              de velas{' '}
-              <span className="relative">
-                <span className="relative z-10 italic bg-gradient-to-r from-blue-300 via-cyan-300 to-blue-400 bg-clip-text text-transparent">
-                  que vende
-                </span>
-              </span>
-              <br />
+            <h1 className="text-[2.5rem] sm:text-5xl lg:text-[4.25rem] font-bold text-white leading-[1.1] tracking-tight font-[family-name:var(--font-cormorant)]">
+              El configurador de velas{' '}
               <span className="italic bg-gradient-to-r from-blue-300 via-cyan-300 to-blue-400 bg-clip-text text-transparent">
-                por ti
+                que vende por ti
               </span>
             </h1>
 
@@ -61,38 +53,37 @@ export function Hero() {
 
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <a
-                href="/signup"
+                href="/contact"
                 className="group inline-flex items-center gap-2.5 px-7 py-4 rounded-2xl text-sm font-semibold text-[#0a2540] bg-white transition-all duration-300 hover:shadow-[0_8px_40px_rgba(255,255,255,0.15)] hover:-translate-y-0.5"
               >
                 Solicitar demo
                 <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
               </a>
               <a
-                href="/demo"
-                className="group inline-flex items-center gap-2.5 px-5 py-4 rounded-2xl text-sm font-medium text-white/60 hover:text-white border border-white/10 hover:border-white/20 hover:bg-white/[0.04] transition-all duration-300"
+                href="/#producto"
+                className="inline-flex items-center gap-2 px-5 py-4 rounded-2xl text-sm font-medium text-white/50 hover:text-white/80 transition-all duration-300"
               >
-                <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/15 transition-colors">
-                  <Play size={12} fill="white" className="ml-0.5" />
-                </span>
-                Ver demo en vivo
+                Conocer mas
+                <ArrowRight size={14} />
               </a>
             </div>
 
             {/* Trust stats */}
-            <div className="mt-16 pt-8 border-t border-white/[0.06] grid grid-cols-3 gap-8">
+            <div className="mt-16 pt-8 border-t border-white/[0.06] flex items-center gap-10">
               {[
-                { value: '4.839', label: 'Barcos en la base de datos' },
-                { value: '9', label: 'Tipos de vela configurables' },
-                { value: '<5min', label: 'Tiempo de integracion' },
+                { value: '4.839+', label: 'barcos' },
+                { value: '9', label: 'tipos de vela' },
+                { value: '48h', label: 'setup' },
               ].map((stat, i) => (
                 <motion.div
                   key={stat.label}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 + i * 0.1, duration: 0.5 }}
+                  className="flex items-baseline gap-2"
                 >
                   <p className="text-2xl font-bold text-white font-[family-name:var(--font-cormorant)]">{stat.value}</p>
-                  <p className="text-xs text-white/30 mt-1 leading-tight">{stat.label}</p>
+                  <p className="text-sm text-white/30">{stat.label}</p>
                 </motion.div>
               ))}
             </div>
