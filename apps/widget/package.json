@@ -1,0 +1,14 @@
+{
+  "name": "@aerolume/widget",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "vite": "^6",
+    "typescript": "^5"
+  }
+}

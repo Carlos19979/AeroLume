@@ -1,0 +1,45 @@
+import { pgTable, uuid, text, timestamp, boolean } from 'drizzle-orm/pg-core';
+
+export const tenants = pgTable('tenants', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  slug: text('slug').unique().notNull(),
+  customDomain: text('custom_domain').unique(),
+  logoUrl: text('logo_url'),
+
+  // Theme
+  themeAccent: text('theme_accent').default('#0b5faa'),
+  themeAccentDim: text('theme_accent_dim').default('#1a7fd4'),
+  themeNavy: text('theme_navy').default('#0a2540'),
+  themeText: text('theme_text').default('#0a1e3d'),
+  themeFontDisplay: text('theme_font_display').default('Cormorant'),
+  themeFontBody: text('theme_font_body').default('Manrope'),
+
+  // Localization
+  locale: text('locale').default('es'),
+  currency: text('currency').default('EUR'),
+
+  // Subscription
+  plan: text('plan').default('starter'),
+  stripeCustomerId: text('stripe_customer_id'),
+  subscriptionStatus: text('subscription_status').default('trialing'),
+  trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),
+
+  // Settings
+  allowedOrigins: text('allowed_origins').array().default([]),
+  webhookUrl: text('webhook_url'),
+  sailonetImport: boolean('sailonet_import').default(false),
+
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const tenantMembers = pgTable('tenant_members', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id')
+    .references(() => tenants.id, { onDelete: 'cascade' })
+    .notNull(),
+  userId: uuid('user_id').notNull(), // References Supabase auth.users
+  role: text('role').default('admin').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
