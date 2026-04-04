@@ -70,7 +70,12 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
   const [productsLoading, setProductsLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [config, setConfig] = useState<Record<string, string>>({});
-  const [step, setStep] = useState<'boat' | 'products' | 'configure'>('boat');
+  const [step, setStep] = useState<'boat' | 'products' | 'configure' | 'contact' | 'done'>('boat');
+  const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerNotes, setCustomerNotes] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const headers = { 'x-api-key': apiKey };
 
@@ -326,21 +331,139 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
               ))}
 
             <button
-              onClick={() => {
-                const quote = {
-                  boat: selectedBoat,
-                  product: selectedProduct,
-                  configuration: config,
-                };
-                postMessage('aerolume:quote-created', quote);
-                alert('Presupuesto solicitado. Nos pondremos en contacto contigo.');
-              }}
+              onClick={() => setStep('contact')}
               className="w-full py-3 text-white text-sm rounded-lg font-medium"
               style={{ backgroundColor: 'var(--accent, #0b5faa)' }}
             >
-              Solicitar presupuesto
+              Continuar &rarr;
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Step 4: Contact info */}
+      {step === 'contact' && selectedProduct && (
+        <div className="space-y-4">
+          <div className="bg-gray-50 rounded-lg px-4 py-2 text-sm text-gray-600">
+            Barco: <strong>{selectedBoat?.model}</strong> &middot; Vela: <strong>{selectedProduct.name}</strong>
+          </div>
+
+          <div className="bg-white border rounded-lg p-6 space-y-4">
+            <h3 className="font-medium text-gray-900">Datos de contacto</h3>
+            <p className="text-sm text-gray-500">Para enviarte el presupuesto detallado.</p>
+
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Nombre *</label>
+              <input
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
+                placeholder="Tu nombre"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Email *</label>
+              <input
+                type="email"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
+                placeholder="tu@email.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Teléfono</label>
+              <input
+                type="tel"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
+                placeholder="+34 600 000 000"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Notas</label>
+              <textarea
+                value={customerNotes}
+                onChange={(e) => setCustomerNotes(e.target.value)}
+                rows={3}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
+                placeholder="Cualquier detalle adicional..."
+              />
+            </div>
+
+            <button
+              onClick={async () => {
+                if (!customerName.trim() || !customerEmail.trim()) return;
+                setSubmitting(true);
+
+                const res = await fetch('/api/v1/quotes', {
+                  method: 'POST',
+                  headers: { ...headers, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    boatId: selectedBoat?.id,
+                    boatModel: selectedBoat?.model,
+                    boatLength: selectedBoat?.length,
+                    customerName,
+                    customerEmail,
+                    customerPhone: customerPhone || null,
+                    customerNotes: customerNotes || null,
+                    items: [{
+                      productId: selectedProduct.id,
+                      sailType: selectedProduct.sailType,
+                      productName: selectedProduct.name,
+                      configuration: config,
+                    }],
+                  }),
+                });
+
+                const { data } = await res.json();
+                postMessage('aerolume:quote-created', {
+                  quoteId: data?.id,
+                  boat: selectedBoat,
+                  product: selectedProduct,
+                  configuration: config,
+                  customer: { name: customerName, email: customerEmail },
+                });
+
+                setSubmitting(false);
+                setStep('done');
+              }}
+              disabled={submitting || !customerName.trim() || !customerEmail.trim()}
+              className="w-full py-3 text-white text-sm rounded-lg font-medium disabled:opacity-50"
+              style={{ backgroundColor: 'var(--accent, #0b5faa)' }}
+            >
+              {submitting ? 'Enviando...' : 'Solicitar presupuesto'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 5: Done */}
+      {step === 'done' && (
+        <div className="text-center py-12">
+          <div className="text-4xl mb-4">&#9989;</div>
+          <h3 className="text-lg font-semibold text-gray-900">Presupuesto solicitado</h3>
+          <p className="text-sm text-gray-500 mt-2">
+            Hemos recibido tu solicitud. Te contactaremos a <strong>{customerEmail}</strong> con el presupuesto detallado.
+          </p>
+          <button
+            onClick={() => {
+              setStep('boat');
+              setSelectedBoat(null);
+              setSelectedProduct(null);
+              setConfig({});
+              setCustomerName('');
+              setCustomerEmail('');
+              setCustomerPhone('');
+              setCustomerNotes('');
+              setQuery('');
+            }}
+            className="mt-6 px-6 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
+          >
+            Nuevo presupuesto
+          </button>
         </div>
       )}
 
