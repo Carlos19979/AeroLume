@@ -6,9 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 
 const NAV_LINKS = [
-    { href: '/', label: 'Inicio' },
-    { href: '/about', label: 'Nosotros' },
-    { href: '/configurator', label: 'Configurador' },
+    { href: '/#producto', label: 'Producto' },
+    { href: '/demo', label: 'Demo' },
+    { href: '/#pricing', label: 'Pricing' },
     { href: '/contact', label: 'Contacto' },
 ];
 
@@ -75,10 +75,10 @@ export function Navigation() {
                     </div>
 
                     <Link
-                        href="/configurator"
+                        href="/signup"
                         className="hidden lg:inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)] px-6 py-2.5 text-sm tracking-[0.06em] text-white transition-all hover:bg-[var(--color-accent-dim)] hover:shadow-[0_8px_30px_rgba(11,95,170,0.25)]"
                     >
-                        Configurar velas
+                        Solicitar demo
                     </Link>
 
                     <button

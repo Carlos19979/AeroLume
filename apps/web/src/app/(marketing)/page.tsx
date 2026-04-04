@@ -1,21 +1,21 @@
-import { ScrollHero } from '@/components/home/ScrollHero';
-import { StatsSection } from '@/components/home/StatsSection';
-import { ProcessSection } from '@/components/home/ProcessSection';
-import { FeaturesSection } from '@/components/home/FeaturesSection';
-import { MarqueeSection } from '@/components/home/MarqueeSection';
-import { QuoteSection } from '@/components/home/QuoteSection';
-import { CTASection } from '@/components/home/CTASection';
+import { Hero } from '@/components/landing/Hero';
+import { LogoBar } from '@/components/landing/LogoBar';
+import { ProductPillars } from '@/components/landing/ProductPillars';
+import { DemoSection } from '@/components/landing/DemoSection';
+import { Pricing } from '@/components/landing/Pricing';
+import { FAQ } from '@/components/landing/FAQ';
+import { FinalCTA } from '@/components/landing/FinalCTA';
 
 export default function HomePage() {
     return (
         <>
-            <ScrollHero />
-            <StatsSection />
-            <ProcessSection />
-            <FeaturesSection />
-            <MarqueeSection />
-            <QuoteSection />
-            <CTASection />
+            <Hero />
+            <LogoBar />
+            <ProductPillars />
+            <DemoSection />
+            <Pricing />
+            <FAQ />
+            <FinalCTA />
         </>
     );
 }
