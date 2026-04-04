@@ -79,6 +79,17 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
 
   const headers = { 'x-api-key': apiKey };
 
+  function track(eventType: string, extra?: Record<string, any>) {
+    fetch('/api/v1/analytics', {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventType, ...extra }),
+    }).catch(() => {});
+  }
+
+  // Track configurator opened
+  useEffect(() => { track('configurator_opened'); }, []);
+
   // Search boats
   useEffect(() => {
     const value = deferredQuery.trim();
@@ -117,12 +128,14 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
     setQuery(boat.model);
     setBoatResults([]);
     setStep('products');
+    track('boat_selected', { boatModel: boat.model });
   }
 
   function selectProduct(product: Product) {
     setSelectedProduct(product);
     setConfig({});
     setStep('configure');
+    track('product_selected', { sailType: product.sailType, productId: product.id });
   }
 
   function postMessage(type: string, payload: any) {
@@ -419,6 +432,11 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
                 });
 
                 const { data } = await res.json();
+                track('quote_created', {
+                  boatModel: selectedBoat?.model,
+                  sailType: selectedProduct.sailType,
+                  productId: selectedProduct.id,
+                });
                 postMessage('aerolume:quote-created', {
                   quoteId: data?.id,
                   boat: selectedBoat,
