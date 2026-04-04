@@ -1,4 +1,4 @@
-import { db, apiKeys, eq } from '@aerolume/db';
+import { db, apiKeys, tenants, eq } from '@aerolume/db';
 import { hashApiKey } from '@/lib/api-keys';
 
 export type ApiKeyContext = {
@@ -15,6 +15,7 @@ type ValidationResult =
 /**
  * Validate an API key from a request.
  * Reads `x-api-key` header or `apiKey` query param.
+ * Checks origin against tenant's allowed_origins.
  * Returns tenant context or an error.
  */
 export async function validateApiKey(request: Request): Promise<ValidationResult> {
@@ -53,7 +54,25 @@ export async function validateApiKey(request: Request): Promise<ValidationResult
     return { ok: false, error: 'API key expired', status: 401 };
   }
 
-  // Update last_used_at (fire and forget — don't block the response)
+  // Check origin against tenant's allowed_origins
+  const origin = request.headers.get('origin') || request.headers.get('referer');
+  const [tenant] = await db
+    .select({ allowedOrigins: tenants.allowedOrigins, webhookUrl: tenants.webhookUrl })
+    .from(tenants)
+    .where(eq(tenants.id, found.tenantId))
+    .limit(1);
+
+  if (tenant?.allowedOrigins && tenant.allowedOrigins.length > 0 && origin) {
+    const originHost = origin.replace(/\/$/, '');
+    const allowed = tenant.allowedOrigins.some(
+      (ao) => originHost === ao.replace(/\/$/, '') || originHost.endsWith('.' + new URL(ao).hostname)
+    );
+    if (!allowed) {
+      return { ok: false, error: 'Origin not allowed', status: 403 };
+    }
+  }
+
+  // Update last_used_at (fire and forget)
   db.update(apiKeys)
     .set({ lastUsedAt: new Date() })
     .where(eq(apiKeys.id, found.id))
