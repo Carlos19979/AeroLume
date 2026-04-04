@@ -280,31 +280,6 @@ export function BoatsClient() {
                       </div>
                     </div>
 
-                    {/* Raw areas grid */}
-                    <div>
-                      <h4 className="text-xs uppercase tracking-wider text-gray-400 font-medium mb-3">Areas calculadas</h4>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {[
-                          { key: 'mainsailArea', label: 'Mayor' },
-                          { key: 'mainsailFullArea', label: 'Mayor Full' },
-                          { key: 'mainsailFurlerArea', label: 'Mayor Enroll.' },
-                          { key: 'genoaArea', label: 'Genova' },
-                          { key: 'genoaFurlerArea', label: 'Genova Enroll.' },
-                          { key: 'spinnakerArea', label: 'Spinnaker' },
-                          { key: 'spinnakerAsymArea', label: 'Spi. Asim.' },
-                          { key: 'sgenArea', label: 'Sgen' },
-                        ].map(({ key, label }) => {
-                          const val = selectedBoat[key];
-                          if (!val || val === '0.00') return null;
-                          return (
-                            <div key={key} className="bg-gray-50 rounded-xl p-3 text-center">
-                              <p className="text-base font-semibold text-gray-900 font-mono">{Number(val).toFixed(1)}</p>
-                              <p className="text-xs text-gray-400 mt-0.5">{label}</p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
                   </div>
                 </>
               )}
