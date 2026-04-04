@@ -5,18 +5,18 @@ const FOOTER_LINKS = [
         title: 'Navegacion',
         links: [
             { label: 'Inicio', href: '/' },
-            { label: 'Configurador', href: '/configurator' },
+            { label: 'Producto', href: '/#producto' },
             { label: 'Nosotros', href: '/about' },
             { label: 'Contacto', href: '/contact' },
         ],
     },
     {
-        title: 'Servicios',
+        title: 'Plataforma',
         links: [
-            { label: 'Velas a medida', href: '/configurator' },
-            { label: 'Mayor', href: '/configurator#main' },
-            { label: 'Genova', href: '/configurator#head' },
-            { label: 'Spinnaker', href: '/configurator#spi' },
+            { label: 'Widget embebible', href: '/#producto' },
+            { label: 'Dashboard', href: '/#producto' },
+            { label: 'API REST', href: '/#producto' },
+            { label: 'Solicitar demo', href: '/contact' },
         ],
     },
 ];
@@ -50,7 +50,7 @@ export function Footer() {
                     <div>
                         <FooterLogo />
                         <p className="mt-6 max-w-sm text-sm leading-relaxed text-white/50">
-                            Configurador inteligente de velas. Busca tu barco, compara opciones y encuentra la vela perfecta para cada condicion.
+                            Plataforma SaaS para proveedores de velas. Widget embebible, dashboard de gestion y API REST para vender mas.
                         </p>
                     </div>
 
