@@ -175,53 +175,80 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-3 font-sans">
+    <div className="max-w-2xl mx-auto px-4 py-6 font-sans">
 
-      {/* Header row: back + title + stepper */}
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--navy, #0a2540)' }}>
+          Configurador de Velas
+        </h1>
+        <p className="text-sm text-gray-400 mt-1">por {tenant.name}</p>
+      </div>
+
+      {/* Stepper */}
       {step !== 'done' && (
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            {step !== 'boat' ? (
-              <button onClick={goBack} className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors shrink-0">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round"><path d="M10 4L6 8L10 12" /></svg>
-              </button>
-            ) : null}
-            <h1 className="text-sm font-semibold" style={{ color: 'var(--navy, #0a2540)' }}>
-              {tenant.name}
-            </h1>
-          </div>
-          <div className="flex items-center gap-0">
-            {STEPS.map((s, i) => {
-              const current = stepIndex(step);
-              const done = i < current;
-              const active = i === current;
-              return (
-                <div key={s.key} className="flex items-center">
-                  {i > 0 && <div className="w-5 h-px" style={{ backgroundColor: done ? accent : '#e5e7eb' }} />}
-                  <button
-                    onClick={() => { if (done) setStep(s.key); }}
-                    disabled={!done && !active}
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold transition-all duration-200 shrink-0"
-                    style={active ? { backgroundColor: accent, color: '#fff' } : done ? { backgroundColor: accent, color: '#fff' } : { backgroundColor: '#f3f4f6', color: '#9ca3af' }}
-                    title={s.label}
+        <div className="flex items-center justify-center gap-0 mb-8">
+          {STEPS.map((s, i) => {
+            const current = stepIndex(step);
+            const done = i < current;
+            const active = i === current;
+            return (
+              <div key={s.key} className="flex items-center">
+                {i > 0 && (
+                  <div className="w-8 sm:w-12 h-0.5 mx-1" style={{ backgroundColor: done ? accent : '#e5e7eb' }} />
+                )}
+                <button
+                  onClick={() => {
+                    if (done) setStep(s.key);
+                  }}
+                  disabled={!done && !active}
+                  className="flex items-center gap-2 group"
+                >
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-300 shrink-0"
+                    style={
+                      active
+                        ? { backgroundColor: accent, color: '#fff', boxShadow: `0 0 0 4px ${accent}25` }
+                        : done
+                          ? { backgroundColor: accent, color: '#fff' }
+                          : { backgroundColor: '#f3f4f6', color: '#9ca3af' }
+                    }
                   >
                     {done ? '✓' : s.num}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+                  </div>
+                  <span className={`text-xs hidden sm:inline ${active ? 'font-semibold text-gray-900' : done ? 'text-gray-600' : 'text-gray-400'}`}>
+                    {s.label}
+                  </span>
+                </button>
+              </div>
+            );
+          })}
         </div>
+      )}
+
+      {/* Back button */}
+      {step !== 'boat' && step !== 'done' && (
+        <button
+          onClick={goBack}
+          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 mb-4 transition-colors"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M10 4L6 8L10 12" />
+          </svg>
+          Atras
+        </button>
       )}
 
       {/* Context bar */}
       {step !== 'boat' && step !== 'done' && selectedBoat && (
-        <div className="flex flex-wrap items-center gap-1.5 mb-4">
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
-            {selectedBoat.model} <span className="text-blue-400">{selectedBoat.length}m</span>
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 17l6-6 4 4 8-8" /><path d="M14 7h7v7" /></svg>
+            {selectedBoat.model}
+            <span className="text-blue-400">{selectedBoat.length}m</span>
           </span>
           {selectedProduct && step !== 'products' && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium">
               {selectedProduct.name}
               {(() => {
                 const area = getBoatSailArea(selectedBoat, selectedProduct.sailType);
@@ -269,8 +296,9 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
           )}
 
           {!query && !selectedBoat && (
-            <div className="text-center py-4">
-              <p className="text-sm text-gray-400">⛵ Empieza buscando el modelo de tu barco</p>
+            <div className="text-center py-8">
+              <div className="text-4xl mb-3">⛵</div>
+              <p className="text-sm text-gray-400">Empieza buscando el modelo de tu barco</p>
             </div>
           )}
         </div>
@@ -278,10 +306,11 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
 
       {/* ═══════════════ STEP 2: PRODUCTS ═══════════════ */}
       {step === 'products' && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {productsLoading ? (
-            <div className="text-center py-6">
-              <div className="w-6 h-6 border-2 border-gray-200 border-t-[var(--accent)] rounded-full animate-spin mx-auto" style={{ borderTopColor: accent }} />
+            <div className="text-center py-12">
+              <div className="w-8 h-8 border-2 border-gray-200 border-t-[var(--accent)] rounded-full animate-spin mx-auto" style={{ borderTopColor: accent }} />
+              <p className="text-sm text-gray-400 mt-3">Cargando productos...</p>
             </div>
           ) : (
             Object.entries(SAIL_GROUPS).map(([groupKey, group]) => {
@@ -289,10 +318,10 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
               if (groupProducts.length === 0) return null;
               return (
                 <div key={groupKey}>
-                  <h3 className="text-xs uppercase tracking-wider text-gray-400 font-medium mb-2">
-                    {group.icon} {group.label}
+                  <h3 className="text-xs uppercase tracking-wider text-gray-400 font-medium mb-3">
+                    <span className="mr-1.5">{group.icon}</span>{group.label}
                   </h3>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {groupProducts.map((product) => {
                       const area = getBoatSailArea(selectedBoat, product.sailType);
                       const pricePerSqm = Number(product.basePrice) || 0;
@@ -301,13 +330,14 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
                         <button
                           key={product.id}
                           onClick={() => selectProduct(product)}
-                          className="text-left border border-gray-200 rounded-xl p-3 hover:border-blue-200 hover:shadow-sm transition-all duration-200 group"
+                          className="text-left border border-gray-200 rounded-2xl p-5 hover:border-blue-200 hover:shadow-md transition-all duration-200 group"
                         >
-                          <p className="font-medium text-gray-900 text-xs group-hover:text-[var(--accent)] leading-tight">{product.name}</p>
-                          {area && <p className="text-[10px] text-gray-400 mt-0.5">{area.toFixed(1)} m²</p>}
+                          <p className="font-medium text-gray-900 text-sm group-hover:text-[var(--accent)]">{product.name}</p>
+                          <p className="text-xs text-gray-400 mt-1">{SAIL_TYPE_LABELS[product.sailType] || product.sailType}</p>
+                          {area && <p className="text-xs text-gray-400 mt-0.5">{area.toFixed(1)} m² para tu barco</p>}
                           {estimatedPrice && (
-                            <p className="text-sm font-bold mt-1.5" style={{ color: accent }}>
-                              {estimatedPrice.toFixed(0)} {product.currency || currency}
+                            <p className="text-base font-bold mt-3" style={{ color: accent }}>
+                              desde {estimatedPrice.toFixed(0)} {product.currency || currency}
                             </p>
                           )}
                         </button>
@@ -324,8 +354,8 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
       {/* ═══════════════ STEP 3: CONFIGURE ═══════════════ */}
       {step === 'configure' && selectedProduct && (
         <div className="space-y-4">
-          <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
-            <h3 className="font-semibold text-gray-900 text-sm">Configurar {selectedProduct.name}</h3>
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-5">
+            <h3 className="font-semibold text-gray-900">Configurar {selectedProduct.name}</h3>
 
             {selectedProduct.configFields
               .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
@@ -366,7 +396,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
 
             {/* Price breakdown */}
             {pricing && (
-              <div className="bg-gray-50 rounded-lg p-4 space-y-1.5">
+              <div className="bg-gray-50 rounded-xl p-5 space-y-2">
                 <div className="flex justify-between text-sm text-gray-500">
                   <span>{getBoatSailArea(selectedBoat, selectedProduct.sailType)?.toFixed(2)} m² x {Number(selectedProduct.basePrice).toFixed(0)} {currency}/m²</span>
                   <span>{pricing.base.toFixed(0)} {currency}</span>
@@ -377,7 +407,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
                     <span>+{extra.amount} {currency}</span>
                   </div>
                 ))}
-                <div className="flex justify-between text-base font-bold pt-2 border-t border-gray-200" style={{ color: accent }}>
+                <div className="flex justify-between text-lg font-bold pt-3 border-t border-gray-200" style={{ color: accent }}>
                   <span>Total estimado</span>
                   <span>{pricing.total.toFixed(0)} {currency}</span>
                 </div>
@@ -386,7 +416,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
 
             <button
               onClick={() => setStep('contact')}
-              className="w-full py-3 text-white text-sm rounded-xl font-semibold transition-all duration-200 hover:opacity-90 hover:shadow-lg"
+              className="w-full py-3.5 text-white text-sm rounded-xl font-semibold transition-all duration-200 hover:opacity-90 hover:shadow-lg"
               style={{ backgroundColor: accent }}
             >
               Continuar
@@ -398,43 +428,39 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
       {/* ═══════════════ STEP 4: CONTACT ═══════════════ */}
       {step === 'contact' && selectedProduct && (
         <div className="space-y-4">
-          <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-5">
             <div>
-              <h3 className="font-semibold text-gray-900 text-sm">Datos de contacto</h3>
-              <p className="text-xs text-gray-400 mt-0.5">Para enviarte el presupuesto detallado.</p>
+              <h3 className="font-semibold text-gray-900">Datos de contacto</h3>
+              <p className="text-sm text-gray-400 mt-1">Para enviarte el presupuesto detallado.</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Nombre *</label>
-                <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 transition-shadow"
-                  style={{ '--tw-ring-color': accent } as React.CSSProperties}
-                  placeholder="Tu nombre" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Email *</label>
-                <input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 transition-shadow"
-                  style={{ '--tw-ring-color': accent } as React.CSSProperties}
-                  placeholder="tu@email.com" />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1.5">Nombre *</label>
+              <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-shadow"
+                style={{ '--tw-ring-color': accent } as React.CSSProperties}
+                placeholder="Tu nombre" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Telefono</label>
-                <input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 transition-shadow"
-                  style={{ '--tw-ring-color': accent } as React.CSSProperties}
-                  placeholder="+34 600 000 000" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Notas</label>
-                <input type="text" value={customerNotes} onChange={(e) => setCustomerNotes(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 transition-shadow"
-                  style={{ '--tw-ring-color': accent } as React.CSSProperties}
-                  placeholder="Detalle adicional..." />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1.5">Email *</label>
+              <input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-shadow"
+                style={{ '--tw-ring-color': accent } as React.CSSProperties}
+                placeholder="tu@email.com" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1.5">Telefono</label>
+              <input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-shadow"
+                style={{ '--tw-ring-color': accent } as React.CSSProperties}
+                placeholder="+34 600 000 000" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1.5">Notas</label>
+              <textarea value={customerNotes} onChange={(e) => setCustomerNotes(e.target.value)} rows={3}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-shadow resize-none"
+                style={{ '--tw-ring-color': accent } as React.CSSProperties}
+                placeholder="Cualquier detalle adicional..." />
             </div>
 
             {/* Summary */}
@@ -481,20 +507,20 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
 
       {/* ═══════════════ STEP 5: DONE ═══════════════ */}
       {step === 'done' && (
-        <div className="text-center py-8">
-          <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: `${accent}15` }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5" /></svg>
+        <div className="text-center py-12">
+          <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: `${accent}15` }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5" /></svg>
           </div>
-          <h3 className="text-lg font-bold text-gray-900">Presupuesto solicitado</h3>
-          <p className="text-xs text-gray-500 mt-1.5">
-            Te contactaremos a <strong className="text-gray-700">{customerEmail}</strong>
+          <h3 className="text-xl font-bold text-gray-900">Presupuesto solicitado</h3>
+          <p className="text-sm text-gray-500 mt-2 max-w-sm mx-auto">
+            Hemos recibido tu solicitud. Te contactaremos a <strong className="text-gray-700">{customerEmail}</strong> con el presupuesto detallado.
           </p>
           <button
             onClick={() => {
               setStep('boat'); setSelectedBoat(null); setSelectedProduct(null); setConfig({});
               setCustomerName(''); setCustomerEmail(''); setCustomerPhone(''); setCustomerNotes(''); setQuery('');
             }}
-            className="mt-4 px-5 py-2 text-xs rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
+            className="mt-6 px-6 py-2.5 text-sm rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
           >
             Nuevo presupuesto
           </button>
@@ -502,8 +528,8 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
       )}
 
       {/* Footer */}
-      <div className="mt-6 text-center">
-        <p className="text-[10px] text-gray-300">
+      <div className="mt-10 text-center">
+        <p className="text-xs text-gray-300">
           Powered by <span style={{ color: accent }} className="font-medium">Aerolume</span>
         </p>
       </div>
