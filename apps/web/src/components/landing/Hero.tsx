@@ -39,9 +39,9 @@ export function Hero() {
               <span className="text-xs text-white/50 tracking-wide">Plataforma SaaS para el sector nautico</span>
             </motion.div>
 
-            <h1 className="text-[2.5rem] sm:text-5xl lg:text-[4.25rem] font-bold text-white leading-[1.1] tracking-tight font-[family-name:var(--font-cormorant)]">
+            <h1 className="text-[2.5rem] sm:text-5xl lg:text-[4.25rem] font-bold text-white leading-[1.15] tracking-tight font-[family-name:var(--font-cormorant)]">
               El configurador de velas{' '}
-              <span className="italic bg-gradient-to-r from-blue-300 via-cyan-300 to-blue-400 bg-clip-text text-transparent">
+              <span className="italic" style={{ color: '#7dd3fc' }}>
                 que vende por ti
               </span>
             </h1>
@@ -69,24 +69,20 @@ export function Hero() {
             </div>
 
             {/* Trust stats */}
-            <div className="mt-16 pt-8 border-t border-white/[0.06] flex items-center gap-10">
-              {[
-                { value: '4.839+', label: 'barcos' },
-                { value: '9', label: 'tipos de vela' },
-                { value: '48h', label: 'setup' },
-              ].map((stat, i) => (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 + i * 0.1, duration: 0.5 }}
-                  className="flex items-baseline gap-2"
-                >
-                  <p className="text-2xl font-bold text-white font-[family-name:var(--font-cormorant)]">{stat.value}</p>
-                  <p className="text-sm text-white/30">{stat.label}</p>
-                </motion.div>
-              ))}
-            </div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7, duration: 0.5 }}
+              className="mt-14 pt-6 border-t border-white/[0.06]"
+            >
+              <p className="text-sm text-white/30">
+                <span className="text-white/50 font-medium">4.839+</span> barcos
+                <span className="mx-3 text-white/15">·</span>
+                <span className="text-white/50 font-medium">9</span> tipos de vela
+                <span className="mx-3 text-white/15">·</span>
+                Setup en <span className="text-white/50 font-medium">48 horas</span>
+              </p>
+            </motion.div>
           </motion.div>
 
           {/* Right: Browser mockup — takes 5 cols */}
