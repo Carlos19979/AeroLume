@@ -217,8 +217,8 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
             {/* Header */}
             <div className="text-center mb-4">
               {theme.logoUrl && <img src={theme.logoUrl} alt="Logo" className="h-6 mx-auto mb-1.5 object-contain" />}
-              <p className="text-base font-bold" style={{ color: navy, fontFamily: fontDisplay }}>Configurador de Velas</p>
-              <p className="text-[10px] text-gray-400">por Tu Veleria</p>
+              <p className="text-base font-bold" style={{ color: text, fontFamily: fontDisplay }}>Configurador de Velas</p>
+              <p className="text-[10px]" style={{ color: `${text}60` }}>por Tu Veleria</p>
             </div>
 
             {/* Stepper */}
@@ -241,15 +241,24 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
             {/* Step 1: Search */}
             {previewStep === 1 && (
               <div className="space-y-3">
-                <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-                  <span className="text-xs text-gray-400">Busca tu barco...</span>
+                <div className="flex items-center gap-2 rounded-xl px-3 py-2.5" style={{ backgroundColor: `${navy}08` }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`${text}50`} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+                  <span className="text-xs" style={{ color: `${text}40` }}>Busca tu barco...</span>
                 </div>
                 <div className="text-center py-6">
                   <div className="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center" style={{ background: `${accent}15` }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.5"><path d="M12 2L4 20h16L12 2z" opacity="0.2" fill={accent} /><path d="M12 2v18" /><path d="M4 20c0 0 4-10 8-18c4 8 8 18 8 18" /></svg>
                   </div>
-                  <p className="text-xs text-gray-400">Empieza buscando tu barco</p>
+                  <p className="text-xs" style={{ color: `${text}50` }}>Empieza buscando tu barco</p>
+                </div>
+                {/* Sample result */}
+                <div className="rounded-xl border border-gray-100 divide-y divide-gray-50">
+                  {['BAVARIA 38 CRUISER', 'BENETEAU FIRST 40'].map((name) => (
+                    <div key={name} className="flex items-center justify-between px-3 py-2.5">
+                      <span className="text-xs font-medium" style={{ color: text }}>{name}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-md" style={{ backgroundColor: `${navy}08`, color: `${text}60` }}>11.8m</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -268,7 +277,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
                     <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ backgroundColor: `${colorMain}18` }}>
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={colorMain} strokeWidth="2"><path d="M12 2L4 20h16L12 2z" opacity="0.2" fill={colorMain} /><path d="M12 2v18" /><path d="M4 20c0 0 4-10 8-18c4 8 8 18 8 18" /></svg>
                     </div>
-                    <span className="text-[10px] font-bold text-gray-700">Vela mayor</span>
+                    <span className="text-[10px] font-bold text-gray-700" style={{ color: text }}>Vela mayor</span>
                     <div className="flex-1 h-px bg-gray-100" />
                   </div>
                   <div className="grid grid-cols-2 gap-1.5">
@@ -281,7 +290,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
                           borderColor: `rgba(${hexToRgb(colorMain)}, 0.12)`,
                         }}
                       >
-                        <p className="text-[10px] font-semibold text-gray-900">{name}</p>
+                        <p className="text-[10px] font-semibold text-gray-900" style={{ color: text }}>{name}</p>
                         <p className="text-[9px] mt-0.5" style={{ color: colorMain }}>25.9 m²</p>
                         <p className="text-xs font-bold mt-1" style={{ color: accent }}>{[1165, 1188][i]} EUR</p>
                       </div>
@@ -295,7 +304,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
                     <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ backgroundColor: `${colorHead}18` }}>
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={colorHead} strokeWidth="2"><path d="M12 2L4 20h16L12 2z" opacity="0.2" fill={colorHead} /><path d="M12 2v18" /><path d="M4 20c0 0 4-10 8-18c4 8 8 18 8 18" /></svg>
                     </div>
-                    <span className="text-[10px] font-bold text-gray-700">Vela de proa</span>
+                    <span className="text-[10px] font-bold text-gray-700" style={{ color: text }}>Vela de proa</span>
                     <div className="flex-1 h-px bg-gray-100" />
                   </div>
                   <div className="grid grid-cols-2 gap-1.5">
@@ -308,7 +317,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
                           borderColor: `rgba(${hexToRgb(colorHead)}, 0.12)`,
                         }}
                       >
-                        <p className="text-[10px] font-semibold text-gray-900">{name}</p>
+                        <p className="text-[10px] font-semibold text-gray-900" style={{ color: text }}>{name}</p>
                         <p className="text-[9px] mt-0.5" style={{ color: colorHead }}>31.8 m²</p>
                         <p className="text-xs font-bold mt-1" style={{ color: accent }}>{[1336, 1398][i]} EUR</p>
                       </div>
@@ -322,7 +331,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
                     <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ backgroundColor: `${colorSpi}18` }}>
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={colorSpi} strokeWidth="2"><path d="M12 2L4 20h16L12 2z" opacity="0.2" fill={colorSpi} /><path d="M12 2v18" /><path d="M4 20c0 0 4-10 8-18c4 8 8 18 8 18" /></svg>
                     </div>
-                    <span className="text-[10px] font-bold text-gray-700">Portantes</span>
+                    <span className="text-[10px] font-bold text-gray-700" style={{ color: text }}>Portantes</span>
                     <div className="flex-1 h-px bg-gray-100" />
                   </div>
                   <div className="grid grid-cols-2 gap-1.5">
@@ -335,7 +344,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
                           borderColor: `rgba(${hexToRgb(colorSpi)}, 0.12)`,
                         }}
                       >
-                        <p className="text-[10px] font-semibold text-gray-900">{name}</p>
+                        <p className="text-[10px] font-semibold text-gray-900" style={{ color: text }}>{name}</p>
                         <p className="text-[9px] mt-0.5" style={{ color: colorSpi }}>69.1 m²</p>
                         <p className="text-xs font-bold mt-1" style={{ color: accent }}>{[2626, 3317][i]} EUR</p>
                       </div>
