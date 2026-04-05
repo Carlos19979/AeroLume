@@ -92,17 +92,28 @@ export function TenantDetailClient({ tenant, members, quotes, apiKeys }: {
 
       {/* Sidebar */}
       <div className="space-y-4">
-        {/* Info */}
+        {/* Company info */}
+        <div className="rounded-2xl bg-white border border-gray-200 p-5 space-y-3">
+          <h3 className="text-sm font-semibold text-gray-800">Empresa</h3>
+          <dl className="space-y-2 text-xs">
+            <div className="flex justify-between"><dt className="text-gray-500">Nombre</dt><dd className="text-gray-700 font-medium">{tenant.companyName || tenant.name}</dd></div>
+            {tenant.phone && <div className="flex justify-between"><dt className="text-gray-500">Telefono</dt><dd className="text-gray-700">{tenant.phone}</dd></div>}
+            {tenant.website && <div className="flex justify-between"><dt className="text-gray-500">Web</dt><dd><a href={tenant.website.startsWith('http') ? tenant.website : `https://${tenant.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{tenant.website}</a></dd></div>}
+            {(tenant.city || tenant.country) && <div className="flex justify-between"><dt className="text-gray-500">Ubicacion</dt><dd className="text-gray-700">{[tenant.city, tenant.country].filter(Boolean).join(', ')}</dd></div>}
+          </dl>
+        </div>
+
+        {/* Details */}
         <div className="rounded-2xl bg-white border border-gray-200 p-5 space-y-3">
           <h3 className="text-sm font-semibold text-gray-800">Detalles</h3>
           <dl className="space-y-2 text-xs">
-            <div className="flex justify-between"><dt className="text-gray-400">Slug</dt><dd className="text-gray-600 font-mono">{tenant.slug}</dd></div>
-            <div className="flex justify-between"><dt className="text-gray-400">Plan</dt><dd className="text-gray-600">{tenant.plan}</dd></div>
-            <div className="flex justify-between"><dt className="text-gray-400">Estado</dt>
+            <div className="flex justify-between"><dt className="text-gray-500">Slug</dt><dd className="text-gray-600 font-mono">{tenant.slug}</dd></div>
+            <div className="flex justify-between"><dt className="text-gray-500">Plan</dt><dd className="text-gray-600">{tenant.plan}</dd></div>
+            <div className="flex justify-between"><dt className="text-gray-500">Estado</dt>
               <dd><span className={`px-1.5 py-0.5 rounded ${STATUS_COLORS[tenant.subscriptionStatus] || STATUS_COLORS.canceled}`}>{tenant.subscriptionStatus}</span></dd>
             </div>
-            <div className="flex justify-between"><dt className="text-gray-400">Creado</dt><dd className="text-gray-600">{tenant.createdAt ? new Date(tenant.createdAt).toLocaleDateString('es') : '—'}</dd></div>
-            <div className="flex justify-between"><dt className="text-gray-400">ID</dt><dd className="text-gray-400 font-mono text-[10px]">{tenant.id.slice(0, 12)}...</dd></div>
+            <div className="flex justify-between"><dt className="text-gray-500">Creado</dt><dd className="text-gray-600">{tenant.createdAt ? new Date(tenant.createdAt).toLocaleDateString('es') : '—'}</dd></div>
+            <div className="flex justify-between"><dt className="text-gray-500">ID</dt><dd className="text-gray-500 font-mono text-[10px]">{tenant.id.slice(0, 12)}...</dd></div>
           </dl>
         </div>
 

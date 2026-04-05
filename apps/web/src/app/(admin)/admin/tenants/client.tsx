@@ -6,6 +6,11 @@ type TenantRow = {
   id: string;
   name: string;
   slug: string;
+  companyName: string | null;
+  phone: string | null;
+  website: string | null;
+  country: string | null;
+  city: string | null;
   plan: string | null;
   subscriptionStatus: string | null;
   createdAt: Date | null;
@@ -53,8 +58,10 @@ export function TenantsClient({ tenants }: { tenants: TenantRow[] }) {
             {filtered.map((t) => (
               <tr key={t.id} className="hover:bg-gray-50">
                 <td className="px-5 py-3">
-                  <p className="text-gray-800 font-medium">{t.name}</p>
-                  <p className="text-[10px] text-gray-300 font-mono">{t.slug}</p>
+                  <p className="text-gray-800 font-medium">{t.companyName || t.name}</p>
+                  <p className="text-[10px] text-gray-500">
+                    {[t.city, t.country].filter(Boolean).join(', ') || t.slug}
+                  </p>
                 </td>
                 <td className="px-5 py-3 text-gray-500 text-xs">{t.plan || '—'}</td>
                 <td className="px-5 py-3">
