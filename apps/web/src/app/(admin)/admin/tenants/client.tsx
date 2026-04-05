@@ -139,6 +139,8 @@ export function TenantsClient({ tenants }: { tenants: TenantRow[] }) {
               <thead>
                 <tr className="text-xs text-gray-500 border-b border-gray-100">
                   <th className="text-left px-5 py-3 font-medium">Empresa</th>
+                  <th className="text-left px-5 py-3 font-medium">Telefono</th>
+                  <th className="text-left px-5 py-3 font-medium">Web</th>
                   <th className="text-left px-5 py-3 font-medium">Ubicacion</th>
                   <th className="text-left px-5 py-3 font-medium">Plan</th>
                   <th className="text-left px-5 py-3 font-medium">Estado</th>
@@ -153,8 +155,12 @@ export function TenantsClient({ tenants }: { tenants: TenantRow[] }) {
                   <tr key={t.id} className={`hover:bg-gray-50 transition-colors ${i < filtered.length - 1 ? 'border-b border-gray-50' : ''}`}>
                     <td className="px-5 py-3">
                       <p className="text-gray-800 font-medium">{t.companyName || t.name}</p>
-                      {t.website && <p className="text-[10px] text-gray-500">{t.website}</p>}
-                      {t.phone && <p className="text-[10px] text-gray-500">{t.phone}</p>}
+                    </td>
+                    <td className="px-5 py-3 text-gray-600 text-xs">{t.phone || '—'}</td>
+                    <td className="px-5 py-3 text-xs">
+                      {t.website ? (
+                        <a href={t.website.startsWith('http') ? t.website : `https://${t.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{t.website}</a>
+                      ) : '—'}
                     </td>
                     <td className="px-5 py-3 text-gray-600 text-xs">
                       {[t.city, t.country].filter(Boolean).join(', ') || '—'}
