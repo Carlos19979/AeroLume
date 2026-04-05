@@ -4,7 +4,6 @@ import { useState } from 'react';
 
 type Tenant = { [key: string]: any };
 type Member = { id: string; userId: string; role: string; [key: string]: any };
-type ProductRow = { id: string; name: string; sailType: string; active: boolean | null };
 type QuoteRow = { id: string; boatModel: string | null; customerName: string | null; status: string; createdAt: Date | null };
 type ApiKeyRow = { id: string; keyPrefix: string; name: string; createdAt: Date | null };
 
@@ -15,10 +14,9 @@ const STATUS_COLORS: Record<string, string> = {
   canceled: 'bg-white/10 text-white/40',
 };
 
-export function TenantDetailClient({ tenant, members, products, quotes, apiKeys }: {
+export function TenantDetailClient({ tenant, members, quotes, apiKeys }: {
   tenant: Tenant;
   members: Member[];
-  products: ProductRow[];
   quotes: QuoteRow[];
   apiKeys: ApiKeyRow[];
 }) {
@@ -61,32 +59,6 @@ export function TenantDetailClient({ tenant, members, products, quotes, apiKeys 
           >
             Abrir en nueva pestaña
           </a>
-        </div>
-
-        {/* Products */}
-        <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] overflow-hidden">
-          <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-white/80">Productos ({products.length})</h3>
-          </div>
-          {products.length === 0 ? (
-            <p className="px-5 py-6 text-xs text-white/30">Sin productos</p>
-          ) : (
-            <table className="w-full text-xs">
-              <tbody className="divide-y divide-white/[0.04]">
-                {products.map((p) => (
-                  <tr key={p.id} className="hover:bg-white/[0.02]">
-                    <td className="px-5 py-2.5 text-white/70">{p.name}</td>
-                    <td className="px-5 py-2.5 text-white/40">{p.sailType}</td>
-                    <td className="px-5 py-2.5">
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] ${p.active ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/30'}`}>
-                        {p.active ? 'activo' : 'inactivo'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
         </div>
 
         {/* Quotes */}
