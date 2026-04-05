@@ -1,30 +1,152 @@
-import { db, tenants, analyticsEvents, boats, sql } from '@aerolume/db';
+import { db, tenants, tenantMembers, analyticsEvents, boats, sql, desc, eq } from '@aerolume/db';
 
 export default async function AdminOverviewPage() {
   const [tenantCount] = await db.select({ count: sql<number>`count(*)::int` }).from(tenants);
   const [eventCount] = await db.select({ count: sql<number>`count(*)::int` }).from(analyticsEvents);
   const [boatCount] = await db.select({ count: sql<number>`count(*)::int` }).from(boats);
 
-  const stats = [
-    { label: 'Tenants', value: tenantCount?.count ?? 0, color: '#3b82f6' },
-    { label: 'Eventos', value: eventCount?.count ?? 0, color: '#8b5cf6' },
-    { label: 'Barcos', value: boatCount?.count ?? 0, color: '#ec4899' },
-  ];
+  // Recent tenants
+  const recentTenants = await db
+    .select({ id: tenants.id, name: tenants.name, plan: tenants.plan, subscriptionStatus: tenants.subscriptionStatus, createdAt: tenants.createdAt })
+    .from(tenants)
+    .orderBy(desc(tenants.createdAt))
+    .limit(5);
+
+  // Recent users (from auth.users)
+  const recentUsers = await db.execute(sql`
+    SELECT id, email, raw_user_meta_data->>'full_name' as full_name, created_at
+    FROM auth.users ORDER BY created_at DESC LIMIT 5
+  `) as any[];
+
+  // Recent events
+  const recentEvents = await db
+    .select({
+      id: analyticsEvents.id,
+      eventType: analyticsEvents.eventType,
+      boatModel: analyticsEvents.boatModel,
+      tenantName: tenants.name,
+      createdAt: analyticsEvents.createdAt,
+    })
+    .from(analyticsEvents)
+    .leftJoin(tenants, eq(analyticsEvents.tenantId, tenants.id))
+    .orderBy(desc(analyticsEvents.createdAt))
+    .limit(8);
+
+  const EVENT_LABELS: Record<string, string> = {
+    configurator_opened: 'Configurador abierto',
+    boat_selected: 'Barco seleccionado',
+    product_selected: 'Producto seleccionado',
+    quote_created: 'Presupuesto creado',
+  };
+
+  const STATUS_COLORS: Record<string, string> = {
+    active: 'bg-green-50 text-green-600',
+    past_due: 'bg-red-50 text-red-600',
+    canceled: 'bg-gray-100 text-gray-500',
+    prueba: 'bg-amber-50 text-amber-600',
+  };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <h2 className="text-xl font-bold text-gray-900">Overview</h2>
 
+      {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="rounded-2xl bg-white border border-gray-200 p-5">
-            <p className="text-2xl font-bold text-gray-900">{stat.value.toLocaleString('es')}</p>
-            <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
-            <div className="mt-3 h-1 rounded-full bg-gray-100">
-              <div className="h-1 rounded-full" style={{ backgroundColor: stat.color, width: '60%' }} />
-            </div>
+        <a href="/admin/tenants" className="rounded-2xl bg-white border border-gray-200 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all">
+          <p className="text-2xl font-bold text-gray-900">{tenantCount?.count ?? 0}</p>
+          <p className="text-xs text-gray-500 mt-1">Tenants</p>
+          <div className="mt-3 h-1 rounded-full bg-gray-100">
+            <div className="h-1 rounded-full bg-blue-500" style={{ width: '60%' }} />
           </div>
-        ))}
+        </a>
+        <a href="/admin/logs" className="rounded-2xl bg-white border border-gray-200 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all">
+          <p className="text-2xl font-bold text-gray-900">{eventCount?.count ?? 0}</p>
+          <p className="text-xs text-gray-500 mt-1">Eventos</p>
+          <div className="mt-3 h-1 rounded-full bg-gray-100">
+            <div className="h-1 rounded-full bg-violet-500" style={{ width: '60%' }} />
+          </div>
+        </a>
+        <a href="/admin/boats" className="rounded-2xl bg-white border border-gray-200 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all">
+          <p className="text-2xl font-bold text-gray-900">{boatCount?.count ?? 0}</p>
+          <p className="text-xs text-gray-500 mt-1">Barcos</p>
+          <div className="mt-3 h-1 rounded-full bg-gray-100">
+            <div className="h-1 rounded-full bg-pink-500" style={{ width: '60%' }} />
+          </div>
+        </a>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent tenants */}
+        <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-800">Ultimos tenants</h3>
+            <a href="/admin/tenants" className="text-xs text-blue-600 hover:underline">Ver todos</a>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {recentTenants.map((t) => (
+              <a key={t.id} href={`/admin/tenants/${t.id}`} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">{t.name}</p>
+                  <p className="text-xs text-gray-500">{t.createdAt ? new Date(t.createdAt).toLocaleDateString('es', { day: 'numeric', month: 'short' }) : '—'}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[t.subscriptionStatus || ''] || STATUS_COLORS.canceled}`}>
+                    {t.subscriptionStatus}
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">{t.plan}</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent users */}
+        <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-800">Ultimos usuarios</h3>
+            <a href="/admin/users" className="text-xs text-blue-600 hover:underline">Ver todos</a>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {recentUsers.map((u: any) => (
+              <div key={u.id} className="flex items-center justify-between px-5 py-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">{u.full_name || u.email?.split('@')[0]}</p>
+                  <p className="text-xs text-gray-500">{u.email}</p>
+                </div>
+                <p className="text-xs text-gray-500">{u.created_at ? new Date(u.created_at).toLocaleDateString('es', { day: 'numeric', month: 'short' }) : '—'}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Recent activity */}
+      <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-800">Actividad reciente</h3>
+          <a href="/admin/logs" className="text-xs text-blue-600 hover:underline">Ver todo</a>
+        </div>
+        <div className="divide-y divide-gray-50">
+          {recentEvents.map((e) => (
+            <div key={e.id} className="flex items-center justify-between px-5 py-2.5">
+              <div className="flex items-center gap-3">
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                  e.eventType === 'quote_created' ? 'bg-green-50 text-green-600' :
+                  e.eventType === 'boat_selected' ? 'bg-blue-50 text-blue-600' :
+                  e.eventType === 'product_selected' ? 'bg-violet-50 text-violet-600' :
+                  'bg-gray-100 text-gray-500'
+                }`}>
+                  {EVENT_LABELS[e.eventType] || e.eventType}
+                </span>
+                {e.boatModel && <span className="text-xs text-gray-500">{e.boatModel}</span>}
+              </div>
+              <div className="flex items-center gap-3">
+                {e.tenantName && <span className="text-xs text-gray-500">{e.tenantName}</span>}
+                <span className="text-xs text-gray-500">{e.createdAt ? new Date(e.createdAt).toLocaleDateString('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
