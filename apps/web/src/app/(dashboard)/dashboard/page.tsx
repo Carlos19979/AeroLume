@@ -9,7 +9,7 @@ export default async function DashboardPage() {
 
     if (!user) return null;
 
-    const tenant = await getTenantForUser(user.id);
+    const tenant = await getTenantForUser(user.id, user.email);
     const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario';
 
     if (!tenant) {

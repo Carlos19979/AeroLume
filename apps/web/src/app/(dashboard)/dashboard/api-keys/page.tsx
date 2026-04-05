@@ -9,7 +9,7 @@ export default async function ApiKeysPage() {
 
   if (!user) return null;
 
-  const tenant = await getTenantForUser(user.id);
+  const tenant = await getTenantForUser(user.id, user.email);
   if (!tenant) {
     return (
       <div className="text-center py-12 text-gray-500">

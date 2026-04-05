@@ -12,7 +12,7 @@ export default async function ProductEditPage({ params }: PageProps) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const tenant = await getTenantForUser(user.id);
+  const tenant = await getTenantForUser(user.id, user.email);
   if (!tenant) return notFound();
 
   const [product] = await db

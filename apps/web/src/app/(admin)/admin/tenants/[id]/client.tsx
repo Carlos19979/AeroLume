@@ -51,13 +51,15 @@ export function TenantDetailClient({ tenant, members, products, quotes, apiKeys 
         <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-5 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-blue-300">Impersonar tenant</p>
-            <p className="text-xs text-blue-300/50 mt-0.5">Ver el dashboard como si fueras este tenant</p>
+            <p className="text-xs text-blue-300/50 mt-0.5">Abre el dashboard en una nueva pestaña como si fueras este tenant</p>
           </div>
           <a
-            href={`/dashboard?impersonate=${tenant.id}`}
+            href={`/api/admin/impersonate?tenantId=${tenant.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="px-4 py-2 bg-blue-500 text-white text-xs font-medium rounded-lg hover:bg-blue-400 transition-colors"
           >
-            Abrir dashboard
+            Abrir en nueva pestaña
           </a>
         </div>
 

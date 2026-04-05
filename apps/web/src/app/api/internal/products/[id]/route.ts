@@ -11,7 +11,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const tenant = await getTenantForUser(user.id);
+  const tenant = await getTenantForUser(user.id, user.email);
   if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
 
   const [product] = await db
@@ -36,7 +36,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const tenant = await getTenantForUser(user.id);
+  const tenant = await getTenantForUser(user.id, user.email);
   if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
 
   const body = await request.json();
@@ -68,7 +68,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const tenant = await getTenantForUser(user.id);
+  const tenant = await getTenantForUser(user.id, user.email);
   if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
 
   await db
