@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { db, products, eq } from '@aerolume/db';
+import { db, products, tenants, eq } from '@aerolume/db';
 import { getTenantForUser } from '@/lib/tenant';
+import { canCreateProducts } from '@/lib/plan-gates';
 
 export async function GET() {
   const supabase = await createClient();
@@ -45,6 +46,12 @@ export async function POST(request: Request) {
 
   const tenant = await getTenantForUser(user.id, user.email);
   if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
+
+  // Check plan
+  const [full] = await db.select({ plan: tenants.plan, subscriptionStatus: tenants.subscriptionStatus }).from(tenants).where(eq(tenants.id, tenant.id)).limit(1);
+  if (full && !canCreateProducts(full)) {
+    return NextResponse.json({ error: 'Tu plan no permite crear productos. Contacta para activar.' }, { status: 403 });
+  }
 
   const body = await request.json();
   if (!body.name || !body.sailType) {

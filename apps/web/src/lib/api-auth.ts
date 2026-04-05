@@ -54,13 +54,17 @@ export async function validateApiKey(request: Request): Promise<ValidationResult
     return { ok: false, error: 'API key expired', status: 401 };
   }
 
-  // Check origin against tenant's allowed_origins
+  // Check tenant status — widget only works for pro + active
   const origin = request.headers.get('origin') || request.headers.get('referer');
   const [tenant] = await db
-    .select({ allowedOrigins: tenants.allowedOrigins, webhookUrl: tenants.webhookUrl })
+    .select({ allowedOrigins: tenants.allowedOrigins, webhookUrl: tenants.webhookUrl, plan: tenants.plan, subscriptionStatus: tenants.subscriptionStatus })
     .from(tenants)
     .where(eq(tenants.id, found.tenantId))
     .limit(1);
+
+  if (tenant && (tenant.plan !== 'pro' || tenant.subscriptionStatus !== 'active')) {
+    return { ok: false, error: 'Account inactive', status: 403 };
+  }
 
   if (tenant?.allowedOrigins && tenant.allowedOrigins.length > 0 && origin) {
     const originHost = origin.replace(/\/$/, '');

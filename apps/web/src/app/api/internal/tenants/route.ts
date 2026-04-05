@@ -29,6 +29,8 @@ export async function POST(request: Request) {
         .values({
             name,
             slug,
+            plan: 'prueba',
+            subscriptionStatus: 'active',
             companyName: body.companyName || null,
             phone: body.phone || null,
             website: body.website || null,
