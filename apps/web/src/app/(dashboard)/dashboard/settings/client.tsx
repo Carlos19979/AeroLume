@@ -6,6 +6,11 @@ type Settings = {
   id: string;
   name: string;
   slug: string;
+  companyName: string | null;
+  phone: string | null;
+  website: string | null;
+  country: string | null;
+  city: string | null;
   customDomain: string | null;
   locale: string | null;
   currency: string | null;
@@ -35,6 +40,11 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
   const [saved, setSaved] = useState(false);
 
   const [name, setName] = useState(settings.name);
+  const [companyName, setCompanyName] = useState(settings.companyName || '');
+  const [phone, setPhone] = useState(settings.phone || '');
+  const [siteUrl, setSiteUrl] = useState(settings.website || '');
+  const [country, setCountry] = useState(settings.country || '');
+  const [city, setCity] = useState(settings.city || '');
   const [customDomain, setCustomDomain] = useState(settings.customDomain || '');
   const [locale, setLocale] = useState(settings.locale || 'es');
   const [currency, setCurrency] = useState(settings.currency || 'EUR');
@@ -55,6 +65,11 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name,
+        companyName: companyName || null,
+        phone: phone || null,
+        website: siteUrl || null,
+        country: country || null,
+        city: city || null,
         customDomain: customDomain || null,
         locale,
         currency,
@@ -78,14 +93,48 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
           <h3 className="font-medium text-gray-900">General</h3>
 
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Nombre del workspace</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Nombre del workspace</label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]" />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Nombre de empresa</label>
+              <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                placeholder="Tu veleria" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Telefono</label>
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                placeholder="+34 600 000 000" />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Web</label>
+              <input type="url" value={siteUrl} onChange={(e) => setSiteUrl(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                placeholder="tuveleria.com" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Pais</label>
+              <input type="text" value={country} onChange={(e) => setCountry(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                placeholder="España" />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Ciudad</label>
+              <input type="text" value={city} onChange={(e) => setCity(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                placeholder="Valencia" />
+            </div>
           </div>
 
           <div>
