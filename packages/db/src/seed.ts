@@ -9,6 +9,7 @@ import { resolve } from 'path';
 config({ path: resolve(__dirname, '../../../.env') });
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { eq } from 'drizzle-orm';
 import { boats } from './schema/boats';
 import { tenants } from './schema/tenants';
 import { products } from './schema/products';
@@ -37,7 +38,7 @@ async function seedBoats() {
   console.log(`Found ${rawBoats.length} boats to import`);
 
   // Insert in batches of 500
-  const BATCH_SIZE = 5;
+  const BATCH_SIZE = 500;
   let inserted = 0;
 
   for (let i = 0; i < rawBoats.length; i += BATCH_SIZE) {
@@ -76,7 +77,7 @@ async function seedBoats() {
     }));
 
     try {
-      await db.insert(boats).values(batch);
+      await db.insert(boats).values(batch).onConflictDoNothing();
       inserted += batch.length;
       console.log(`  Inserted ${inserted}/${rawBoats.length} boats`);
     } catch (err: any) {
@@ -192,19 +193,28 @@ function slugify(text: string): string {
 async function seedDemoTenant() {
   console.log('Creating demo tenant...');
 
-  const [tenant] = await db
-    .insert(tenants)
-    .values({
-      name: 'Aerolume Demo',
-      slug: 'demo',
-      locale: 'es',
-      currency: 'EUR',
-      plan: 'enterprise',
-      subscriptionStatus: 'active',
-    })
-    .returning();
+  // Check if demo tenant already exists (idempotent)
+  const existing = await db.select().from(tenants).where(eq(tenants.slug, 'demo'));
+  let tenant;
 
-  console.log(`✓ Created tenant: ${tenant.name} (${tenant.id})`);
+  if (existing.length > 0) {
+    tenant = existing[0];
+    console.log(`✓ Demo tenant already exists: ${tenant.name} (${tenant.id})`);
+  } else {
+    [tenant] = await db
+      .insert(tenants)
+      .values({
+        name: 'Aerolume Demo',
+        slug: 'demo',
+        locale: 'es',
+        currency: 'EUR',
+        plan: 'enterprise',
+        subscriptionStatus: 'active',
+      })
+      .returning();
+
+    console.log(`✓ Created tenant: ${tenant.name} (${tenant.id})`);
+  }
 
   console.log('Seeding products and config fields...');
 
@@ -221,7 +231,14 @@ async function seedDemoTenant() {
         sailType: config.sailType,
         active: true,
       })
+      .onConflictDoNothing({ target: [products.tenantId, products.slug] })
       .returning();
+
+    // If product already existed, skip config fields
+    if (!product) {
+      console.log(`  - ${config.name} already exists, skipping`);
+      continue;
+    }
 
     // Insert config fields
     const fieldValues = config.fields.map((field, idx) => ({

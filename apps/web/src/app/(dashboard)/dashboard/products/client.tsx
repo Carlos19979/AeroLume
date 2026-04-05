@@ -2,18 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-const SAIL_TYPE_LABELS: Record<string, string> = {
-  gvstd: 'Mayor Clásica',
-  gvfull: 'Mayor Full Batten',
-  gve: 'Mayor Enrollable',
-  gse: 'Génova Enrollable',
-  gn: 'Génova Mosquetones',
-  gen: 'Gennaker / Code 0',
-  spisym: 'Spinnaker Simétrico',
-  spiasy: 'Spinnaker Asimétrico',
-  furling: 'Code S / Furling',
-};
+import { SAIL_TYPE_LABELS } from '@/lib/constants';
 
 type ProductRow = {
   id: string;
@@ -33,45 +22,79 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
   const [newName, setNewName] = useState('');
   const [newSailType, setNewSailType] = useState('gvstd');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   async function handleCreate() {
     if (!newName.trim()) return;
     setLoading(true);
+    try {
+      setError(null);
+      const res = await fetch('/api/internal/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName, sailType: newSailType }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      const { data } = await res.json();
 
-    const res = await fetch('/api/internal/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newName, sailType: newSailType }),
-    });
-    const { data } = await res.json();
-
-    setProductsList((prev) => [...prev, data]);
-    setNewName('');
-    setShowCreate(false);
-    setLoading(false);
+      setProductsList((prev) => [...prev, data]);
+      setNewName('');
+      setShowCreate(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleToggleActive(id: string, currentActive: boolean | null) {
-    const newActive = !currentActive;
-    await fetch(`/api/internal/products/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ active: newActive }),
-    });
-    setProductsList((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, active: newActive } : p))
-    );
+    try {
+      setError(null);
+      const newActive = !currentActive;
+      const res = await fetch(`/api/internal/products/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: newActive }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      setProductsList((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, active: newActive } : p))
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
+    }
   }
 
   async function handleDelete(id: string) {
     if (!confirm('¿Eliminar este producto? Esta acción no se puede deshacer.')) return;
-    await fetch(`/api/internal/products/${id}`, { method: 'DELETE' });
-    setProductsList((prev) => prev.filter((p) => p.id !== id));
+    try {
+      setError(null);
+      const res = await fetch(`/api/internal/products/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      setProductsList((prev) => prev.filter((p) => p.id !== id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
+    }
   }
 
   return (
     <>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
       {showCreate ? (
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <h3 className="font-medium text-gray-900 mb-3">Nuevo producto</h3>

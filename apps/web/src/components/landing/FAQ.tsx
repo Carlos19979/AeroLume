@@ -31,12 +31,14 @@ const QUESTIONS = [
   },
 ];
 
-function FAQItem({ q, a }: { q: string; a: string }) {
+function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="border-b border-gray-100 last:border-0">
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-controls={`faq-answer-${index}`}
         className="flex items-center justify-between w-full py-5 text-left group"
       >
         <span className="text-sm font-semibold text-gray-900 group-hover:text-gray-700 transition-colors pr-4">{q}</span>
@@ -46,6 +48,9 @@ function FAQItem({ q, a }: { q: string; a: string }) {
         />
       </button>
       <div
+        id={`faq-answer-${index}`}
+        role="region"
+        aria-hidden={!open}
         className="overflow-hidden transition-all duration-300"
         style={{ maxHeight: open ? '200px' : '0', opacity: open ? 1 : 0 }}
       >
@@ -76,8 +81,8 @@ export function FAQ() {
           viewport={{ once: true }}
           className="rounded-3xl border border-gray-100 bg-white px-6"
         >
-          {QUESTIONS.map((item) => (
-            <FAQItem key={item.q} q={item.q} a={item.a} />
+          {QUESTIONS.map((item, index) => (
+            <FAQItem key={item.q} q={item.q} a={item.a} index={index} />
           ))}
         </motion.div>
       </div>

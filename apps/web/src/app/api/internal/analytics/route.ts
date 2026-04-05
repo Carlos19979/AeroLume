@@ -1,16 +1,8 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { db, analyticsEvents, eq, sql, desc } from '@aerolume/db';
-import { getTenantForUser } from '@/lib/tenant';
+import { withTenantAuth } from '@/lib/auth-helpers';
 
-export async function GET() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
-
+export const GET = withTenantAuth(async (_request, { tenant }) => {
   // Total events
   const [totalResult] = await db
     .select({ count: sql<number>`count(*)::int` })
@@ -81,4 +73,4 @@ export async function GET() {
       perDay,
     },
   });
-}
+});

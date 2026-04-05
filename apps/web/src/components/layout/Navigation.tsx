@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
+import { Logo } from '@/components/ui/Logo';
 
 const NAV_LINKS = [
     { href: '/#producto', label: 'Producto' },
@@ -39,22 +40,7 @@ export function Navigation() {
             >
                 <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-8">
                     <Link href="/" className="group flex items-center gap-2">
-                        <div
-                            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-300"
-                            style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : '#0b5faa' }}
-                        >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M12 2L4 20h16L12 2z" opacity="0.3" fill="white" />
-                                <path d="M12 2v18" /><path d="M4 20c0 0 4-10 8-18c4 8 8 18 8 18" />
-                            </svg>
-                        </div>
-                        <span
-                            className={`text-lg font-bold tracking-[0.15em] uppercase transition-colors duration-300 font-[family-name:var(--font-cormorant)] ${
-                                isDark ? 'text-white' : 'text-[#0a2540]'
-                            }`}
-                        >
-                            Aerolume
-                        </span>
+                        <Logo variant={isDark ? 'light' : 'dark'} />
                     </Link>
 
                     <div className="hidden lg:flex items-center gap-1">
@@ -99,6 +85,8 @@ export function Navigation() {
                     <button
                         type="button"
                         onClick={() => setMobileOpen(!mobileOpen)}
+                        aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
+                        aria-expanded={mobileOpen}
                         className={`lg:hidden p-2 transition-colors ${isDark ? 'text-white/70' : 'text-gray-600'}`}
                     >
                         {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}

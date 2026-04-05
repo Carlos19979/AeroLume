@@ -65,14 +65,19 @@ function init(config: AerolumeConfig) {
 
   // Listen for messages from the embed
   window.addEventListener('message', (event) => {
+    if (event.origin !== new URL(EMBED_BASE_URL).origin) return;
     if (event.source !== iframe.contentWindow) return;
 
     const { type, payload } = event.data ?? {};
 
     switch (type) {
-      case 'aerolume:resize':
-        iframe.style.height = `${payload.height}px`;
+      case 'aerolume:resize': {
+        const height = Number(payload?.height);
+        if (Number.isFinite(height) && height > 0) {
+          iframe.style.height = `${height}px`;
+        }
         break;
+      }
       case 'aerolume:boat-selected':
         config.onBoatSelected?.(payload);
         break;

@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { validateApiKey } from '@/lib/api-auth';
 import { db, quotes, quoteItems, tenants, eq } from '@aerolume/db';
+import { isInternalUrl } from '@/lib/url-validation';
+import { withCors } from '@/lib/cors';
+import { validateBody, createQuoteSchema } from '@/lib/validations';
 
 export async function POST(request: Request) {
   const auth = await validateApiKey(request);
@@ -9,26 +12,32 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
+  const validation = validateBody(createQuoteSchema, body);
+  if ('error' in validation) {
+    const origin = request.headers.get('origin');
+    return withCors(NextResponse.json({ error: validation.error }, { status: 400 }), origin);
+  }
+  const data = validation.data;
 
   const [quote] = await db
     .insert(quotes)
     .values({
       tenantId: auth.ctx.tenantId,
-      boatId: body.boatId || null,
-      boatModel: body.boatModel || null,
-      boatLength: body.boatLength || null,
+      boatId: data.boatId || null,
+      boatModel: data.boatModel || null,
+      boatLength: data.boatLength || null,
       status: 'draft',
-      customerName: body.customerName || null,
-      customerEmail: body.customerEmail || null,
-      customerPhone: body.customerPhone || null,
-      customerNotes: body.customerNotes || null,
-      currency: body.currency || 'EUR',
+      customerName: data.customerName || null,
+      customerEmail: data.customerEmail || null,
+      customerPhone: data.customerPhone || null,
+      customerNotes: data.customerNotes || null,
+      currency: data.currency,
     })
     .returning();
 
   let items: any[] = [];
-  if (body.items && Array.isArray(body.items)) {
-    const itemValues = body.items.map((item: any, idx: number) => ({
+  if (data.items && Array.isArray(data.items)) {
+    const itemValues = data.items.map((item: any, idx: number) => ({
       quoteId: quote.id,
       productId: item.productId || null,
       sailType: item.sailType || 'unknown',
@@ -50,7 +59,7 @@ export async function POST(request: Request) {
     .where(eq(tenants.id, auth.ctx.tenantId))
     .limit(1);
 
-  if (tenant?.webhookUrl) {
+  if (tenant?.webhookUrl && !isInternalUrl(tenant.webhookUrl)) {
     fetch(tenant.webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -79,5 +88,11 @@ export async function POST(request: Request) {
     }).catch(() => {});
   }
 
-  return NextResponse.json({ data: { id: quote.id, status: quote.status } });
+  const origin = request.headers.get('origin');
+  return withCors(NextResponse.json({ data: { id: quote.id, status: quote.status } }), origin);
+}
+
+export async function OPTIONS(request: Request) {
+  const origin = request.headers.get('origin');
+  return withCors(new NextResponse(null, { status: 204 }), origin);
 }

@@ -1,21 +1,11 @@
-import { createClient } from '@/lib/supabase/server';
-import { getTenantForUser } from '@/lib/tenant';
+import { getAuthenticatedTenant } from '@/lib/auth-page';
 import { db, products, eq } from '@aerolume/db';
 import { ProductsClient } from './client';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default async function ProductsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) {
-    return (
-      <div className="text-center py-12 text-gray-500">
-        No tienes un workspace configurado.
-      </div>
-    );
-  }
+  const auth = await getAuthenticatedTenant();
+  if (!auth) return null;
 
   const list = await db
     .select({
@@ -30,16 +20,11 @@ export default async function ProductsPage() {
       createdAt: products.createdAt,
     })
     .from(products)
-    .where(eq(products.tenantId, tenant.id));
+    .where(eq(products.tenantId, auth.tenant.id));
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-900">Productos</h2>
-        <p className="text-gray-500 mt-1">
-          Gestiona tu catálogo de velas y configuraciones.
-        </p>
-      </div>
+      <PageHeader title="Productos" description="Gestiona tu catálogo de velas y configuraciones." />
       <ProductsClient initialProducts={list} />
     </div>
   );

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validateApiKey } from '@/lib/api-auth';
-import { db, products, productConfigFields, eq, inArray } from '@aerolume/db';
+import { db, products, productConfigFields, eq, inArray, and } from '@aerolume/db';
+import { withCors } from '@/lib/cors';
 
 export async function GET(request: Request) {
   const auth = await validateApiKey(request);
@@ -11,7 +12,10 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const sailType = url.searchParams.get('sailType');
 
-  let query = db
+  const conditions = [eq(products.tenantId, auth.ctx.tenantId)];
+  if (sailType) conditions.push(eq(products.sailType, sailType as typeof products.sailType.enumValues[number]));
+
+  const productList = await db
     .select({
       id: products.id,
       name: products.name,
@@ -28,14 +32,7 @@ export async function GET(request: Request) {
       sortOrder: products.sortOrder,
     })
     .from(products)
-    .where(eq(products.tenantId, auth.ctx.tenantId))
-    .$dynamic();
-
-  if (sailType) {
-    query = query.where(eq(products.sailType, sailType));
-  }
-
-  const productList = await query;
+    .where(and(...conditions));
 
   // Fetch config fields for all products
   const productIds = productList.map((p) => p.id);
@@ -66,5 +63,11 @@ export async function GET(request: Request) {
       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
   }));
 
-  return NextResponse.json({ data: result });
+  const origin = request.headers.get('origin');
+  return withCors(NextResponse.json({ data: result }), origin);
+}
+
+export async function OPTIONS(request: Request) {
+  const origin = request.headers.get('origin');
+  return withCors(new NextResponse(null, { status: 204 }), origin);
 }

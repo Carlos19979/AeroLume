@@ -1,4 +1,8 @@
-import { pgTable, uuid, text, timestamp, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, boolean, pgEnum, unique } from 'drizzle-orm/pg-core';
+
+export const tenantPlanEnum = pgEnum('tenant_plan', ['prueba', 'pro', 'enterprise']);
+export const subscriptionStatusEnum = pgEnum('subscription_status', ['trialing', 'active', 'past_due', 'canceled']);
+export const memberRoleEnum = pgEnum('member_role', ['owner', 'admin', 'viewer']);
 
 export const tenants = pgTable('tenants', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -25,9 +29,9 @@ export const tenants = pgTable('tenants', {
   currency: text('currency').default('EUR'),
 
   // Subscription
-  plan: text('plan').default('starter'),
+  plan: tenantPlanEnum('plan').default('prueba'),
   stripeCustomerId: text('stripe_customer_id'),
-  subscriptionStatus: text('subscription_status').default('trialing'),
+  subscriptionStatus: subscriptionStatusEnum('subscription_status').default('trialing'),
   trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),
 
   // Settings
@@ -43,15 +47,21 @@ export const tenants = pgTable('tenants', {
   city: text('city'),
 
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().$onUpdateFn(() => new Date()),
 });
 
-export const tenantMembers = pgTable('tenant_members', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  tenantId: uuid('tenant_id')
-    .references(() => tenants.id, { onDelete: 'cascade' })
-    .notNull(),
-  userId: uuid('user_id').notNull(), // References Supabase auth.users
-  role: text('role').default('admin').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
+export const tenantMembers = pgTable(
+  'tenant_members',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .references(() => tenants.id, { onDelete: 'cascade' })
+      .notNull(),
+    userId: uuid('user_id').notNull(), // References Supabase auth.users
+    role: memberRoleEnum('role').default('admin').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    unique('tenant_member_unique').on(table.tenantId, table.userId),
+  ],
+);

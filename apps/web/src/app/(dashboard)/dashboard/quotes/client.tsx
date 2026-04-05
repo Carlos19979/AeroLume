@@ -2,14 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  draft: { label: 'Borrador', color: 'bg-gray-100 text-gray-600' },
-  sent: { label: 'Enviado', color: 'bg-blue-50 text-blue-700' },
-  accepted: { label: 'Aceptado', color: 'bg-green-50 text-green-700' },
-  rejected: { label: 'Rechazado', color: 'bg-red-50 text-red-600' },
-  expired: { label: 'Expirado', color: 'bg-yellow-50 text-yellow-700' },
-};
+import { QUOTE_STATUS_LABELS } from '@/lib/constants';
+import { formatDate } from '@/lib/format';
 
 type QuoteRow = {
   id: string;
@@ -26,6 +20,7 @@ type QuoteRow = {
 export function QuotesClient({ initialQuotes }: { initialQuotes: QuoteRow[] }) {
   const [quotesList, setQuotesList] = useState(initialQuotes);
   const [filter, setFilter] = useState<string>('all');
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const filtered = filter === 'all'
@@ -33,24 +28,48 @@ export function QuotesClient({ initialQuotes }: { initialQuotes: QuoteRow[] }) {
     : quotesList.filter((q) => q.status === filter);
 
   async function handleUpdateStatus(id: string, status: string) {
-    await fetch(`/api/internal/quotes/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    setQuotesList((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, status } : q))
-    );
+    try {
+      setError(null);
+      const res = await fetch(`/api/internal/quotes/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      setQuotesList((prev) =>
+        prev.map((q) => (q.id === id ? { ...q, status } : q))
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
+    }
   }
 
   async function handleDelete(id: string) {
     if (!confirm('¿Eliminar este presupuesto?')) return;
-    await fetch(`/api/internal/quotes/${id}`, { method: 'DELETE' });
-    setQuotesList((prev) => prev.filter((q) => q.id !== id));
+    try {
+      setError(null);
+      const res = await fetch(`/api/internal/quotes/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      setQuotesList((prev) => prev.filter((q) => q.id !== id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
+    }
   }
 
   return (
     <>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex gap-2">
         {[
@@ -100,7 +119,7 @@ export function QuotesClient({ initialQuotes }: { initialQuotes: QuoteRow[] }) {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filtered.map((quote) => {
-                const status = STATUS_LABELS[quote.status] || STATUS_LABELS.draft;
+                const status = QUOTE_STATUS_LABELS[quote.status] || QUOTE_STATUS_LABELS.draft;
                 return (
                   <tr key={quote.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
@@ -118,7 +137,7 @@ export function QuotesClient({ initialQuotes }: { initialQuotes: QuoteRow[] }) {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${status.color}`}>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${status.bg} ${status.color}`}>
                         {status.label}
                       </span>
                     </td>
@@ -129,7 +148,7 @@ export function QuotesClient({ initialQuotes }: { initialQuotes: QuoteRow[] }) {
                     </td>
                     <td className="px-4 py-3 text-gray-500 text-xs">
                       {quote.createdAt
-                        ? new Date(quote.createdAt).toLocaleDateString('es')
+                        ? formatDate(quote.createdAt)
                         : '—'}
                     </td>
                     <td className="px-4 py-3 text-right">

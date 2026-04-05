@@ -1,16 +1,8 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { db, boats, sql, eq, or } from '@aerolume/db';
-import { getTenantForUser } from '@/lib/tenant';
+import { db, boats, sql } from '@aerolume/db';
+import { withTenantAuth } from '@/lib/auth-helpers';
 
-export async function GET(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
-
+export const GET = withTenantAuth(async (request, { tenant }) => {
   const url = new URL(request.url);
   const page = Math.max(1, Number(url.searchParams.get('page') || '1'));
   const pageSize = Math.min(50, Number(url.searchParams.get('pageSize') || '50'));
@@ -50,4 +42,4 @@ export async function GET(request: Request) {
       totalPages: Math.ceil((countResult?.count ?? 0) / pageSize),
     },
   });
-}
+});

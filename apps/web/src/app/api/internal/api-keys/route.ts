@@ -1,19 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { db, apiKeys, tenants, eq, and } from '@aerolume/db';
-import { getTenantForUser } from '@/lib/tenant';
 import { generateApiKey, hashApiKey, getKeyPrefix } from '@/lib/api-keys';
 import { canCreateApiKeys } from '@/lib/plan-gates';
+import { withTenantAuth } from '@/lib/auth-helpers';
 
 // GET: list keys for current tenant
-export async function GET() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
-
+export const GET = withTenantAuth(async (_request, { tenant }) => {
   const keys = await db
     .select({
       id: apiKeys.id,
@@ -29,21 +21,14 @@ export async function GET() {
     .where(eq(apiKeys.tenantId, tenant.id));
 
   return NextResponse.json({ data: keys });
-}
+});
 
 // POST: create a new key
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
-
+export const POST = withTenantAuth(async (request, { tenant }) => {
   // Check plan
   const [full] = await db.select({ plan: tenants.plan, subscriptionStatus: tenants.subscriptionStatus }).from(tenants).where(eq(tenants.id, tenant.id)).limit(1);
   if (full && !canCreateApiKeys(full)) {
-    return NextResponse.json({ error: 'Tu plan no permite crear API keys. Contacta para activar.' }, { status: 403 });
+    return NextResponse.json({ error: 'Feature not available on current plan' }, { status: 403 });
   }
 
   // Check if tenant already has a key
@@ -54,7 +39,7 @@ export async function POST(request: Request) {
     .limit(1);
 
   if (existing.length > 0) {
-    return NextResponse.json({ error: 'Ya tienes una API key. Revoca la actual para crear una nueva.' }, { status: 400 });
+    return NextResponse.json({ error: 'API key already exists. Revoke the current key to create a new one.' }, { status: 400 });
   }
 
   const body = await request.json();
@@ -85,17 +70,10 @@ export async function POST(request: Request) {
   return NextResponse.json({
     data: { ...created, rawKey },
   });
-}
+});
 
 // DELETE: revoke a key
-export async function DELETE(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
-
+export const DELETE = withTenantAuth(async (request, { tenant }) => {
   const { searchParams } = new URL(request.url);
   const keyId = searchParams.get('id');
   if (!keyId) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
@@ -105,4 +83,4 @@ export async function DELETE(request: Request) {
     .where(and(eq(apiKeys.id, keyId), eq(apiKeys.tenantId, tenant.id)));
 
   return NextResponse.json({ data: { deleted: true } });
-}
+});

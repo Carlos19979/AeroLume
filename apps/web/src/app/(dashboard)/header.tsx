@@ -4,30 +4,7 @@ import { useState } from 'react';
 import { Search, Menu, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { UserMenu } from './components/user-menu';
-import { Home, Package, Ship, FileText, Palette, Key, BarChart3, Settings } from 'lucide-react';
-import { type LucideIcon } from 'lucide-react';
-
-const PAGE_TITLES: Record<string, string> = {
-    '/dashboard': 'Inicio',
-    '/dashboard/products': 'Productos',
-    '/dashboard/boats': 'Barcos',
-    '/dashboard/quotes': 'Presupuestos',
-    '/dashboard/theme': 'Personalizar',
-    '/dashboard/api-keys': 'API Keys',
-    '/dashboard/analytics': 'Analytics',
-    '/dashboard/settings': 'Configuracion',
-};
-
-const MOBILE_LINKS: { href: string; label: string; icon: LucideIcon }[] = [
-    { href: '/dashboard', label: 'Inicio', icon: Home },
-    { href: '/dashboard/products', label: 'Productos', icon: Package },
-    { href: '/dashboard/boats', label: 'Barcos', icon: Ship },
-    { href: '/dashboard/quotes', label: 'Presupuestos', icon: FileText },
-    { href: '/dashboard/theme', label: 'Personalizar', icon: Palette },
-    { href: '/dashboard/api-keys', label: 'API Keys', icon: Key },
-    { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
-    { href: '/dashboard/settings', label: 'Configuracion', icon: Settings },
-];
+import { DASHBOARD_NAV, PAGE_TITLES } from '@/lib/navigation';
 
 export function DashboardHeader({ userName, userEmail }: { userName: string; userEmail: string }) {
     const pathname = usePathname();
@@ -84,7 +61,7 @@ export function DashboardHeader({ userName, userEmail }: { userName: string; use
                             </button>
                         </div>
                         <nav className="px-3 py-4 space-y-1">
-                            {MOBILE_LINKS.map((link) => {
+                            {DASHBOARD_NAV.map((link) => {
                                 const active = link.href === '/dashboard'
                                     ? pathname === '/dashboard'
                                     : pathname.startsWith(link.href);

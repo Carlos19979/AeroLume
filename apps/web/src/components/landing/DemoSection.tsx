@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { EmbedConfigurator } from '@/app/embed/configurator';
 
@@ -22,7 +23,7 @@ const DEMO_TENANT = {
   currency: 'EUR',
 };
 
-const DEMO_API_KEY = 'ak_26a3b7a817ba23d1fc9488daf2a154759bb66197';
+const DEMO_API_KEY = process.env.NEXT_PUBLIC_DEMO_API_KEY ?? '';
 
 export function DemoSection() {
   return (
@@ -73,13 +74,13 @@ export function DemoSection() {
           viewport={{ once: true }}
           className="text-center mt-8"
         >
-          <a
+          <Link
             href="/demo"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
           >
             Ver a pantalla completa
             <ArrowRight size={14} />
-          </a>
+          </Link>
         </motion.div>
       </div>
     </section>

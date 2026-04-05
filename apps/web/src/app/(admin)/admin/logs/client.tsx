@@ -1,7 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Search, X, Building2 } from 'lucide-react';
+import { EVENT_TYPE_LABELS, EVENT_COLORS } from '@/lib/constants';
+import { formatDateTime } from '@/lib/format';
+import { useClickOutside } from '@/hooks/useClickOutside';
 
 type TenantOption = { id: string; name: string };
 
@@ -25,19 +28,6 @@ type QuoteRow = {
   createdAt: Date | null;
 };
 
-const EVENT_LABELS: Record<string, string> = {
-  configurator_opened: 'Configurador abierto',
-  boat_selected: 'Barco seleccionado',
-  product_selected: 'Producto seleccionado',
-  quote_created: 'Presupuesto creado',
-};
-
-const EVENT_COLORS: Record<string, string> = {
-  configurator_opened: 'bg-gray-100 text-gray-600',
-  boat_selected: 'bg-blue-50 text-blue-600',
-  product_selected: 'bg-violet-50 text-violet-600',
-  quote_created: 'bg-green-50 text-green-600',
-};
 
 function TenantSearch({ tenants, selected, onSelect }: {
   tenants: TenantOption[];
@@ -48,13 +38,7 @@ function TenantSearch({ tenants, selected, onSelect }: {
   const [query, setQuery] = useState('');
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
+  useClickOutside(ref, useCallback(() => setOpen(false), []));
 
   const filtered = query.length >= 1
     ? tenants.filter((t) => t.name.toLowerCase().includes(query.toLowerCase()))
@@ -190,7 +174,7 @@ export function LogsClient({ tenants, events, quotes }: {
                         </a>
                       </td>
                     )}
-                    <td className="px-5 py-3 text-gray-400">{q.createdAt ? new Date(q.createdAt).toLocaleDateString('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                    <td className="px-5 py-3 text-gray-400">{q.createdAt ? formatDateTime(q.createdAt) : '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -223,7 +207,7 @@ export function LogsClient({ tenants, events, quotes }: {
                   <tr key={e.id} className={`hover:bg-gray-50 transition-colors ${i < filteredEvents.length - 1 ? 'border-b border-gray-50' : ''}`}>
                     <td className="px-5 py-2.5">
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${EVENT_COLORS[e.eventType] || 'bg-gray-100 text-gray-500'}`}>
-                        {EVENT_LABELS[e.eventType] || e.eventType}
+                        {EVENT_TYPE_LABELS[e.eventType] || e.eventType}
                       </span>
                     </td>
                     <td className="px-5 py-2.5 text-gray-500">{e.boatModel || '—'}</td>
@@ -234,7 +218,7 @@ export function LogsClient({ tenants, events, quotes }: {
                         </a>
                       </td>
                     )}
-                    <td className="px-5 py-2.5 text-gray-400">{e.createdAt ? new Date(e.createdAt).toLocaleDateString('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                    <td className="px-5 py-2.5 text-gray-400">{e.createdAt ? formatDateTime(e.createdAt) : '—'}</td>
                   </tr>
                 ))}
               </tbody>

@@ -1,26 +1,16 @@
-import { createClient } from '@/lib/supabase/server';
-import { getTenantForUser } from '@/lib/tenant';
+import { getAuthenticatedTenant } from '@/lib/auth-page';
 import { db, analyticsEvents, eq, sql, desc } from '@aerolume/db';
 import { AnalyticsClient } from './client';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default async function AnalyticsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) {
-    return (
-      <div className="text-center py-12 text-gray-500">
-        No tienes un workspace configurado.
-      </div>
-    );
-  }
+  const auth = await getAuthenticatedTenant();
+  if (!auth) return null;
 
   const [totalResult] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(analyticsEvents)
-    .where(eq(analyticsEvents.tenantId, tenant.id));
+    .where(eq(analyticsEvents.tenantId, auth.tenant.id));
 
   const byType = await db
     .select({
@@ -28,7 +18,7 @@ export default async function AnalyticsPage() {
       count: sql<number>`count(*)::int`,
     })
     .from(analyticsEvents)
-    .where(eq(analyticsEvents.tenantId, tenant.id))
+    .where(eq(analyticsEvents.tenantId, auth.tenant.id))
     .groupBy(analyticsEvents.eventType)
     .orderBy(desc(sql`count(*)`));
 
@@ -39,7 +29,7 @@ export default async function AnalyticsPage() {
     })
     .from(analyticsEvents)
     .where(
-      sql`${analyticsEvents.tenantId} = ${tenant.id}
+      sql`${analyticsEvents.tenantId} = ${auth.tenant.id}
           AND ${analyticsEvents.boatModel} IS NOT NULL`
     )
     .groupBy(analyticsEvents.boatModel)
@@ -53,7 +43,7 @@ export default async function AnalyticsPage() {
     })
     .from(analyticsEvents)
     .where(
-      sql`${analyticsEvents.tenantId} = ${tenant.id}
+      sql`${analyticsEvents.tenantId} = ${auth.tenant.id}
           AND ${analyticsEvents.sailType} IS NOT NULL`
     )
     .groupBy(analyticsEvents.sailType)
@@ -67,7 +57,7 @@ export default async function AnalyticsPage() {
     })
     .from(analyticsEvents)
     .where(
-      sql`${analyticsEvents.tenantId} = ${tenant.id}
+      sql`${analyticsEvents.tenantId} = ${auth.tenant.id}
           AND ${analyticsEvents.createdAt} > now() - interval '30 days'`
     )
     .groupBy(sql`to_char(${analyticsEvents.createdAt}, 'YYYY-MM-DD')`)
@@ -75,12 +65,7 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-900">Analytics</h2>
-        <p className="text-gray-500 mt-1">
-          Métricas de uso del configurador embebido.
-        </p>
-      </div>
+      <PageHeader title="Analytics" description="Métricas de uso del configurador embebido." />
       <AnalyticsClient
         data={{
           total: totalResult?.count ?? 0,

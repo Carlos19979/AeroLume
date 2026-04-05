@@ -16,8 +16,27 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-    title: 'Aerolume — Sail Configurator',
-    description: 'Find the perfect sail for your boat. Search your model, review rig dimensions, and compare real product options.',
+    title: {
+        default: 'Aerolume | Configurador de Velas para Retailers Náuticos',
+        template: '%s | Aerolume',
+    },
+    description: 'Plataforma SaaS de configuración de velas. Permite a tus clientes buscar barcos, configurar velas y generar presupuestos automáticamente.',
+    openGraph: {
+        title: 'Aerolume | Configurador de Velas',
+        description: 'Plataforma SaaS de configuración de velas para retailers náuticos.',
+        locale: 'es_ES',
+        type: 'website',
+        siteName: 'Aerolume',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Aerolume | Configurador de Velas',
+        description: 'Plataforma SaaS de configuración de velas para retailers náuticos.',
+    },
+    robots: {
+        index: true,
+        follow: true,
+    },
 };
 
 export default function RootLayout({

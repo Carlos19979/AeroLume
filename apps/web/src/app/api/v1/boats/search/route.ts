@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validateApiKey } from '@/lib/api-auth';
 import { db, boats, sql, or, eq } from '@aerolume/db';
+import { withCors } from '@/lib/cors';
 
 export async function GET(request: Request) {
   const auth = await validateApiKey(request);
@@ -50,5 +51,11 @@ export async function GET(request: Request) {
     )
     .limit(limit);
 
-  return NextResponse.json({ data: results });
+  const origin = request.headers.get('origin');
+  return withCors(NextResponse.json({ data: results }), origin);
+}
+
+export async function OPTIONS(request: Request) {
+  const origin = request.headers.get('origin');
+  return withCors(new NextResponse(null, { status: 204 }), origin);
 }

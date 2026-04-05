@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2, ChevronLeft, ChevronRight, ExternalLink, Package, Tag, Ruler, Settings2, Minus, Plus, ShoppingCart } from 'lucide-react';
 
@@ -146,16 +147,13 @@ export function ProductDetailModal({
                                 {images.length > 0 ? (
                                     <>
                                         <div className="relative aspect-[4/3] overflow-hidden">
-                                            <img
+                                            <Image
                                                 src={images[activeImage] ?? images[0]}
                                                 alt={displayName}
+                                                width={600}
+                                                height={450}
+                                                unoptimized
                                                 className="h-full w-full object-contain p-6"
-                                                onError={(e) => {
-                                                    const target = e.currentTarget;
-                                                    if (target.src.includes('large_default')) {
-                                                        target.src = target.src.replace('-large_default/', '-home_default/');
-                                                    }
-                                                }}
                                             />
                                         </div>
 
@@ -188,9 +186,12 @@ export function ProductDetailModal({
                                                                     : 'border-transparent opacity-60 hover:opacity-100'
                                                             }`}
                                                         >
-                                                            <img
+                                                            <Image
                                                                 src={img.replace('-large_default/', '-small_default/')}
                                                                 alt=""
+                                                                width={64}
+                                                                height={64}
+                                                                unoptimized
                                                                 className="h-full w-full object-cover"
                                                             />
                                                         </button>

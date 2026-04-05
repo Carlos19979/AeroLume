@@ -16,25 +16,19 @@ export type PlanStatus = {
   subscriptionStatus: string | null;
 };
 
-export function canCreateProducts(ps: PlanStatus): boolean {
+function requirePro(ps: PlanStatus): boolean {
   return ps.plan === 'pro' && ps.subscriptionStatus === 'active';
 }
 
-export function canCreateApiKeys(ps: PlanStatus): boolean {
-  return ps.plan === 'pro' && ps.subscriptionStatus === 'active';
-}
-
-export function canReceiveQuotes(ps: PlanStatus): boolean {
-  return ps.plan === 'pro' && ps.subscriptionStatus === 'active';
-}
-
-export function canEditTheme(ps: PlanStatus): boolean {
+function requireProOrPastDue(ps: PlanStatus): boolean {
   return ps.plan === 'pro' && (ps.subscriptionStatus === 'active' || ps.subscriptionStatus === 'past_due');
 }
 
-export function canEditSettings(ps: PlanStatus): boolean {
-  return ps.plan === 'pro' && (ps.subscriptionStatus === 'active' || ps.subscriptionStatus === 'past_due');
-}
+export const canCreateProducts = requirePro;
+export const canCreateApiKeys = requirePro;
+export const canReceiveQuotes = requirePro;
+export const canEditTheme = requireProOrPastDue;
+export const canEditSettings = requireProOrPastDue;
 
 export function isWidgetEnabled(ps: PlanStatus): boolean {
   return ps.plan === 'pro' && ps.subscriptionStatus === 'active';
@@ -59,13 +53,13 @@ export function getDashboardBanner(ps: PlanStatus): { type: 'trial' | 'past_due'
   if (isPastDue(ps)) {
     return {
       type: 'past_due',
-      message: 'Tu pago esta pendiente. Tienes 7 dias para regularizar o tu cuenta sera suspendida.',
+      message: 'Tu pago está pendiente. Tienes 7 días para regularizar o tu cuenta será suspendida.',
     };
   }
   if (isTrial(ps)) {
     return {
       type: 'trial',
-      message: 'Estas en modo prueba. Contacta con nosotros para activar tu configurador.',
+      message: 'Estás en modo prueba. Contacta con nosotros para activar tu configurador.',
     };
   }
   return { type: 'none', message: '' };

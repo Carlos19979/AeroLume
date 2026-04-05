@@ -22,6 +22,7 @@ export function BoatsAdminClient({ initialBoats }: { initialBoats: BoatRow[] }) 
   const [showCreate, setShowCreate] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Create form
   const [newModel, setNewModel] = useState('');
@@ -44,20 +45,30 @@ export function BoatsAdminClient({ initialBoats }: { initialBoats: BoatRow[] }) 
   async function handleCreate() {
     if (!newModel.trim()) return;
     setSaving(true);
-    const res = await fetch('/api/admin/boats', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: newModel, length: newLength || null, isMultihull: newMultihull,
-        p: newP || null, e: newE || null, i: newI || null, j: newJ || null,
-      }),
-    });
-    const { data } = await res.json();
-    setBoatsList((prev) => [data, ...prev]);
-    setNewModel(''); setNewLength(''); setNewMultihull(false);
-    setNewP(''); setNewE(''); setNewI(''); setNewJ('');
-    setShowCreate(false);
-    setSaving(false);
+    try {
+      setError(null);
+      const res = await fetch('/api/admin/boats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: newModel, length: newLength || null, isMultihull: newMultihull,
+          p: newP || null, e: newE || null, i: newI || null, j: newJ || null,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      const { data } = await res.json();
+      setBoatsList((prev) => [data, ...prev]);
+      setNewModel(''); setNewLength(''); setNewMultihull(false);
+      setNewP(''); setNewE(''); setNewI(''); setNewJ('');
+      setShowCreate(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
+    } finally {
+      setSaving(false);
+    }
   }
 
   function startEdit(boat: BoatRow) {
@@ -74,28 +85,53 @@ export function BoatsAdminClient({ initialBoats }: { initialBoats: BoatRow[] }) 
   async function handleSaveEdit() {
     if (!editingId || !editModel.trim()) return;
     setSaving(true);
-    const res = await fetch(`/api/admin/boats/${editingId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: editModel, boatModel: editModel, length: editLength || null, isMultihull: editMultihull,
-        p: editP || null, e: editE || null, i: editI || null, j: editJ || null,
-      }),
-    });
-    const { data } = await res.json();
-    setBoatsList((prev) => prev.map((b) => b.id === editingId ? { ...b, ...data } : b));
-    setEditingId(null);
-    setSaving(false);
+    try {
+      setError(null);
+      const res = await fetch(`/api/admin/boats/${editingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: editModel, boatModel: editModel, length: editLength || null, isMultihull: editMultihull,
+          p: editP || null, e: editE || null, i: editI || null, j: editJ || null,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      const { data } = await res.json();
+      setBoatsList((prev) => prev.map((b) => b.id === editingId ? { ...b, ...data } : b));
+      setEditingId(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleDelete(id: string) {
     if (!confirm('¿Eliminar este barco? Esta accion no se puede deshacer.')) return;
-    await fetch(`/api/admin/boats/${id}`, { method: 'DELETE' });
-    setBoatsList((prev) => prev.filter((b) => b.id !== id));
+    try {
+      setError(null);
+      const res = await fetch(`/api/admin/boats/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      setBoatsList((prev) => prev.filter((b) => b.id !== id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
+    }
   }
 
   return (
     <>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
       {/* Create button / form */}
       {showCreate ? (
         <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">

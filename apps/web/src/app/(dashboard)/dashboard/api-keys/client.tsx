@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { formatDate } from '@/lib/format';
 
 type ApiKeyRow = {
   id: string;
@@ -19,41 +20,59 @@ export function ApiKeysClient({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleCreate() {
     if (!newKeyName.trim()) return;
     setLoading(true);
+    try {
+      setError(null);
+      const res = await fetch('/api/internal/api-keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newKeyName }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      const { data } = await res.json();
 
-    const res = await fetch('/api/internal/api-keys', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newKeyName }),
-    });
-    const { data } = await res.json();
-
-    setCreatedKey(data.rawKey);
-    setKeys((prev) => [
-      {
-        id: data.id,
-        keyPrefix: data.keyPrefix,
-        name: data.name,
-        scopes: ['read'],
-        rateLimit: 1000,
-        lastUsedAt: null,
-        expiresAt: null,
-        createdAt: data.createdAt,
-      },
-      ...prev,
-    ]);
-    setNewKeyName('');
-    setLoading(false);
+      setCreatedKey(data.rawKey);
+      setKeys((prev) => [
+        {
+          id: data.id,
+          keyPrefix: data.keyPrefix,
+          name: data.name,
+          scopes: ['read'],
+          rateLimit: 1000,
+          lastUsedAt: null,
+          expiresAt: null,
+          createdAt: data.createdAt,
+        },
+        ...prev,
+      ]);
+      setNewKeyName('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleRevoke(id: string) {
     if (!confirm('¿Revocar esta API key? Los widgets que la usen dejarán de funcionar.')) return;
-
-    await fetch(`/api/internal/api-keys?id=${id}`, { method: 'DELETE' });
-    setKeys((prev) => prev.filter((k) => k.id !== id));
+    try {
+      setError(null);
+      const res = await fetch(`/api/internal/api-keys?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      setKeys((prev) => prev.filter((k) => k.id !== id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
+    }
   }
 
   function copyToClipboard(text: string) {
@@ -62,6 +81,12 @@ export function ApiKeysClient({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
 
   return (
     <>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
       {/* Created key banner — shown once */}
       {createdKey && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-4">
@@ -153,12 +178,12 @@ export function ApiKeysClient({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
                   </td>
                   <td className="px-4 py-3 text-gray-500">
                     {key.lastUsedAt
-                      ? new Date(key.lastUsedAt).toLocaleDateString('es')
+                      ? formatDate(key.lastUsedAt)
                       : 'Nunca'}
                   </td>
                   <td className="px-4 py-3 text-gray-500">
                     {key.createdAt
-                      ? new Date(key.createdAt).toLocaleDateString('es')
+                      ? formatDate(key.createdAt)
                       : '—'}
                   </td>
                   <td className="px-4 py-3 text-right">

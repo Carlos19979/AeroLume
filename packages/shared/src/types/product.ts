@@ -1,4 +1,5 @@
-export type SailProduct = {
+/** @deprecated Used only by legacy Sailonet scraping routes */
+export type SailonetProduct = {
   id: string;
   name: string;
   price: number | null;
@@ -11,7 +12,8 @@ export type SailProduct = {
   onSale: boolean;
 };
 
-export type ProductDetail = {
+/** @deprecated Used only by legacy Sailonet scraping routes */
+export type SailonetProductDetail = {
   name: string | null;
   price: number | null;
   priceTaxExc: number | null;
@@ -24,6 +26,32 @@ export type ProductDetail = {
   shortDescription: string | null;
   fullDescription: string | null;
   configOptions: ProductConfigOption[];
+};
+
+/** Product as stored in the database */
+export type Product = {
+  id: string;
+  tenantId: string;
+  name: string;
+  slug: string;
+  sailType: string;
+  gamme: string | null;
+  basePrice: number | null;
+  currency: string;
+  descriptionShort: string | null;
+  descriptionFull: string | null;
+  images: string[];
+  sku: string | null;
+  weight: string | null;
+  availability: string | null;
+  minBoatLength: number | null;
+  maxBoatLength: number | null;
+  minSailArea: number | null;
+  maxSailArea: number | null;
+  active: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type ProductConfigOption = {

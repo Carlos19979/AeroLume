@@ -1,5 +1,8 @@
-import { pgTable, uuid, text, numeric, boolean, integer, timestamp, jsonb, uniqueIndex, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, numeric, boolean, integer, timestamp, jsonb, uniqueIndex, index, pgEnum } from 'drizzle-orm/pg-core';
 import { tenants } from './tenants';
+
+export const sailTypeEnum = pgEnum('sail_type', ['gvstd', 'gvfull', 'gve', 'gse', 'gn', 'spiasy', 'spisym', 'furling', 'gen']);
+export const fieldTypeEnum = pgEnum('field_type', ['select', 'radio', 'number', 'text']);
 
 export const products = pgTable(
   'products',
@@ -12,7 +15,7 @@ export const products = pgTable(
     externalId: text('external_id'), // Sailonet id_product for imports
     name: text('name').notNull(),
     slug: text('slug').notNull(),
-    sailType: text('sail_type').notNull(), // gvstd, gvfull, gve, gse, gn, spiasy, spisym, furling, gen
+    sailType: sailTypeEnum('sail_type').notNull(), // gvstd, gvfull, gve, gse, gn, spiasy, spisym, furling, gen
     gamme: text('gamme'), // product line/range
 
     basePrice: numeric('base_price'),
@@ -36,7 +39,7 @@ export const products = pgTable(
     sortOrder: integer('sort_order').default(0),
 
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().$onUpdateFn(() => new Date()),
   },
   (table) => [
     uniqueIndex('idx_products_tenant_slug').on(table.tenantId, table.slug),
@@ -54,7 +57,7 @@ export const productConfigFields = pgTable(
 
     key: text('key').notNull(), // 'surface', 'fabric', 'rizos'
     label: text('label').notNull(), // 'Superficie (m²)'
-    fieldType: text('field_type').default('select'), // select, radio, number, text
+    fieldType: fieldTypeEnum('field_type').default('select'), // select, radio, number, text
     options: jsonb('options').default([]), // ["option1", "option2"]
     sortOrder: integer('sort_order').default(0),
     required: boolean('required').default(true),

@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { Search, X, Filter } from 'lucide-react';
+import { SUBSCRIPTION_STATUS_LABELS } from '@/lib/constants';
+import { formatDate } from '@/lib/format';
 
 type TenantRow = {
   id: string;
@@ -19,12 +21,6 @@ type TenantRow = {
   memberCount: number;
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-green-100 text-green-700',
-  past_due: 'bg-red-100 text-red-700',
-  canceled: 'bg-gray-100 text-gray-500',
-  prueba: 'bg-amber-100 text-amber-700',
-};
 
 export function TenantsClient({ tenants }: { tenants: TenantRow[] }) {
   const [search, setSearch] = useState('');
@@ -169,14 +165,14 @@ export function TenantsClient({ tenants }: { tenants: TenantRow[] }) {
                       <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{t.plan || '—'}</span>
                     </td>
                     <td className="px-5 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[t.subscriptionStatus || ''] || STATUS_COLORS.canceled}`}>
-                        {t.subscriptionStatus || '—'}
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${(SUBSCRIPTION_STATUS_LABELS[t.subscriptionStatus || ''] || SUBSCRIPTION_STATUS_LABELS.canceled).bg} ${(SUBSCRIPTION_STATUS_LABELS[t.subscriptionStatus || ''] || SUBSCRIPTION_STATUS_LABELS.canceled).color}`}>
+                        {(SUBSCRIPTION_STATUS_LABELS[t.subscriptionStatus || ''] || SUBSCRIPTION_STATUS_LABELS.canceled).label}
                       </span>
                     </td>
                     <td className="px-5 py-3 text-gray-600">{t.quoteCount}</td>
                     <td className="px-5 py-3 text-gray-600">{t.memberCount}</td>
                     <td className="px-5 py-3 text-gray-500 text-xs">
-                      {t.createdAt ? new Date(t.createdAt).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                      {t.createdAt ? formatDate(t.createdAt) : '—'}
                     </td>
                     <td className="px-5 py-3 text-right">
                       <a href={`/admin/tenants/${t.id}`} className="text-xs text-blue-600 hover:text-blue-500 font-medium">

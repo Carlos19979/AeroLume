@@ -1,5 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
-import { getTenantForUser } from '@/lib/tenant';
+import { getAuthenticatedTenant } from '@/lib/auth-page';
 import { db, quotes, quoteItems, eq, and } from '@aerolume/db';
 import { notFound } from 'next/navigation';
 import { QuoteDetailClient } from './client';
@@ -8,12 +7,10 @@ type PageProps = { params: Promise<{ id: string }> };
 
 export default async function QuoteDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  const auth = await getAuthenticatedTenant();
+  if (!auth) return null;
 
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) return notFound();
+  const { tenant } = auth;
 
   const [quote] = await db
     .select()

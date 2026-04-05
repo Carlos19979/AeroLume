@@ -1,4 +1,6 @@
 import { db, tenants, tenantMembers, analyticsEvents, boats, sql, desc, eq } from '@aerolume/db';
+import { EVENT_TYPE_LABELS, SUBSCRIPTION_STATUS_LABELS } from '@/lib/constants';
+import { formatDateShort, formatDateTime } from '@/lib/format';
 
 export default async function AdminOverviewPage() {
   const [tenantCount] = await db.select({ count: sql<number>`count(*)::int` }).from(tenants);
@@ -32,19 +34,6 @@ export default async function AdminOverviewPage() {
     .orderBy(desc(analyticsEvents.createdAt))
     .limit(8);
 
-  const EVENT_LABELS: Record<string, string> = {
-    configurator_opened: 'Configurador abierto',
-    boat_selected: 'Barco seleccionado',
-    product_selected: 'Producto seleccionado',
-    quote_created: 'Presupuesto creado',
-  };
-
-  const STATUS_COLORS: Record<string, string> = {
-    active: 'bg-green-50 text-green-600',
-    past_due: 'bg-red-50 text-red-600',
-    canceled: 'bg-gray-100 text-gray-500',
-    prueba: 'bg-amber-50 text-amber-600',
-  };
 
   return (
     <div className="space-y-6">
@@ -87,11 +76,11 @@ export default async function AdminOverviewPage() {
               <a key={t.id} href={`/admin/tenants/${t.id}`} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors">
                 <div>
                   <p className="text-sm font-medium text-gray-800">{t.name}</p>
-                  <p className="text-xs text-gray-500">{t.createdAt ? new Date(t.createdAt).toLocaleDateString('es', { day: 'numeric', month: 'short' }) : '—'}</p>
+                  <p className="text-xs text-gray-500">{t.createdAt ? formatDateShort(t.createdAt) : '—'}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[t.subscriptionStatus || ''] || STATUS_COLORS.canceled}`}>
-                    {t.subscriptionStatus}
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${(SUBSCRIPTION_STATUS_LABELS[t.subscriptionStatus || ''] || SUBSCRIPTION_STATUS_LABELS.canceled).bg} ${(SUBSCRIPTION_STATUS_LABELS[t.subscriptionStatus || ''] || SUBSCRIPTION_STATUS_LABELS.canceled).color}`}>
+                    {(SUBSCRIPTION_STATUS_LABELS[t.subscriptionStatus || ''] || SUBSCRIPTION_STATUS_LABELS.canceled).label}
                   </span>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">{t.plan}</span>
                 </div>
@@ -113,7 +102,7 @@ export default async function AdminOverviewPage() {
                   <p className="text-sm font-medium text-gray-800">{u.full_name || u.email?.split('@')[0]}</p>
                   <p className="text-xs text-gray-500">{u.email}</p>
                 </div>
-                <p className="text-xs text-gray-500">{u.created_at ? new Date(u.created_at).toLocaleDateString('es', { day: 'numeric', month: 'short' }) : '—'}</p>
+                <p className="text-xs text-gray-500">{u.created_at ? formatDateShort(u.created_at) : '—'}</p>
               </div>
             ))}
           </div>
@@ -136,13 +125,13 @@ export default async function AdminOverviewPage() {
                   e.eventType === 'product_selected' ? 'bg-violet-50 text-violet-600' :
                   'bg-gray-100 text-gray-500'
                 }`}>
-                  {EVENT_LABELS[e.eventType] || e.eventType}
+                  {EVENT_TYPE_LABELS[e.eventType] || e.eventType}
                 </span>
                 {e.boatModel && <span className="text-xs text-gray-500">{e.boatModel}</span>}
               </div>
               <div className="flex items-center gap-3">
                 {e.tenantName && <span className="text-xs text-gray-500">{e.tenantName}</span>}
-                <span className="text-xs text-gray-500">{e.createdAt ? new Date(e.createdAt).toLocaleDateString('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                <span className="text-xs text-gray-500">{e.createdAt ? formatDateTime(e.createdAt) : '—'}</span>
               </div>
             </div>
           ))}

@@ -1,4 +1,5 @@
 import { db, tenantMembers, tenants, eq, sql } from '@aerolume/db';
+import { formatDate } from '@/lib/format';
 
 export default async function AdminUsersPage() {
   // Get all users from auth.users via raw SQL
@@ -84,7 +85,7 @@ export default async function AdminUsersPage() {
                   ))}
                 </td>
                 <td className="px-5 py-3 text-gray-400 text-xs">
-                  {u.createdAt ? new Date(u.createdAt).toLocaleDateString('es') : '—'}
+                  {u.createdAt ? formatDate(u.createdAt) : '—'}
                 </td>
               </tr>
             ))}

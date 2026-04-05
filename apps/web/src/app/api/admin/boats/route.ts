@@ -1,34 +1,42 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { isSuperAdmin } from '@/lib/admin';
 import { db, boats } from '@aerolume/db';
+import { withAdminAuth } from '@/lib/auth-helpers';
+import { z } from 'zod';
+import { validateBody, numericString } from '@/lib/validations';
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user || !isSuperAdmin(user.email)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+const createBoatSchema = z.object({
+  model: z.string().min(1).max(200),
+  boatModel: z.string().max(200).optional(),
+  length: numericString.optional().nullable(),
+  isMultihull: z.boolean().optional(),
+  i: numericString.optional().nullable(),
+  j: numericString.optional().nullable(),
+  p: numericString.optional().nullable(),
+  e: numericString.optional().nullable(),
+});
 
+export const POST = withAdminAuth(async (request) => {
   const body = await request.json();
-  if (!body.model) {
-    return NextResponse.json({ error: 'model is required' }, { status: 400 });
+  const validation = validateBody(createBoatSchema, body);
+  if ('error' in validation) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
   }
+  const data = validation.data;
 
   const [created] = await db
     .insert(boats)
     .values({
       tenantId: null, // Global boat
-      model: body.model,
-      boatModel: body.boatModel || body.model,
-      length: body.length || null,
-      isMultihull: body.isMultihull || false,
-      i: body.i || null,
-      j: body.j || null,
-      p: body.p || null,
-      e: body.e || null,
+      model: data.model,
+      boatModel: data.boatModel || data.model,
+      length: data.length || null,
+      isMultihull: data.isMultihull || false,
+      i: data.i || null,
+      j: data.j || null,
+      p: data.p || null,
+      e: data.e || null,
     })
     .returning();
 
   return NextResponse.json({ data: created });
-}
+});

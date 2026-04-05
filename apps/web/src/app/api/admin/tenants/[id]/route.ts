@@ -1,25 +1,28 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { isSuperAdmin } from '@/lib/admin';
 import { db, tenants, eq } from '@aerolume/db';
+import { withAdminAuth } from '@/lib/auth-helpers';
+import { z } from 'zod';
+import { validateBody } from '@/lib/validations';
 
-type RouteParams = { params: Promise<{ id: string }> };
+const updateTenantAdminSchema = z.object({
+  plan: z.enum(['prueba', 'pro', 'enterprise']).optional(),
+  subscriptionStatus: z.enum(['trialing', 'active', 'past_due', 'canceled']).optional(),
+  name: z.string().min(1).max(200).optional(),
+});
 
-export async function PUT(request: Request, { params }: RouteParams) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user || !isSuperAdmin(user.email)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
+export const PUT = withAdminAuth(async (request, _ctx, params) => {
+  const { id } = params;
   const body = await request.json();
+  const validation = validateBody(updateTenantAdminSchema, body);
+  if ('error' in validation) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
+  const data = validation.data;
   const updates: Record<string, any> = { updatedAt: new Date() };
 
-  if (body.plan) updates.plan = body.plan;
-  if (body.subscriptionStatus) updates.subscriptionStatus = body.subscriptionStatus;
-  if (body.name) updates.name = body.name;
+  if (data.plan) updates.plan = data.plan;
+  if (data.subscriptionStatus) updates.subscriptionStatus = data.subscriptionStatus;
+  if (data.name) updates.name = data.name;
 
   const [updated] = await db
     .update(tenants)
@@ -28,4 +31,4 @@ export async function PUT(request: Request, { params }: RouteParams) {
     .returning();
 
   return NextResponse.json({ data: updated });
-}
+});

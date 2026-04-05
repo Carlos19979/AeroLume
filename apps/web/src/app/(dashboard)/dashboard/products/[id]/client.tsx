@@ -2,18 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-const SAIL_TYPE_LABELS: Record<string, string> = {
-  gvstd: 'Mayor Clásica',
-  gvfull: 'Mayor Full Batten',
-  gve: 'Mayor Enrollable',
-  gse: 'Génova Enrollable',
-  gn: 'Génova Mosquetones',
-  gen: 'Gennaker / Code 0',
-  spisym: 'Spinnaker Simétrico',
-  spiasy: 'Spinnaker Asimétrico',
-  furling: 'Code S / Furling',
-};
+import { SAIL_TYPE_LABELS } from '@/lib/constants';
+import { formatDate } from '@/lib/format';
+import { SaveButton, useSaveState } from '@/components/ui/SaveButton';
 
 type Product = {
   id: string;
@@ -54,8 +45,7 @@ export function ProductEditClient({
   const router = useRouter();
   const [product, setProduct] = useState(initialProduct);
   const [fields, setFields] = useState(initialFields);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const { saving, saved, save } = useSaveState();
 
   const [name, setName] = useState(product.name);
   const [sailType, setSailType] = useState(product.sailType);
@@ -69,43 +59,58 @@ export function ProductEditClient({
   const [newFieldOptions, setNewFieldOptions] = useState('');
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [savingField, setSavingField] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSaveProduct() {
-    setSaving(true);
-    const res = await fetch(`/api/internal/products/${product.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name,
-        sailType,
-        basePrice: basePrice || null,
-        descriptionShort: descriptionShort || null,
-        active,
-      }),
+    await save(async () => {
+      setError(null);
+      const res = await fetch(`/api/internal/products/${product.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          sailType,
+          basePrice: basePrice || null,
+          descriptionShort: descriptionShort || null,
+          active,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      const { data } = await res.json();
+      if (data) setProduct(data);
+    }).catch((e: unknown) => {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
     });
-    const { data } = await res.json();
-    if (data) setProduct(data);
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   }
 
   async function handleAddField(fieldData: { key: string; label: string; options: string[]; priceModifiers: Record<string, number> }) {
-    const res = await fetch(`/api/internal/products/${product.id}/fields`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        key: fieldData.key,
-        label: fieldData.label,
-        fieldType: 'select',
-        options: fieldData.options,
-        sortOrder: fields.length,
-        priceModifiers: fieldData.priceModifiers,
-      }),
-    });
-    const { data } = await res.json();
-    setFields((prev) => [...prev, data]);
-    setShowAddField(false);
+    try {
+      setError(null);
+      const res = await fetch(`/api/internal/products/${product.id}/fields`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: fieldData.key,
+          label: fieldData.label,
+          fieldType: 'select',
+          options: fieldData.options,
+          sortOrder: fields.length,
+          priceModifiers: fieldData.priceModifiers,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      const { data } = await res.json();
+      setFields((prev) => [...prev, data]);
+      setShowAddField(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
+    }
   }
 
   async function handleUpdateField(fieldId: string, fieldData: { key: string; label: string; options: string[]; priceModifiers: Record<string, number> }) {
@@ -113,40 +118,65 @@ export function ProductEditClient({
     const field = fields.find((f) => f.id === fieldId);
     if (!field) return;
 
-    await fetch(`/api/internal/products/${product.id}/fields`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: fieldId,
-        key: fieldData.key,
-        label: fieldData.label,
-        fieldType: field.fieldType,
-        options: fieldData.options,
-        sortOrder: field.sortOrder,
-        required: field.required,
-        priceModifiers: fieldData.priceModifiers,
-      }),
-    });
+    try {
+      setError(null);
+      const res = await fetch(`/api/internal/products/${product.id}/fields`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: fieldId,
+          key: fieldData.key,
+          label: fieldData.label,
+          fieldType: field.fieldType,
+          options: fieldData.options,
+          sortOrder: field.sortOrder,
+          required: field.required,
+          priceModifiers: fieldData.priceModifiers,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
 
-    setFields((prev) =>
-      prev.map((f) => (f.id === fieldId ? { ...f, ...fieldData } : f))
-    );
-    setSavingField(false);
-    setEditingFieldId(null);
+      setFields((prev) =>
+        prev.map((f) => (f.id === fieldId ? { ...f, ...fieldData } : f))
+      );
+      setEditingFieldId(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
+    } finally {
+      setSavingField(false);
+    }
   }
 
   async function handleDeleteField(fieldId: string) {
     if (!confirm('¿Eliminar este campo de configuración?')) return;
 
-    await fetch(`/api/internal/products/${product.id}/fields?fieldId=${fieldId}`, {
-      method: 'DELETE',
-    });
-    setFields((prev) => prev.filter((f) => f.id !== fieldId));
+    try {
+      setError(null);
+      const res = await fetch(`/api/internal/products/${product.id}/fields?fieldId=${fieldId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      setFields((prev) => prev.filter((f) => f.id !== fieldId));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
+    }
   }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
           <h3 className="font-medium text-gray-900">Información del producto</h3>
 
@@ -208,17 +238,13 @@ export function ProductEditClient({
             </button>
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <button
+          <div className="pt-2">
+            <SaveButton
+              saving={saving}
+              saved={saved}
               onClick={handleSaveProduct}
-              disabled={saving}
               className="px-4 py-2 bg-[var(--color-accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
-            >
-              {saving ? 'Guardando...' : 'Guardar cambios'}
-            </button>
-            {saved && (
-              <span className="text-sm text-green-600 self-center">Guardado</span>
-            )}
+            />
           </div>
         </div>
 
@@ -323,7 +349,7 @@ export function ProductEditClient({
               <dt className="text-gray-500">Creado</dt>
               <dd className="text-gray-900">
                 {product.createdAt
-                  ? new Date(product.createdAt).toLocaleDateString('es')
+                  ? formatDate(product.createdAt)
                   : '—'}
               </dd>
             </div>

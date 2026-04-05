@@ -2,20 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  draft: { label: 'Borrador', color: 'text-gray-600', bg: 'bg-gray-100' },
-  sent: { label: 'Enviado', color: 'text-blue-700', bg: 'bg-blue-50' },
-  accepted: { label: 'Aceptado', color: 'text-green-700', bg: 'bg-green-50' },
-  rejected: { label: 'Rechazado', color: 'text-red-600', bg: 'bg-red-50' },
-  expired: { label: 'Expirado', color: 'text-yellow-700', bg: 'bg-yellow-50' },
-};
-
-const SAIL_TYPE_LABELS: Record<string, string> = {
-  gvstd: 'Mayor Clasica', gvfull: 'Mayor Full Batten', gve: 'Mayor Enrollable',
-  gse: 'Genova Enrollable', gn: 'Genova Mosquetones', gen: 'Gennaker / Code 0',
-  spisym: 'Spinnaker Simetrico', spiasy: 'Spinnaker Asimetrico', furling: 'Code S',
-};
+import { SAIL_TYPE_LABELS, QUOTE_STATUS_LABELS } from '@/lib/constants';
+import { formatDate } from '@/lib/format';
 
 type Quote = {
   id: string;
@@ -53,10 +41,11 @@ function formatPrice(value: string | number | null, currency: string) {
 export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote; items: QuoteItem[] }) {
   const [quote, setQuote] = useState(initialQuote);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const cur = quote.currency || 'EUR';
-  const status = STATUS_LABELS[quote.status] || STATUS_LABELS.draft;
+  const status = QUOTE_STATUS_LABELS[quote.status] || QUOTE_STATUS_LABELS.draft;
 
   const totalFromItems = items.reduce((sum, item) => {
     return sum + (item.unitPrice ? Number(item.unitPrice) : 0) * (item.quantity || 1);
@@ -65,20 +54,36 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
 
   async function updateStatus(newStatus: string) {
     setSaving(true);
-    const res = await fetch(`/api/internal/quotes/${quote.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
-    });
-    const { data } = await res.json();
-    if (data) setQuote(data);
-    setSaving(false);
+    try {
+      setError(null);
+      const res = await fetch(`/api/internal/quotes/${quote.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      const { data } = await res.json();
+      if (data) setQuote(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* ── Main content ── */}
       <div className="lg:col-span-2 space-y-6">
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
 
         {/* Price summary card */}
         <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #0a2540, #0b5faa)' }}>
@@ -268,13 +273,13 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
             <div className="flex items-center justify-between">
               <dt className="text-gray-500">Creado</dt>
               <dd className="text-gray-700 font-medium">
-                {quote.createdAt ? new Date(quote.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                {quote.createdAt ? formatDate(quote.createdAt) : '—'}
               </dd>
             </div>
             <div className="flex items-center justify-between">
               <dt className="text-gray-500">Actualizado</dt>
               <dd className="text-gray-700 font-medium">
-                {quote.updatedAt ? new Date(quote.updatedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                {quote.updatedAt ? formatDate(quote.updatedAt) : '—'}
               </dd>
             </div>
             <div className="flex items-center justify-between">

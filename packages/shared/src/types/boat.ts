@@ -1,7 +1,6 @@
 export type Boat = {
   id?: string;
   id_sail_boat_type?: string | null;
-  bateau?: string | null;
   boat_model: string | null;
   model: string;
   i: string | null;
@@ -21,17 +20,8 @@ export type Boat = {
   spinnaker_area: string | null;
   spinnaker_asym_area: string | null;
   sgen_area: string | null;
-  leech_asymetrique: string | null;
-  leech_symetrique: string | null;
   is_multihull: string | null;
-  longs?: string | null;
   multi?: string | null;
-  sgn?: string | null;
-  sgse?: string | null;
-  sgv?: string | null;
-  sspi?: string | null;
-  sasy?: string | null;
-  sgen?: string | null;
   gn?: string | null;
   gse?: string | null;
   gen?: string | null;

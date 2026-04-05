@@ -1,16 +1,9 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { db, tenants, eq } from '@aerolume/db';
-import { getTenantForUser } from '@/lib/tenant';
+import { withTenantAuth } from '@/lib/auth-helpers';
+import { validateBody, updateThemeSchema } from '@/lib/validations';
 
-export async function GET() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
-
+export const GET = withTenantAuth(async (_request, { tenant }) => {
   const [data] = await db
     .select({
       themeAccent: tenants.themeAccent,
@@ -29,31 +22,29 @@ export async function GET() {
     .limit(1);
 
   return NextResponse.json({ data });
-}
+});
 
-export async function PUT(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
-
+export const PUT = withTenantAuth(async (request, { tenant }) => {
   const body = await request.json();
+  const validation = validateBody(updateThemeSchema, body);
+  if ('error' in validation) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
+  const data = validation.data;
 
   const [updated] = await db
     .update(tenants)
     .set({
-      themeAccent: body.themeAccent,
-      themeAccentDim: body.themeAccentDim,
-      themeNavy: body.themeNavy,
-      themeText: body.themeText,
-      themeFontDisplay: body.themeFontDisplay,
-      themeFontBody: body.themeFontBody,
-      themeColorMain: body.themeColorMain,
-      themeColorHead: body.themeColorHead,
-      themeColorSpi: body.themeColorSpi,
-      logoUrl: body.logoUrl,
+      themeAccent: data.themeAccent,
+      themeAccentDim: data.themeAccentDim,
+      themeNavy: data.themeNavy,
+      themeText: data.themeText,
+      themeFontDisplay: data.themeFontDisplay,
+      themeFontBody: data.themeFontBody,
+      themeColorMain: data.themeColorMain,
+      themeColorHead: data.themeColorHead,
+      themeColorSpi: data.themeColorSpi,
+      logoUrl: data.logoUrl,
       updatedAt: new Date(),
     })
     .where(eq(tenants.id, tenant.id))
@@ -71,4 +62,4 @@ export async function PUT(request: Request) {
     });
 
   return NextResponse.json({ data: updated });
-}
+});

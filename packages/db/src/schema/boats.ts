@@ -47,7 +47,7 @@ export const boats = pgTable(
     idSailBoatType: text('id_sail_boat_type'),
 
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().$onUpdateFn(() => new Date()),
   },
   (table) => [
     index('idx_boats_tenant').on(table.tenantId),

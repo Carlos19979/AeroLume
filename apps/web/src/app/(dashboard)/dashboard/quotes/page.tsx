@@ -1,21 +1,11 @@
-import { createClient } from '@/lib/supabase/server';
-import { getTenantForUser } from '@/lib/tenant';
+import { getAuthenticatedTenant } from '@/lib/auth-page';
 import { db, quotes, eq, desc } from '@aerolume/db';
 import { QuotesClient } from './client';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default async function QuotesPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) {
-    return (
-      <div className="text-center py-12 text-gray-500">
-        No tienes un workspace configurado.
-      </div>
-    );
-  }
+  const auth = await getAuthenticatedTenant();
+  if (!auth) return null;
 
   const list = await db
     .select({
@@ -30,17 +20,12 @@ export default async function QuotesPage() {
       createdAt: quotes.createdAt,
     })
     .from(quotes)
-    .where(eq(quotes.tenantId, tenant.id))
+    .where(eq(quotes.tenantId, auth.tenant.id))
     .orderBy(desc(quotes.createdAt));
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-900">Presupuestos</h2>
-        <p className="text-gray-500 mt-1">
-          Gestiona las solicitudes de presupuesto de tus clientes.
-        </p>
-      </div>
+      <PageHeader title="Presupuestos" description="Gestiona las solicitudes de presupuesto de tus clientes." />
       <QuotesClient initialQuotes={list} />
     </div>
   );

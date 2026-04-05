@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
+import { SaveButton, useSaveState } from '@/components/ui/SaveButton';
 
 type ThemeData = {
   themeAccent: string | null;
@@ -41,9 +43,9 @@ function hexToRgb(hex: string): string {
 
 export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
   const [theme, setTheme] = useState<ThemeData>(initialTheme);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const { saving, saved, save } = useSaveState();
   const [previewStep, setPreviewStep] = useState<1 | 2>(1);
+  const [error, setError] = useState<string | null>(null);
 
   function updateField(key: keyof ThemeData, value: string) {
     setTheme((prev) => ({ ...prev, [key]: value }));
@@ -69,17 +71,22 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
   }
 
   async function handleSave() {
-    setSaving(true);
-    const res = await fetch('/api/internal/theme', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(theme),
+    await save(async () => {
+      setError(null);
+      const res = await fetch('/api/internal/theme', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(theme),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      const { data } = await res.json();
+      if (data) setTheme(data);
+    }).catch((e: unknown) => {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
     });
-    const { data } = await res.json();
-    if (data) setTheme(data);
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   }
 
   const accent = theme.themeAccent || DEFAULTS.themeAccent!;
@@ -95,6 +102,12 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* ── Editor ── */}
       <div className="space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+
         {/* Main colors */}
         <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
           <div className="flex items-center justify-between">
@@ -160,23 +173,18 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
           />
           {theme.logoUrl && (
             <div className="border rounded-xl p-4 bg-gray-50 flex items-center justify-center">
-              <img src={theme.logoUrl} alt="Logo" className="max-h-12 object-contain" />
+              <Image src={theme.logoUrl} alt="Logo" width={192} height={48} unoptimized className="max-h-12 w-auto object-contain" />
             </div>
           )}
         </div>
 
         {/* Save */}
-        <div className="flex gap-3">
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="px-6 py-2.5 text-white text-sm font-semibold rounded-xl hover:opacity-90 disabled:opacity-50 transition-all"
-            style={{ backgroundColor: accent }}
-          >
-            {saving ? 'Guardando...' : 'Guardar cambios'}
-          </button>
-          {saved && <span className="text-sm text-green-600 self-center">Guardado</span>}
-        </div>
+        <SaveButton
+          saving={saving}
+          saved={saved}
+          onClick={handleSave}
+          className="px-6 py-2.5 bg-[var(--color-accent)] text-white text-sm font-semibold rounded-xl hover:opacity-90 disabled:opacity-50 transition-all"
+        />
       </div>
 
       {/* ── Preview ── */}
@@ -216,7 +224,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
           <div className="bg-white p-5" style={{ fontFamily: fontBody }}>
             {/* Header */}
             <div className="text-center mb-4">
-              {theme.logoUrl && <img src={theme.logoUrl} alt="Logo" className="h-6 mx-auto mb-1.5 object-contain" />}
+              {theme.logoUrl && <Image src={theme.logoUrl} alt="Logo" width={96} height={24} unoptimized className="h-6 w-auto mx-auto mb-1.5 object-contain" />}
               <p className="text-base font-bold" style={{ color: text, fontFamily: fontDisplay }}>Configurador de Velas</p>
               <p className="text-[10px]" style={{ color: `${text}60` }}>por Tu Veleria</p>
             </div>

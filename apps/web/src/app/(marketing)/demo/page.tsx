@@ -1,5 +1,12 @@
+import type { Metadata } from 'next';
 import { ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import { EmbedConfigurator } from '@/app/embed/configurator';
+
+export const metadata: Metadata = {
+    title: 'Demo',
+    description: 'Prueba el configurador de velas de Aerolume en vivo. Sin registro necesario.',
+};
 
 const DEMO_TENANT = {
     id: 'demo',
@@ -19,7 +26,7 @@ const DEMO_TENANT = {
     currency: 'EUR',
 };
 
-const DEMO_API_KEY = 'ak_26a3b7a817ba23d1fc9488daf2a154759bb66197';
+const DEMO_API_KEY = process.env.NEXT_PUBLIC_DEMO_API_KEY ?? '';
 
 export default function DemoPage() {
     return (
@@ -28,9 +35,9 @@ export default function DemoPage() {
             <div className="bg-white border-b border-gray-100">
                 <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <a href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+                        <Link href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
                             &larr; Volver
-                        </a>
+                        </Link>
                         <span className="w-px h-4 bg-gray-200" />
                         <h1 className="text-sm font-semibold text-gray-900">Demo del configurador</h1>
                     </div>
@@ -54,14 +61,14 @@ export default function DemoPage() {
                     <p className="text-sm text-gray-500 mt-1">
                         Solicita tu propio configurador personalizado con tus productos y tu marca.
                     </p>
-                    <a
+                    <Link
                         href="/signup"
                         className="inline-flex items-center gap-2 mt-4 px-6 py-3 rounded-2xl text-sm font-semibold text-white transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
                         style={{ backgroundColor: '#0b5faa' }}
                     >
                         Solicitar demo
                         <ArrowRight size={16} />
-                    </a>
+                    </Link>
                 </div>
             </div>
         </div>

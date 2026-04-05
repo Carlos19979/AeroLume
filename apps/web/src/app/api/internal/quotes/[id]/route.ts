@@ -1,18 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { db, quotes, quoteItems, eq, and } from '@aerolume/db';
-import { getTenantForUser } from '@/lib/tenant';
+import { withTenantAuth } from '@/lib/auth-helpers';
+import { validateBody, updateQuoteSchema } from '@/lib/validations';
 
-type RouteParams = { params: Promise<{ id: string }> };
-
-export async function GET(_request: Request, { params }: RouteParams) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
+export const GET = withTenantAuth(async (_request, { tenant }, params) => {
+  const { id } = params;
 
   const [quote] = await db
     .select()
@@ -28,28 +20,26 @@ export async function GET(_request: Request, { params }: RouteParams) {
     .where(eq(quoteItems.quoteId, id));
 
   return NextResponse.json({ data: { ...quote, items } });
-}
+});
 
-export async function PUT(request: Request, { params }: RouteParams) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
-
+export const PUT = withTenantAuth(async (request, { tenant }, params) => {
+  const { id } = params;
   const body = await request.json();
+  const validation = validateBody(updateQuoteSchema, body);
+  if ('error' in validation) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
+  const data = validation.data;
 
   const [updated] = await db
     .update(quotes)
     .set({
-      status: body.status,
-      totalPrice: body.totalPrice,
-      customerName: body.customerName,
-      customerEmail: body.customerEmail,
-      customerPhone: body.customerPhone,
-      customerNotes: body.customerNotes,
+      status: data.status,
+      totalPrice: data.totalPrice,
+      customerName: data.customerName,
+      customerEmail: data.customerEmail,
+      customerPhone: data.customerPhone,
+      customerNotes: data.customerNotes,
       updatedAt: new Date(),
     })
     .where(and(eq(quotes.id, id), eq(quotes.tenantId, tenant.id)))
@@ -58,20 +48,14 @@ export async function PUT(request: Request, { params }: RouteParams) {
   if (!updated) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   return NextResponse.json({ data: updated });
-}
+});
 
-export async function DELETE(_request: Request, { params }: RouteParams) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
+export const DELETE = withTenantAuth(async (_request, { tenant }, params) => {
+  const { id } = params;
 
   await db
     .delete(quotes)
     .where(and(eq(quotes.id, id), eq(quotes.tenantId, tenant.id)));
 
   return NextResponse.json({ data: { deleted: true } });
-}
+});

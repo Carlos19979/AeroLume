@@ -1,26 +1,6 @@
 'use client';
 
-const EVENT_TYPE_LABELS: Record<string, string> = {
-  configurator_opened: 'Configurador abierto',
-  boat_search: 'Búsqueda de barco',
-  boat_selected: 'Barco seleccionado',
-  product_view: 'Producto visto',
-  product_selected: 'Producto seleccionado',
-  quote_created: 'Presupuesto creado',
-  configure_started: 'Configuración iniciada',
-};
-
-const SAIL_TYPE_LABELS: Record<string, string> = {
-  gvstd: 'Mayor Clásica',
-  gvfull: 'Mayor Full Batten',
-  gve: 'Mayor Enrollable',
-  gse: 'Génova Enrollable',
-  gn: 'Génova Mosquetones',
-  gen: 'Gennaker / Code 0',
-  spisym: 'Spinnaker Simétrico',
-  spiasy: 'Spinnaker Asimétrico',
-  furling: 'Code S',
-};
+import { EVENT_TYPE_LABELS, SAIL_TYPE_LABELS } from '@/lib/constants';
 
 type AnalyticsData = {
   total: number;

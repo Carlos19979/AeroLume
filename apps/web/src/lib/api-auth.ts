@@ -14,15 +14,12 @@ type ValidationResult =
 
 /**
  * Validate an API key from a request.
- * Reads `x-api-key` header or `apiKey` query param.
+ * Reads `x-api-key` header.
  * Checks origin against tenant's allowed_origins.
  * Returns tenant context or an error.
  */
 export async function validateApiKey(request: Request): Promise<ValidationResult> {
-  const url = new URL(request.url);
-  const rawKey =
-    request.headers.get('x-api-key') ||
-    url.searchParams.get('apiKey');
+  const rawKey = request.headers.get('x-api-key');
 
   if (!rawKey) {
     return { ok: false, error: 'Missing API key', status: 401 };

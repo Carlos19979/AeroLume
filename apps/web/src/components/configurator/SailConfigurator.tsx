@@ -4,7 +4,7 @@ import { startTransition, useDeferredValue, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Compass, Gauge, Loader2, Search, Settings2, Wind, Anchor, ChevronDown, FileText } from 'lucide-react';
-import type { Boat } from '@/types/boat';
+import type { Boat } from '@aerolume/shared';
 
 /* ── Types ─────────────────────────────────────── */
 

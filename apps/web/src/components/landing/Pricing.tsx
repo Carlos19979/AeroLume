@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { Check, ArrowRight, Sparkles } from 'lucide-react';
 
 const FEATURES = [
@@ -98,23 +99,23 @@ export function Pricing() {
 
               {/* CTA */}
               <div className="px-10 pb-10">
-                <a
+                <Link
                   href="/signup"
                   className="group flex items-center justify-center gap-2 w-full py-4 rounded-2xl text-sm font-semibold text-white transition-all duration-300 hover:shadow-xl hover:shadow-[#0b5faa]/20 hover:-translate-y-0.5"
                   style={{ background: 'linear-gradient(135deg, #0a2540, #0b5faa)' }}
                 >
                   Empezar ahora
                   <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
-                </a>
+                </Link>
               </div>
             </div>
           </div>
 
           <p className="text-center mt-8 text-sm text-gray-400">
             ¿Mas de una tienda?{' '}
-            <a href="/contact" className="text-[#0b5faa] hover:underline underline-offset-2 font-medium">
+            <Link href="/contact" className="text-[#0b5faa] hover:underline underline-offset-2 font-medium">
               Contacta para plan Enterprise →
-            </a>
+            </Link>
           </p>
         </motion.div>
       </div>

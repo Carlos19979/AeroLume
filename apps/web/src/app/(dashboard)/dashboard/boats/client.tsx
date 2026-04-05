@@ -77,17 +77,28 @@ export function BoatsClient() {
   const [loading, setLoading] = useState(true);
   const [selectedBoat, setSelectedBoat] = useState<BoatDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function fetchBoats(page: number, searchQuery?: string) {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page), pageSize: '50' });
-    if (searchQuery && searchQuery.length >= 2) params.set('search', searchQuery);
+    try {
+      setError(null);
+      const params = new URLSearchParams({ page: String(page), pageSize: '50' });
+      if (searchQuery && searchQuery.length >= 2) params.set('search', searchQuery);
 
-    const res = await fetch(`/api/internal/boats?${params}`);
-    const { data, pagination: pag } = await res.json();
-    setBoatsList(data || []);
-    setPagination(pag || { page: 1, pageSize: 50, total: 0, totalPages: 0 });
-    setLoading(false);
+      const res = await fetch(`/api/internal/boats?${params}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      const { data, pagination: pag } = await res.json();
+      setBoatsList(data || []);
+      setPagination(pag || { page: 1, pageSize: 50, total: 0, totalPages: 0 });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { fetchBoats(1); }, []);
@@ -99,14 +110,30 @@ export function BoatsClient() {
 
   async function handleViewBoat(id: string) {
     setDetailLoading(true);
-    const res = await fetch(`/api/internal/boats/${id}`);
-    const { data } = await res.json();
-    setSelectedBoat(data);
-    setDetailLoading(false);
+    try {
+      setError(null);
+      const res = await fetch(`/api/internal/boats/${id}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      const { data } = await res.json();
+      setSelectedBoat(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
+    } finally {
+      setDetailLoading(false);
+    }
   }
 
   return (
     <>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
       {/* Search */}
       <div className="flex items-center gap-4">
         <input

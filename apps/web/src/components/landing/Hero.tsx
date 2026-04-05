@@ -1,20 +1,21 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden min-h-[100vh]" style={{ background: 'linear-gradient(160deg, #040e1a 0%, #0a2540 40%, #0d3158 70%, #0a2540 100%)' }}>
+    <section className="relative overflow-hidden min-h-[100vh] bg-dark-gradient">
       {/* Grain texture overlay */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")` }} />
+      <div className="absolute inset-0 opacity-[0.03] bg-grain" />
 
       {/* Gradient orbs */}
       <div className="absolute top-[-20%] right-[-10%] w-[700px] h-[700px] rounded-full opacity-[0.07]" style={{ background: 'radial-gradient(circle, #4da3ff, transparent 65%)' }} />
       <div className="absolute bottom-[-30%] left-[-15%] w-[600px] h-[600px] rounded-full opacity-[0.05]" style={{ background: 'radial-gradient(circle, #0b5faa, transparent 65%)' }} />
 
       {/* Subtle grid */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+      <div className="absolute inset-0 opacity-[0.03] bg-dot-grid" />
 
       {/* Horizontal line accent */}
       <div className="absolute top-[45%] left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
@@ -52,20 +53,20 @@ export function Hero() {
             </p>
 
             <div className="mt-10 flex flex-wrap items-center gap-4">
-              <a
+              <Link
                 href="/contact"
                 className="group inline-flex items-center gap-2.5 px-7 py-4 rounded-2xl text-sm font-semibold text-[#0a2540] bg-white transition-all duration-300 hover:shadow-[0_8px_40px_rgba(255,255,255,0.15)] hover:-translate-y-0.5"
               >
                 Solicitar demo
                 <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/#producto"
                 className="inline-flex items-center gap-2 px-5 py-4 rounded-2xl text-sm font-medium text-white/50 hover:text-white/80 transition-all duration-300"
               >
                 Conocer mas
                 <ArrowRight size={14} />
-              </a>
+              </Link>
             </div>
 
             {/* Trust stats */}

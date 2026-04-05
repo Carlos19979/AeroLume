@@ -28,3 +28,10 @@ export function formatDimension(value: string | number | null, unit = 'm'): stri
 export function formatNumber(value: number, locale = 'es-ES'): string {
   return new Intl.NumberFormat(locale).format(value);
 }
+
+/** Convert Drizzle numeric string to number, handling null */
+export function toNumber(value: string | null | undefined): number | null {
+  if (value == null || value === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}

@@ -34,8 +34,8 @@ export function HowItWorks() {
   return (
     <section id="como-funciona" className="py-28 relative overflow-hidden" style={{ background: 'linear-gradient(160deg, #040e1a, #0a2540, #0d3158)' }}>
       {/* Grain */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")` }} />
-      <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+      <div className="absolute inset-0 opacity-[0.03] bg-grain" />
+      <div className="absolute inset-0 opacity-[0.02] bg-dot-grid" />
 
       <div className="relative max-w-7xl mx-auto px-6">
         <motion.div

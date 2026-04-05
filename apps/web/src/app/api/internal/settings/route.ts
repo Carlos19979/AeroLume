@@ -1,16 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { db, tenants, eq } from '@aerolume/db';
-import { getTenantForUser } from '@/lib/tenant';
+import { withTenantAuth } from '@/lib/auth-helpers';
+import { isInternalUrl } from '@/lib/url-validation';
+import { validateBody, updateTenantSettingsSchema } from '@/lib/validations';
 
-export async function GET() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
-
+export const GET = withTenantAuth(async (_request, { tenant }) => {
   const [data] = await db
     .select({
       id: tenants.id,
@@ -35,32 +29,41 @@ export async function GET() {
     .limit(1);
 
   return NextResponse.json({ data });
-}
+});
 
-export async function PUT(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
-
+export const PUT = withTenantAuth(async (request, { tenant }) => {
   const body = await request.json();
+  const validation = validateBody(updateTenantSettingsSchema, body);
+  if ('error' in validation) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
+  const data = validation.data;
+
+  if (data.webhookUrl) {
+    try {
+      new URL(data.webhookUrl);
+      if (isInternalUrl(data.webhookUrl)) {
+        return NextResponse.json({ error: 'Invalid webhook URL' }, { status: 400 });
+      }
+    } catch {
+      return NextResponse.json({ error: 'Invalid webhook URL' }, { status: 400 });
+    }
+  }
 
   const [updated] = await db
     .update(tenants)
     .set({
-      name: body.name,
-      companyName: body.companyName,
-      phone: body.phone,
-      website: body.website,
-      country: body.country,
-      city: body.city,
-      customDomain: body.customDomain,
-      locale: body.locale,
-      currency: body.currency,
-      allowedOrigins: body.allowedOrigins,
-      webhookUrl: body.webhookUrl,
+      name: data.name,
+      companyName: data.companyName,
+      phone: data.phone,
+      website: data.website,
+      country: data.country,
+      city: data.city,
+      customDomain: data.customDomain,
+      locale: data.locale,
+      currency: data.currency,
+      allowedOrigins: data.allowedOrigins,
+      webhookUrl: data.webhookUrl,
       updatedAt: new Date(),
     })
     .where(eq(tenants.id, tenant.id))
@@ -84,4 +87,4 @@ export async function PUT(request: Request) {
     });
 
   return NextResponse.json({ data: updated });
-}
+});

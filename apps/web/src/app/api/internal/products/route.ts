@@ -1,17 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { db, products, tenants, eq } from '@aerolume/db';
-import { getTenantForUser } from '@/lib/tenant';
 import { canCreateProducts } from '@/lib/plan-gates';
+import { withTenantAuth } from '@/lib/auth-helpers';
+import { slugify } from '@/lib/utils';
+import { validateBody, createProductSchema } from '@/lib/validations';
 
-export async function GET() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
-
+export const GET = withTenantAuth(async (_request, { tenant }) => {
   const list = await db
     .select({
       id: products.id,
@@ -28,48 +22,35 @@ export async function GET() {
     .where(eq(products.tenantId, tenant.id));
 
   return NextResponse.json({ data: list });
-}
+});
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-}
 
-export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const tenant = await getTenantForUser(user.id, user.email);
-  if (!tenant) return NextResponse.json({ error: 'No tenant' }, { status: 403 });
-
+export const POST = withTenantAuth(async (request, { tenant }) => {
   // Check plan
   const [full] = await db.select({ plan: tenants.plan, subscriptionStatus: tenants.subscriptionStatus }).from(tenants).where(eq(tenants.id, tenant.id)).limit(1);
   if (full && !canCreateProducts(full)) {
-    return NextResponse.json({ error: 'Tu plan no permite crear productos. Contacta para activar.' }, { status: 403 });
+    return NextResponse.json({ error: 'Plan limit reached' }, { status: 403 });
   }
 
   const body = await request.json();
-  if (!body.name || !body.sailType) {
-    return NextResponse.json({ error: 'name and sailType are required' }, { status: 400 });
+  const validation = validateBody(createProductSchema, body);
+  if ('error' in validation) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
   }
+  const data = validation.data;
 
   const [created] = await db
     .insert(products)
     .values({
       tenantId: tenant.id,
-      name: body.name,
-      slug: slugify(body.name),
-      sailType: body.sailType,
-      basePrice: body.basePrice || null,
-      descriptionShort: body.descriptionShort || null,
+      name: data.name,
+      slug: slugify(data.name),
+      sailType: data.sailType,
+      basePrice: data.basePrice || null,
+      descriptionShort: null,
       active: true,
     })
     .returning();
 
   return NextResponse.json({ data: created });
-}
+});

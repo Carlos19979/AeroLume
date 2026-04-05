@@ -2,15 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@aerolume/db';
 import { tenants, tenantMembers } from '@aerolume/db';
-
-function slugify(text: string): string {
-    return text
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-}
+import { slugify } from '@/lib/utils';
+import { validateBody, createTenantSchema } from '@/lib/validations';
 
 export async function POST(request: Request) {
     const supabase = await createClient();
@@ -20,8 +13,20 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const name = body.name || `${user.email}'s Workspace`;
+    let body: unknown;
+    try {
+        body = await request.json();
+    } catch {
+        return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    }
+
+    const validation = validateBody(createTenantSchema, body);
+    if ('error' in validation) {
+        return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+    const data = validation.data;
+
+    const name = data.name || `${user.email}'s Workspace`;
     const slug = slugify(name) + '-' + user.id.slice(0, 8);
 
     const [tenant] = await db
@@ -31,11 +36,11 @@ export async function POST(request: Request) {
             slug,
             plan: 'prueba',
             subscriptionStatus: 'active',
-            companyName: body.companyName || null,
-            phone: body.phone || null,
-            website: body.website || null,
-            country: body.country || null,
-            city: body.city || null,
+            companyName: data.companyName || null,
+            phone: data.phone || null,
+            website: data.website || null,
+            country: data.country || null,
+            city: data.city || null,
         })
         .returning();
 

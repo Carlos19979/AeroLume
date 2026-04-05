@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { SUBSCRIPTION_STATUS_LABELS } from '@/lib/constants';
+import { formatDate } from '@/lib/format';
+import { SaveButton, useSaveState } from '@/components/ui/SaveButton';
 
 type Settings = {
   id: string;
@@ -26,16 +29,11 @@ const PLAN_LABELS: Record<string, string> = {
   pro: 'Pro',
 };
 
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  active: { label: 'Activa', color: 'bg-green-50 text-green-700' },
-  past_due: { label: 'Pago pendiente', color: 'bg-red-50 text-red-600' },
-  canceled: { label: 'Cancelada', color: 'bg-gray-100 text-gray-500' },
-};
 
 export function SettingsClient({ initialSettings }: { initialSettings: Settings }) {
   const [settings, setSettings] = useState(initialSettings);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const { saving, saved, save } = useSaveState();
+  const [error, setError] = useState<string | null>(null);
 
   const [name, setName] = useState(settings.name);
   const [companyName, setCompanyName] = useState(settings.companyName || '');
@@ -52,41 +50,52 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
   const [webhookUrl, setWebhookUrl] = useState(settings.webhookUrl || '');
 
   async function handleSave() {
-    setSaving(true);
-    const allowedOrigins = originsText
-      .split('\n')
-      .map((o) => o.trim())
-      .filter(Boolean);
+    await save(async () => {
+      setError(null);
+      const allowedOrigins = originsText
+        .split('\n')
+        .map((o) => o.trim())
+        .filter(Boolean);
 
-    const res = await fetch('/api/internal/settings', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name,
-        companyName: companyName || null,
-        phone: phone || null,
-        website: siteUrl || null,
-        country: country || null,
-        city: city || null,
-        customDomain: customDomain || null,
-        locale,
-        currency,
-        allowedOrigins,
-        webhookUrl: webhookUrl || null,
-      }),
+      const res = await fetch('/api/internal/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          companyName: companyName || null,
+          phone: phone || null,
+          website: siteUrl || null,
+          country: country || null,
+          city: city || null,
+          customDomain: customDomain || null,
+          locale,
+          currency,
+          allowedOrigins,
+          webhookUrl: webhookUrl || null,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Error inesperado');
+      }
+      const { data } = await res.json();
+      if (data) setSettings(data);
+    }).catch((e: unknown) => {
+      setError(e instanceof Error ? e.message : 'Error inesperado');
     });
-    const { data } = await res.json();
-    if (data) setSettings(data);
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   }
 
-  const status = STATUS_LABELS[settings.subscriptionStatus || ''] || STATUS_LABELS.trialing;
+  const status = SUBSCRIPTION_STATUS_LABELS[settings.subscriptionStatus || ''] || SUBSCRIPTION_STATUS_LABELS.trialing;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+
         {/* General */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
           <h3 className="font-medium text-gray-900">General</h3>
@@ -110,7 +119,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
               <label className="block text-sm text-gray-600 mb-1">Telefono</label>
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
                 className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                placeholder="+34 600 000 000" />
+                placeholder="+34 611 234 567" />
             </div>
             <div>
               <label className="block text-sm text-gray-600 mb-1">Web</label>
@@ -214,16 +223,12 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
         </div>
 
         {/* Save */}
-        <div className="flex gap-3">
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="px-6 py-2 bg-[var(--color-accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
-          >
-            {saving ? 'Guardando...' : 'Guardar cambios'}
-          </button>
-          {saved && <span className="text-sm text-green-600 self-center">Guardado</span>}
-        </div>
+        <SaveButton
+          saving={saving}
+          saved={saved}
+          onClick={handleSave}
+          className="px-6 py-2 bg-[var(--color-accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
+        />
       </div>
 
       {/* Sidebar */}
@@ -240,7 +245,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
             <div>
               <dt className="text-gray-500">Estado</dt>
               <dd>
-                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${status.color}`}>
+                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${status.bg} ${status.color}`}>
                   {status.label}
                 </span>
               </dd>
@@ -249,7 +254,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
               <div>
                 <dt className="text-gray-500">Prueba termina</dt>
                 <dd className="text-gray-900">
-                  {new Date(settings.trialEndsAt).toLocaleDateString('es')}
+                  {formatDate(settings.trialEndsAt)}
                 </dd>
               </div>
             )}

@@ -4,3 +4,4 @@ export * from './types/tenant';
 export * from './types/api';
 export * from './utils/normalize';
 export * from './utils/format';
+export * from './utils/tenant';

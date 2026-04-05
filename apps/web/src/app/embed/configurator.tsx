@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useDeferredValue } from 'react';
+import Image from 'next/image';
+import { SAIL_TYPE_LABELS } from '@/lib/constants';
 
 type Tenant = {
   id: string;
@@ -67,11 +69,6 @@ function hexToRgb(hex: string): string {
   return `${r}, ${g}, ${b}`;
 }
 
-const SAIL_TYPE_LABELS: Record<string, string> = {
-  gvstd: 'Mayor Clasica', gvfull: 'Mayor Full Batten', gve: 'Mayor Enrollable',
-  gse: 'Genova Enrollable', gn: 'Genova Mosquetones', gen: 'Gennaker / Code 0',
-  spisym: 'Spinnaker Simetrico', spiasy: 'Spinnaker Asimetrico', furling: 'Code S',
-};
 
 const STEPS: { key: Step; label: string }[] = [
   { key: 'boat', label: 'Barco' },
@@ -96,6 +93,16 @@ function SailIcon({ size = 20, color = 'currentColor' }: { size?: number; color?
 }
 
 export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: Tenant }) {
+  const [parentOrigin, setParentOrigin] = useState('*');
+
+  useEffect(() => {
+    if (document.referrer) {
+      try {
+        setParentOrigin(new URL(document.referrer).origin);
+      } catch {}
+    }
+  }, []);
+
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
   const [boatResults, setBoatResults] = useState<Boat[]>([]);
@@ -195,7 +202,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
     postMsg('aerolume:product-selected', product);
   }
 
-  function postMsg(type: string, payload: any) { window.parent.postMessage({ type, payload }, '*'); }
+  function postMsg(type: string, payload: any) { window.parent.postMessage({ type, payload }, parentOrigin); }
 
   useEffect(() => {
     const observer = new ResizeObserver(() => postMsg('aerolume:resize', { height: document.body.scrollHeight }));
@@ -223,7 +230,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
           )}
           <div className="flex items-center gap-2.5">
             {tenant.logoUrl && (
-              <img src={tenant.logoUrl} alt={tenant.name} className="h-7 object-contain" />
+              <Image src={tenant.logoUrl} alt={tenant.name} width={112} height={28} unoptimized className="h-7 w-auto object-contain" />
             )}
             <div>
               <h1 className="text-lg font-bold tracking-tight" style={{ color: textColor, fontFamily: `${fontDisplay}, serif` }}>
@@ -548,7 +555,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Telefono</label>
                 <input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)}
                   className={inputClass} style={{ '--tw-ring-color': accent } as React.CSSProperties}
-                  placeholder="+34 600 000 000" />
+                  placeholder="+34 611 234 567" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Notas</label>

@@ -1,19 +1,14 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Settings, LogOut } from 'lucide-react';
+import { useClickOutside } from '@/hooks/useClickOutside';
 
 export function UserMenu({ name, email }: { name: string; email: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
+  useClickOutside(ref, useCallback(() => setOpen(false), []));
 
   const initial = (name || email || '?')[0].toUpperCase();
 
