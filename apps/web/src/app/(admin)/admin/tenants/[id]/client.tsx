@@ -8,10 +8,9 @@ type QuoteRow = { id: string; boatModel: string | null; customerName: string | n
 type ApiKeyRow = { id: string; keyPrefix: string; name: string; createdAt: Date | null };
 
 const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-green-500/20 text-green-400',
-  trialing: 'bg-yellow-500/20 text-yellow-400',
-  past_due: 'bg-red-500/20 text-red-400',
-  canceled: 'bg-white/10 text-white/40',
+  active: 'bg-green-100 text-green-700',
+  past_due: 'bg-red-100 text-red-700',
+  canceled: 'bg-gray-100 text-gray-500',
 };
 
 export function TenantDetailClient({ tenant, members, quotes, apiKeys }: {
@@ -46,43 +45,43 @@ export function TenantDetailClient({ tenant, members, quotes, apiKeys }: {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-6">
         {/* Impersonate */}
-        <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-5 flex items-center justify-between">
+        <div className="rounded-2xl bg-blue-50 border border-blue-200 p-5 flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-blue-300">Impersonar tenant</p>
-            <p className="text-xs text-blue-300/50 mt-0.5">Abre el dashboard en una nueva pestaña como si fueras este tenant</p>
+            <p className="text-sm font-medium text-blue-700">Impersonar tenant</p>
+            <p className="text-xs text-blue-500 mt-0.5">Abre el dashboard en una nueva pestaña como si fueras este tenant</p>
           </div>
           <a
             href={`/api/admin/impersonate?tenantId=${tenant.id}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2 bg-blue-500 text-white text-xs font-medium rounded-lg hover:bg-blue-400 transition-colors"
+            className="px-4 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-500 transition-colors"
           >
             Abrir en nueva pestaña
           </a>
         </div>
 
         {/* Quotes */}
-        <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] overflow-hidden">
-          <div className="px-5 py-4 border-b border-white/[0.06]">
-            <h3 className="text-sm font-semibold text-white/80">Quotes ({quotes.length})</h3>
+        <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-800">Quotes ({quotes.length})</h3>
           </div>
           {quotes.length === 0 ? (
-            <p className="px-5 py-6 text-xs text-white/30">Sin quotes</p>
+            <p className="px-5 py-6 text-xs text-gray-400">Sin quotes</p>
           ) : (
             <table className="w-full text-xs">
-              <tbody className="divide-y divide-white/[0.04]">
+              <tbody className="divide-y divide-gray-100">
                 {quotes.map((q) => (
-                  <tr key={q.id} className="hover:bg-white/[0.02]">
-                    <td className="px-5 py-2.5 text-white/70">{q.customerName || '—'}</td>
-                    <td className="px-5 py-2.5 text-white/40">{q.boatModel || '—'}</td>
+                  <tr key={q.id} className="hover:bg-gray-50">
+                    <td className="px-5 py-2.5 text-gray-700">{q.customerName || '—'}</td>
+                    <td className="px-5 py-2.5 text-gray-400">{q.boatModel || '—'}</td>
                     <td className="px-5 py-2.5">
                       <span className={`px-1.5 py-0.5 rounded text-[10px] ${
-                        q.status === 'accepted' ? 'bg-green-500/20 text-green-400' :
-                        q.status === 'sent' ? 'bg-blue-500/20 text-blue-400' :
-                        'bg-white/10 text-white/30'
+                        q.status === 'accepted' ? 'bg-green-100 text-green-700' :
+                        q.status === 'sent' ? 'bg-blue-100 text-blue-700' :
+                        'bg-gray-100 text-gray-500'
                       }`}>{q.status}</span>
                     </td>
-                    <td className="px-5 py-2.5 text-white/30">{q.createdAt ? new Date(q.createdAt).toLocaleDateString('es') : '—'}</td>
+                    <td className="px-5 py-2.5 text-gray-400">{q.createdAt ? new Date(q.createdAt).toLocaleDateString('es') : '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -94,30 +93,30 @@ export function TenantDetailClient({ tenant, members, quotes, apiKeys }: {
       {/* Sidebar */}
       <div className="space-y-4">
         {/* Info */}
-        <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-5 space-y-3">
-          <h3 className="text-sm font-semibold text-white/80">Detalles</h3>
+        <div className="rounded-2xl bg-white border border-gray-200 p-5 space-y-3">
+          <h3 className="text-sm font-semibold text-gray-800">Detalles</h3>
           <dl className="space-y-2 text-xs">
-            <div className="flex justify-between"><dt className="text-white/30">Slug</dt><dd className="text-white/60 font-mono">{tenant.slug}</dd></div>
-            <div className="flex justify-between"><dt className="text-white/30">Plan</dt><dd className="text-white/60">{tenant.plan}</dd></div>
-            <div className="flex justify-between"><dt className="text-white/30">Estado</dt>
+            <div className="flex justify-between"><dt className="text-gray-400">Slug</dt><dd className="text-gray-600 font-mono">{tenant.slug}</dd></div>
+            <div className="flex justify-between"><dt className="text-gray-400">Plan</dt><dd className="text-gray-600">{tenant.plan}</dd></div>
+            <div className="flex justify-between"><dt className="text-gray-400">Estado</dt>
               <dd><span className={`px-1.5 py-0.5 rounded ${STATUS_COLORS[tenant.subscriptionStatus] || STATUS_COLORS.canceled}`}>{tenant.subscriptionStatus}</span></dd>
             </div>
-            <div className="flex justify-between"><dt className="text-white/30">Creado</dt><dd className="text-white/60">{tenant.createdAt ? new Date(tenant.createdAt).toLocaleDateString('es') : '—'}</dd></div>
-            <div className="flex justify-between"><dt className="text-white/30">ID</dt><dd className="text-white/30 font-mono text-[10px]">{tenant.id.slice(0, 12)}...</dd></div>
+            <div className="flex justify-between"><dt className="text-gray-400">Creado</dt><dd className="text-gray-600">{tenant.createdAt ? new Date(tenant.createdAt).toLocaleDateString('es') : '—'}</dd></div>
+            <div className="flex justify-between"><dt className="text-gray-400">ID</dt><dd className="text-gray-400 font-mono text-[10px]">{tenant.id.slice(0, 12)}...</dd></div>
           </dl>
         </div>
 
         {/* Plan actions */}
-        <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-5 space-y-3">
-          <h3 className="text-sm font-semibold text-white/80">Cambiar plan</h3>
+        <div className="rounded-2xl bg-white border border-gray-200 p-5 space-y-3">
+          <h3 className="text-sm font-semibold text-gray-800">Cambiar plan</h3>
           <div className="space-y-1.5">
-            {['starter', 'pro', 'enterprise'].map((plan) => (
+            {['prueba', 'pro'].map((plan) => (
               <button
                 key={plan}
                 onClick={() => updatePlan(plan)}
                 disabled={updating || tenant.plan === plan}
                 className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all ${
-                  tenant.plan === plan ? 'bg-white/10 text-white/70 font-medium' : 'text-white/40 hover:bg-white/[0.04] hover:text-white/60'
+                  tenant.plan === plan ? 'bg-gray-100 text-gray-700 font-medium' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
                 } disabled:opacity-50`}
               >
                 {plan.charAt(0).toUpperCase() + plan.slice(1)} {tenant.plan === plan && '(actual)'}
@@ -127,16 +126,16 @@ export function TenantDetailClient({ tenant, members, quotes, apiKeys }: {
         </div>
 
         {/* Status actions */}
-        <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-5 space-y-3">
-          <h3 className="text-sm font-semibold text-white/80">Cambiar estado</h3>
+        <div className="rounded-2xl bg-white border border-gray-200 p-5 space-y-3">
+          <h3 className="text-sm font-semibold text-gray-800">Cambiar estado</h3>
           <div className="space-y-1.5">
-            {['active', 'trialing', 'past_due', 'canceled'].map((status) => (
+            {['active', 'canceled', 'past_due'].map((status) => (
               <button
                 key={status}
                 onClick={() => updateStatus(status)}
                 disabled={updating || tenant.subscriptionStatus === status}
                 className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all ${
-                  tenant.subscriptionStatus === status ? 'bg-white/10 text-white/70 font-medium' : 'text-white/40 hover:bg-white/[0.04] hover:text-white/60'
+                  tenant.subscriptionStatus === status ? 'bg-gray-100 text-gray-700 font-medium' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
                 } disabled:opacity-50`}
               >
                 {status} {tenant.subscriptionStatus === status && '(actual)'}
@@ -146,23 +145,23 @@ export function TenantDetailClient({ tenant, members, quotes, apiKeys }: {
         </div>
 
         {/* Members */}
-        <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-5 space-y-3">
-          <h3 className="text-sm font-semibold text-white/80">Miembros ({members.length})</h3>
+        <div className="rounded-2xl bg-white border border-gray-200 p-5 space-y-3">
+          <h3 className="text-sm font-semibold text-gray-800">Miembros ({members.length})</h3>
           {members.map((m) => (
             <div key={m.id} className="flex justify-between text-xs">
-              <span className="text-white/40 font-mono text-[10px]">{m.userId.slice(0, 8)}...</span>
-              <span className="text-white/60">{m.role}</span>
+              <span className="text-gray-400 font-mono text-[10px]">{m.userId.slice(0, 8)}...</span>
+              <span className="text-gray-600">{m.role}</span>
             </div>
           ))}
         </div>
 
         {/* API Keys */}
-        <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-5 space-y-3">
-          <h3 className="text-sm font-semibold text-white/80">API Keys ({apiKeys.length})</h3>
+        <div className="rounded-2xl bg-white border border-gray-200 p-5 space-y-3">
+          <h3 className="text-sm font-semibold text-gray-800">API Keys ({apiKeys.length})</h3>
           {apiKeys.map((k) => (
             <div key={k.id} className="flex justify-between text-xs">
-              <span className="text-white/50 font-mono">{k.keyPrefix}...</span>
-              <span className="text-white/30">{k.name}</span>
+              <span className="text-gray-500 font-mono">{k.keyPrefix}...</span>
+              <span className="text-gray-400">{k.name}</span>
             </div>
           ))}
         </div>
