@@ -35,6 +35,13 @@ export const tenants = pgTable('tenants', {
   webhookUrl: text('webhook_url'),
   sailonetImport: boolean('sailonet_import').default(false),
 
+  // Company info
+  companyName: text('company_name'),
+  phone: text('phone'),
+  website: text('website'),
+  country: text('country'),
+  city: text('city'),
+
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });

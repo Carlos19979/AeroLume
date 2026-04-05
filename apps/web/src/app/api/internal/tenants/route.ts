@@ -29,6 +29,11 @@ export async function POST(request: Request) {
         .values({
             name,
             slug,
+            companyName: body.companyName || null,
+            phone: body.phone || null,
+            website: body.website || null,
+            country: body.country || null,
+            city: body.city || null,
         })
         .returning();
 
