@@ -104,10 +104,10 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100">
             <h3 className="font-semibold text-gray-900">Productos solicitados</h3>
-            <p className="text-xs text-gray-400 mt-0.5">{items.length} {items.length === 1 ? 'producto' : 'productos'} en este presupuesto</p>
+            <p className="text-xs text-gray-500 mt-0.5">{items.length} {items.length === 1 ? 'producto' : 'productos'} en este presupuesto</p>
           </div>
           {items.length === 0 ? (
-            <p className="text-sm text-gray-400 p-6">Sin productos.</p>
+            <p className="text-sm text-gray-500 p-6">Sin productos.</p>
           ) : (
             <div className="divide-y divide-gray-100">
               {items
@@ -120,7 +120,7 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
                       <div className="flex items-start justify-between">
                         <div>
                           <p className="font-semibold text-gray-900">{item.productName}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">
+                          <p className="text-xs text-gray-500 mt-0.5">
                             {SAIL_TYPE_LABELS[item.sailType] || item.sailType}
                             {item.sailArea && <span className="ml-2">· {Number(item.sailArea).toFixed(1)} m²</span>}
                             {item.quantity && item.quantity > 1 && <span className="ml-2">· x{item.quantity}</span>}
@@ -132,7 +132,7 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
                               {formatPrice(item.unitPrice, cur)}
                             </p>
                           ) : (
-                            <p className="text-sm text-gray-400">Sin precio</p>
+                            <p className="text-sm text-gray-500">Sin precio</p>
                           )}
                         </div>
                       </div>
@@ -140,7 +140,7 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
                         <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
                           {entries.map(([key, value]) => (
                             <div key={key} className="bg-gray-50 rounded-lg px-3 py-2">
-                              <p className="text-[10px] text-gray-400 uppercase tracking-wide">{key}</p>
+                              <p className="text-[10px] text-gray-500 uppercase tracking-wide">{key}</p>
                               <p className="text-xs font-medium text-gray-700 mt-0.5">{value}</p>
                             </div>
                           ))}
@@ -231,13 +231,13 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
           <div className="space-y-2 text-sm">
             {quote.customerPhone && (
               <div className="flex items-center gap-2 text-gray-500">
-                <span className="text-gray-400">Tel:</span>
+                <span className="text-gray-500">Tel:</span>
                 <span>{quote.customerPhone}</span>
               </div>
             )}
             {quote.customerEmail && (
               <div className="flex items-center gap-2 text-gray-500">
-                <span className="text-gray-400">Email:</span>
+                <span className="text-gray-500">Email:</span>
                 <span>{quote.customerEmail}</span>
               </div>
             )}
@@ -256,7 +256,7 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
             </div>
             <div>
               <p className="text-sm font-semibold text-gray-900">{quote.boatModel || 'Sin especificar'}</p>
-              {quote.boatLength && <p className="text-xs text-gray-400">Eslora: {quote.boatLength}m</p>}
+              {quote.boatLength && <p className="text-xs text-gray-500">Eslora: {quote.boatLength}m</p>}
             </div>
           </div>
         </div>
@@ -266,20 +266,20 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
           <h3 className="font-semibold text-gray-900 mb-3">Detalles</h3>
           <dl className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
-              <dt className="text-gray-400">Creado</dt>
+              <dt className="text-gray-500">Creado</dt>
               <dd className="text-gray-700 font-medium">
                 {quote.createdAt ? new Date(quote.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
               </dd>
             </div>
             <div className="flex items-center justify-between">
-              <dt className="text-gray-400">Actualizado</dt>
+              <dt className="text-gray-500">Actualizado</dt>
               <dd className="text-gray-700 font-medium">
                 {quote.updatedAt ? new Date(quote.updatedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
               </dd>
             </div>
             <div className="flex items-center justify-between">
-              <dt className="text-gray-400">ID</dt>
-              <dd className="font-mono text-[10px] text-gray-400">{quote.id.slice(0, 8)}...</dd>
+              <dt className="text-gray-500">ID</dt>
+              <dd className="font-mono text-[10px] text-gray-500">{quote.id.slice(0, 8)}...</dd>
             </div>
           </dl>
         </div>

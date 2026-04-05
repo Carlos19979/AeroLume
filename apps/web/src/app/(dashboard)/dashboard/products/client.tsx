@@ -119,7 +119,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {productsList.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12 text-gray-500">
             No tienes productos. Crea uno para empezar.
           </div>
         ) : (
@@ -169,7 +169,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
                   <td className="px-4 py-3 text-right space-x-3">
                     <button
                       onClick={() => handleToggleActive(product.id, product.active)}
-                      className="text-xs text-gray-400 hover:text-gray-600"
+                      className="text-xs text-gray-500 hover:text-gray-600"
                     >
                       {product.active ? 'Desactivar' : 'Activar'}
                     </button>

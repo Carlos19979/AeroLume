@@ -116,7 +116,7 @@ export function BoatsClient() {
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1 max-w-md border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
         />
-        <span className="text-sm text-gray-400">
+        <span className="text-sm text-gray-500">
           {pagination.total.toLocaleString('es')} barcos
         </span>
       </div>
@@ -124,9 +124,9 @@ export function BoatsClient() {
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {loading ? (
-          <div className="text-center py-12 text-gray-400 text-sm">Cargando...</div>
+          <div className="text-center py-12 text-gray-500 text-sm">Cargando...</div>
         ) : boatsList.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 text-sm">No se encontraron barcos.</div>
+          <div className="text-center py-12 text-gray-500 text-sm">No se encontraron barcos.</div>
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
@@ -152,7 +152,7 @@ export function BoatsClient() {
                       <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded">Monocasco</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-400 text-xs">
+                  <td className="px-4 py-3 text-gray-500 text-xs">
                     {boat.tenantId ? 'Personalizado' : 'Global'}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -205,7 +205,7 @@ export function BoatsClient() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto">
               {detailLoading ? (
-                <div className="p-12 text-center text-gray-400">Cargando...</div>
+                <div className="p-12 text-center text-gray-500">Cargando...</div>
               ) : selectedBoat && (
                 <>
                   {/* Header */}
@@ -240,7 +240,7 @@ export function BoatsClient() {
                   <div className="p-6 space-y-6">
                     {/* Rig dimensions */}
                     <div>
-                      <h4 className="text-xs uppercase tracking-wider text-gray-400 font-medium mb-3">Medidas del aparejo</h4>
+                      <h4 className="text-xs uppercase tracking-wider text-gray-500 font-medium mb-3">Medidas del aparejo</h4>
                       <div className="grid grid-cols-4 gap-3">
                         {Object.entries(RIG_LABELS).map(([key, label]) => {
                           const val = selectedBoat[key];
@@ -248,7 +248,7 @@ export function BoatsClient() {
                           return (
                             <div key={key} className="bg-gray-50 rounded-xl p-3 text-center">
                               <p className="text-lg font-semibold text-gray-900 font-mono">{Number(val).toFixed(2)}</p>
-                              <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                              <p className="text-xs text-gray-500 mt-0.5">{label}</p>
                             </div>
                           );
                         })}
@@ -257,7 +257,7 @@ export function BoatsClient() {
 
                     {/* Sail areas */}
                     <div>
-                      <h4 className="text-xs uppercase tracking-wider text-gray-400 font-medium mb-3">Areas de vela</h4>
+                      <h4 className="text-xs uppercase tracking-wider text-gray-500 font-medium mb-3">Areas de vela</h4>
                       <div className="space-y-2">
                         {(() => {
                           const areas = Object.entries(SAIL_AREA_LABELS)

@@ -242,7 +242,7 @@ export function ProductEditClient({
           )}
 
           {fields.length === 0 ? (
-            <p className="text-sm text-gray-400">No hay campos de configuración.</p>
+            <p className="text-sm text-gray-500">No hay campos de configuración.</p>
           ) : (
             <div className="space-y-3">
               {fields
@@ -259,7 +259,7 @@ export function ProductEditClient({
                           <span className="text-sm font-medium text-gray-900">
                             {field.label}
                           </span>
-                          <span className="text-xs text-gray-400 ml-2">({field.key})</span>
+                          <span className="text-xs text-gray-500 ml-2">({field.key})</span>
                           <div className="text-xs text-gray-500 mt-0.5">
                             {options.length} opciones
                             {Object.values(mods).some((v) => v > 0) && (
@@ -441,7 +441,7 @@ function FieldEditor({
               <div key={opt} className="flex items-center gap-3">
                 <span className="flex-1 text-sm text-gray-700 truncate">{opt}</span>
                 <div className="flex items-center gap-1">
-                  <span className="text-xs text-gray-400">+</span>
+                  <span className="text-xs text-gray-500">+</span>
                   <input
                     type="number"
                     step="1"
@@ -449,7 +449,7 @@ function FieldEditor({
                     onChange={(e) => setMods((prev) => ({ ...prev, [opt]: e.target.value }))}
                     className="w-20 border rounded px-2 py-1 text-sm text-right"
                   />
-                  <span className="text-xs text-gray-400">EUR</span>
+                  <span className="text-xs text-gray-500">EUR</span>
                 </div>
               </div>
             ))}

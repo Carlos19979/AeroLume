@@ -128,7 +128,7 @@ export function ApiKeysClient({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
       {/* Keys table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {keys.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12 text-gray-500">
             No tienes API keys. Crea una para empezar.
           </div>
         ) : (

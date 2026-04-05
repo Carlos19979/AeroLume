@@ -80,7 +80,7 @@ export function AnalyticsClient({ data }: { data: AnalyticsData }) {
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-2 text-xs text-gray-400">
+          <div className="flex justify-between mt-2 text-xs text-gray-500">
             <span>{data.perDay[0]?.date}</span>
             <span>{data.perDay[data.perDay.length - 1]?.date}</span>
           </div>
@@ -92,7 +92,7 @@ export function AnalyticsClient({ data }: { data: AnalyticsData }) {
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h3 className="font-medium text-gray-900 mb-4">Eventos por tipo</h3>
           {data.byType.length === 0 ? (
-            <p className="text-sm text-gray-400">Sin datos todavía.</p>
+            <p className="text-sm text-gray-500">Sin datos todavía.</p>
           ) : (
             <div className="space-y-3">
               {data.byType.map((item) => (
@@ -111,13 +111,13 @@ export function AnalyticsClient({ data }: { data: AnalyticsData }) {
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h3 className="font-medium text-gray-900 mb-4">Barcos más buscados</h3>
           {data.topBoats.length === 0 ? (
-            <p className="text-sm text-gray-400">Sin datos todavía.</p>
+            <p className="text-sm text-gray-500">Sin datos todavía.</p>
           ) : (
             <div className="space-y-3">
               {data.topBoats.map((item, i) => (
                 <div key={item.boatModel} className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">
-                    <span className="text-gray-300 mr-2">{i + 1}.</span>
+                    <span className="text-gray-500 mr-2">{i + 1}.</span>
                     {item.boatModel}
                   </span>
                   <span className="text-sm font-semibold text-gray-900">{item.count}</span>
@@ -131,7 +131,7 @@ export function AnalyticsClient({ data }: { data: AnalyticsData }) {
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h3 className="font-medium text-gray-900 mb-4">Tipos de vela populares</h3>
           {data.topSailTypes.length === 0 ? (
-            <p className="text-sm text-gray-400">Sin datos todavía.</p>
+            <p className="text-sm text-gray-500">Sin datos todavía.</p>
           ) : (
             <div className="space-y-3">
               {data.topSailTypes.map((item) => (

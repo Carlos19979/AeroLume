@@ -97,7 +97,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
               className="w-full border rounded-lg px-3 py-2 text-sm"
               placeholder="configurador.tu-web.com"
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               Configura un CNAME apuntando a app.aerolume.com
             </p>
           </div>
@@ -146,7 +146,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
               className="w-full border rounded-lg px-3 py-2 text-sm font-mono"
               placeholder={"https://tu-web.com\nhttps://staging.tu-web.com"}
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               Un dominio por línea. El widget solo funcionará desde estos orígenes.
             </p>
           </div>
@@ -160,7 +160,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
               className="w-full border rounded-lg px-3 py-2 text-sm font-mono"
               placeholder="https://tu-web.com/api/aerolume-webhook"
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               Recibirás notificaciones POST cuando se creen presupuestos.
             </p>
           </div>
@@ -218,7 +218,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
             </div>
             <div>
               <dt className="text-gray-500">Tenant ID</dt>
-              <dd className="font-mono text-xs text-gray-400">{settings.id}</dd>
+              <dd className="font-mono text-xs text-gray-500">{settings.id}</dd>
             </div>
           </dl>
         </div>

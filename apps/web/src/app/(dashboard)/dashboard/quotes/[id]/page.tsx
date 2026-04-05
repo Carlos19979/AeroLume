@@ -31,7 +31,7 @@ export default async function QuoteDetailPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <a href="/dashboard/quotes" className="text-gray-400 hover:text-gray-600">
+        <a href="/dashboard/quotes" className="text-gray-500 hover:text-gray-600">
           &larr; Presupuestos
         </a>
         <h2 className="text-2xl font-semibold text-gray-900">

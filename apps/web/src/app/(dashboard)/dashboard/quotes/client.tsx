@@ -81,7 +81,7 @@ export function QuotesClient({ initialQuotes }: { initialQuotes: QuoteRow[] }) {
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12 text-gray-500">
             {filter === 'all'
               ? 'No hay presupuestos todavía. Llegarán cuando los clientes usen el configurador.'
               : 'No hay presupuestos con este estado.'}
@@ -108,13 +108,13 @@ export function QuotesClient({ initialQuotes }: { initialQuotes: QuoteRow[] }) {
                         {quote.customerName || 'Sin nombre'}
                       </div>
                       {quote.customerEmail && (
-                        <div className="text-xs text-gray-400">{quote.customerEmail}</div>
+                        <div className="text-xs text-gray-500">{quote.customerEmail}</div>
                       )}
                     </td>
                     <td className="px-4 py-3 text-gray-500">
                       {quote.boatModel || '—'}
                       {quote.boatLength && (
-                        <span className="text-gray-400 ml-1">({quote.boatLength}m)</span>
+                        <span className="text-gray-500 ml-1">({quote.boatLength}m)</span>
                       )}
                     </td>
                     <td className="px-4 py-3">

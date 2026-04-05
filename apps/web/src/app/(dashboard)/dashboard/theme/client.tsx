@@ -99,7 +99,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
         <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-gray-900">Colores principales</h3>
-            <button onClick={resetMainColors} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+            <button onClick={resetMainColors} className="text-xs text-gray-500 hover:text-gray-600 transition-colors">
               Resetear
             </button>
           </div>
@@ -116,9 +116,9 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-gray-900">Colores del configurador</h3>
-              <p className="text-xs text-gray-400 mt-0.5">Un color por grupo de vela en el widget.</p>
+              <p className="text-xs text-gray-500 mt-0.5">Un color por grupo de vela en el widget.</p>
             </div>
-            <button onClick={resetGroupColors} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+            <button onClick={resetGroupColors} className="text-xs text-gray-500 hover:text-gray-600 transition-colors">
               Resetear
             </button>
           </div>
@@ -208,7 +208,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
               <div className="w-2.5 h-2.5 rounded-full bg-green-300" />
             </div>
             <div className="flex-1 mx-4">
-              <div className="bg-white rounded-md border border-gray-200 px-3 py-1 text-[10px] text-gray-400 text-center">tuveleria.com/configurador</div>
+              <div className="bg-white rounded-md border border-gray-200 px-3 py-1 text-[10px] text-gray-500 text-center">tuveleria.com/configurador</div>
             </div>
           </div>
 
@@ -356,7 +356,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
 
             {/* Footer */}
             <div className="mt-4 pt-3 border-t border-gray-100 text-center">
-              <span className="text-[9px] text-gray-300">Powered by <span style={{ color: accent }}>Aerolume</span></span>
+              <span className="text-[9px] text-gray-500">Powered by <span style={{ color: accent }}>Aerolume</span></span>
             </div>
           </div>
         </div>

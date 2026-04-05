@@ -55,11 +55,11 @@ export function DashboardHeader({ userName, userEmail }: { userName: string; use
                 <div className="flex items-center gap-4">
                     {/* Search */}
                     <div className="hidden sm:flex items-center gap-2 bg-gray-50 rounded-full px-4 py-2 w-64">
-                        <Search size={16} className="text-gray-400" />
+                        <Search size={16} className="text-gray-500" />
                         <input
                             type="text"
                             placeholder="Buscar..."
-                            className="bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none w-full"
+                            className="bg-transparent text-sm text-gray-700 placeholder:text-gray-500 outline-none w-full"
                         />
                     </div>
                     {/* User */}
@@ -79,7 +79,7 @@ export function DashboardHeader({ userName, userEmail }: { userName: string; use
                             <span className="text-xl font-semibold text-[var(--color-navy)] font-[family-name:var(--font-cormorant)]">
                                 Aerolume
                             </span>
-                            <button onClick={() => setMobileOpen(false)} className="text-gray-400 hover:text-gray-600">
+                            <button onClick={() => setMobileOpen(false)} className="text-gray-500 hover:text-gray-600">
                                 <X size={20} />
                             </button>
                         </div>

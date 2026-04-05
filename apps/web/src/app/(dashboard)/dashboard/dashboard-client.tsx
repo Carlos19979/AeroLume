@@ -80,9 +80,9 @@ export function DashboardClient({
                         </div>
                         <div>
                             <p className="text-sm font-medium text-gray-900">Nuevo producto</p>
-                            <p className="text-xs text-gray-400">Añadir al catalogo</p>
+                            <p className="text-xs text-gray-500">Añadir al catalogo</p>
                         </div>
-                        <ArrowRight size={16} className="ml-auto text-gray-300 group-hover:text-[var(--color-accent)] transition-colors" />
+                        <ArrowRight size={16} className="ml-auto text-gray-500 group-hover:text-[var(--color-accent)] transition-colors" />
                     </a>
                     <a
                         href="/dashboard/quotes"
@@ -93,9 +93,9 @@ export function DashboardClient({
                         </div>
                         <div>
                             <p className="text-sm font-medium text-gray-900">Ver presupuestos</p>
-                            <p className="text-xs text-gray-400">Gestionar solicitudes</p>
+                            <p className="text-xs text-gray-500">Gestionar solicitudes</p>
                         </div>
-                        <ArrowRight size={16} className="ml-auto text-gray-300 group-hover:text-emerald-500 transition-colors" />
+                        <ArrowRight size={16} className="ml-auto text-gray-500 group-hover:text-emerald-500 transition-colors" />
                     </a>
                     <a
                         href="/dashboard/api-keys"
@@ -106,9 +106,9 @@ export function DashboardClient({
                         </div>
                         <div>
                             <p className="text-sm font-medium text-gray-900">Crear API Key</p>
-                            <p className="text-xs text-gray-400">Para tu widget</p>
+                            <p className="text-xs text-gray-500">Para tu widget</p>
                         </div>
-                        <ArrowRight size={16} className="ml-auto text-gray-300 group-hover:text-violet-500 transition-colors" />
+                        <ArrowRight size={16} className="ml-auto text-gray-500 group-hover:text-violet-500 transition-colors" />
                     </a>
                 </div>
             </FadeInUp>

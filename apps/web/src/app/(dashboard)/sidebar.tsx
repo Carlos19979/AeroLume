@@ -64,7 +64,7 @@ export function Sidebar({ userName, userEmail }: { userName: string; userEmail: 
                     </div>
                     <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{userName}</p>
-                        <p className="text-xs text-gray-400 truncate">{userEmail}</p>
+                        <p className="text-xs text-gray-500 truncate">{userEmail}</p>
                     </div>
                 </div>
             </div>

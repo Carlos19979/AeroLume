@@ -31,7 +31,7 @@ export default async function ProductEditPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <a href="/dashboard/products" className="text-gray-400 hover:text-gray-600">
+        <a href="/dashboard/products" className="text-gray-500 hover:text-gray-600">
           &larr; Productos
         </a>
         <h2 className="text-2xl font-semibold text-gray-900">{product.name}</h2>
