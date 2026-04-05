@@ -22,13 +22,11 @@ type Settings = {
 };
 
 const PLAN_LABELS: Record<string, string> = {
-  starter: 'Starter',
+  prueba: 'Prueba',
   pro: 'Pro',
-  enterprise: 'Enterprise',
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  trialing: { label: 'Periodo de prueba', color: 'bg-yellow-50 text-yellow-700' },
   active: { label: 'Activa', color: 'bg-green-50 text-green-700' },
   past_due: { label: 'Pago pendiente', color: 'bg-red-50 text-red-600' },
   canceled: { label: 'Cancelada', color: 'bg-gray-100 text-gray-500' },
