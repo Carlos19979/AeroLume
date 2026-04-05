@@ -9,7 +9,6 @@ type TenantRow = {
   plan: string | null;
   subscriptionStatus: string | null;
   createdAt: Date | null;
-  productCount: number;
   quoteCount: number;
   memberCount: number;
 };
@@ -45,7 +44,6 @@ export function TenantsClient({ tenants }: { tenants: TenantRow[] }) {
               <th className="text-left px-5 py-3">Nombre</th>
               <th className="text-left px-5 py-3">Plan</th>
               <th className="text-left px-5 py-3">Estado</th>
-              <th className="text-left px-5 py-3">Productos</th>
               <th className="text-left px-5 py-3">Quotes</th>
               <th className="text-left px-5 py-3">Miembros</th>
               <th className="text-left px-5 py-3">Creado</th>
@@ -65,7 +63,6 @@ export function TenantsClient({ tenants }: { tenants: TenantRow[] }) {
                     {t.subscriptionStatus || '—'}
                   </span>
                 </td>
-                <td className="px-5 py-3 text-white/50">{t.productCount}</td>
                 <td className="px-5 py-3 text-white/50">{t.quoteCount}</td>
                 <td className="px-5 py-3 text-white/50">{t.memberCount}</td>
                 <td className="px-5 py-3 text-white/30 text-xs">

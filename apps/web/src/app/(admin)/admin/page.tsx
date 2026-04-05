@@ -1,9 +1,8 @@
-import { db, tenants, quotes, products, analyticsEvents, boats, sql, desc } from '@aerolume/db';
+import { db, tenants, quotes, analyticsEvents, boats, sql, desc } from '@aerolume/db';
 
 export default async function AdminOverviewPage() {
   const [tenantCount] = await db.select({ count: sql<number>`count(*)::int` }).from(tenants);
   const [quoteCount] = await db.select({ count: sql<number>`count(*)::int` }).from(quotes);
-  const [productCount] = await db.select({ count: sql<number>`count(*)::int` }).from(products);
   const [eventCount] = await db.select({ count: sql<number>`count(*)::int` }).from(analyticsEvents);
   const [boatCount] = await db.select({ count: sql<number>`count(*)::int` }).from(boats);
 
@@ -23,7 +22,6 @@ export default async function AdminOverviewPage() {
   const stats = [
     { label: 'Tenants', value: tenantCount?.count ?? 0, color: '#3b82f6' },
     { label: 'Quotes', value: quoteCount?.count ?? 0, color: '#10b981' },
-    { label: 'Productos', value: productCount?.count ?? 0, color: '#f59e0b' },
     { label: 'Eventos', value: eventCount?.count ?? 0, color: '#8b5cf6' },
     { label: 'Barcos', value: boatCount?.count ?? 0, color: '#ec4899' },
   ];
@@ -32,7 +30,7 @@ export default async function AdminOverviewPage() {
     <div className="space-y-8">
       <h2 className="text-xl font-bold text-white">Overview</h2>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
           <div key={stat.label} className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-5">
             <p className="text-2xl font-bold text-white">{stat.value.toLocaleString('es')}</p>
