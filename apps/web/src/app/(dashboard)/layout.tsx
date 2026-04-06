@@ -35,13 +35,13 @@ export default async function DashboardLayout({
     }
 
     // Get tenant plan/status for gating (skip for impersonation and admin)
-    let planStatus = { plan: 'pro' as string | null, subscriptionStatus: 'active' as string | null };
+    let planStatus = { plan: 'pro' as string | null, subscriptionStatus: 'active' as string | null, trialEndsAt: null as Date | null };
 
     if (!isAdmin && !impersonating) {
         const tenant = await getTenantForUser(user.id, user.email);
         if (tenant) {
             const [full] = await db
-                .select({ plan: tenants.plan, subscriptionStatus: tenants.subscriptionStatus })
+                .select({ plan: tenants.plan, subscriptionStatus: tenants.subscriptionStatus, trialEndsAt: tenants.trialEndsAt })
                 .from(tenants)
                 .where(eq(tenants.id, tenant.id))
                 .limit(1);
@@ -94,6 +94,12 @@ export default async function DashboardLayout({
                     <div className="bg-blue-50 text-blue-700 text-xs font-medium px-4 py-2.5 flex items-center justify-between border-b border-blue-100">
                         <span>{banner.message}</span>
                         <a href="/contact" className="underline hover:no-underline font-semibold">Activar ahora</a>
+                    </div>
+                )}
+                {banner.type === 'trial_expired' && (
+                    <div className="bg-amber-50 text-amber-800 text-sm font-medium px-4 py-3 flex items-center justify-between border-b border-amber-200">
+                        <span>{banner.message}</span>
+                        <a href="/contact" className="px-4 py-1.5 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition-colors">Contactar</a>
                     </div>
                 )}
                 {banner.type === 'past_due' && (

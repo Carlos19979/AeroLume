@@ -15,6 +15,10 @@ type AdminContext = {
 type TenantHandler = (req: NextRequest, ctx: TenantContext, params?: any) => Promise<NextResponse>;
 type AdminHandler = (req: NextRequest, ctx: AdminContext, params?: any) => Promise<NextResponse>;
 
+function isTrialExpired(tenant: { plan: string | null; trialEndsAt: Date | null }): boolean {
+  return tenant.plan === 'prueba' && (!tenant.trialEndsAt || new Date(tenant.trialEndsAt) <= new Date());
+}
+
 export function withTenantAuth(handler: TenantHandler) {
   return async (req: NextRequest, routeCtx?: { params?: Promise<any> }) => {
     try {
@@ -27,6 +31,12 @@ export function withTenantAuth(handler: TenantHandler) {
       const tenant = await getTenantForUser(user.id, user.email);
       if (!tenant) {
         return NextResponse.json({ error: 'No tenant found' }, { status: 403 });
+      }
+
+      // Block mutations on expired trial (GET is always allowed)
+      const method = req.method.toUpperCase();
+      if (method !== 'GET' && isTrialExpired(tenant)) {
+        return NextResponse.json({ error: 'Trial expired' }, { status: 403 });
       }
 
       const params = routeCtx?.params ? await routeCtx.params : undefined;

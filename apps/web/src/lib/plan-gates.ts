@@ -5,7 +5,8 @@
  * Statuses: 'active', 'past_due', 'canceled'
  *
  * Rules:
- * - prueba + active: can view dashboard, cannot create products/keys/quotes
+ * - prueba + active trial (trial_ends_at > now): full access (same as pro)
+ * - prueba + expired trial: read-only dashboard, API keys disabled
  * - pro + active: full access
  * - pro + past_due: dashboard accessible with warning, widget disabled, 7 days to pay
  * - canceled: everything blocked, show suspended screen
@@ -14,24 +15,37 @@
 export type PlanStatus = {
   plan: string | null;
   subscriptionStatus: string | null;
+  trialEndsAt?: Date | null;
 };
 
-function requirePro(ps: PlanStatus): boolean {
+function isActiveTrial(ps: PlanStatus): boolean {
+  return ps.plan === 'prueba' && !!ps.trialEndsAt && new Date(ps.trialEndsAt) > new Date();
+}
+
+export function isTrialExpired(ps: PlanStatus): boolean {
+  return ps.plan === 'prueba' && (!ps.trialEndsAt || new Date(ps.trialEndsAt) <= new Date());
+}
+
+function isProActive(ps: PlanStatus): boolean {
   return ps.plan === 'pro' && ps.subscriptionStatus === 'active';
 }
 
-function requireProOrPastDue(ps: PlanStatus): boolean {
-  return ps.plan === 'pro' && (ps.subscriptionStatus === 'active' || ps.subscriptionStatus === 'past_due');
+function hasFullAccess(ps: PlanStatus): boolean {
+  return isProActive(ps) || isActiveTrial(ps);
 }
 
-export const canCreateProducts = requirePro;
-export const canCreateApiKeys = requirePro;
-export const canReceiveQuotes = requirePro;
-export const canEditTheme = requireProOrPastDue;
-export const canEditSettings = requireProOrPastDue;
+function hasReadAccess(ps: PlanStatus): boolean {
+  return hasFullAccess(ps) || ps.plan === 'pro' && ps.subscriptionStatus === 'past_due';
+}
+
+export const canCreateProducts = hasFullAccess;
+export const canCreateApiKeys = hasFullAccess;
+export const canReceiveQuotes = hasFullAccess;
+export const canEditTheme = hasReadAccess;
+export const canEditSettings = hasReadAccess;
 
 export function isWidgetEnabled(ps: PlanStatus): boolean {
-  return ps.plan === 'pro' && ps.subscriptionStatus === 'active';
+  return hasFullAccess(ps);
 }
 
 export function isSuspended(ps: PlanStatus): boolean {
@@ -46,20 +60,32 @@ export function isTrial(ps: PlanStatus): boolean {
   return ps.plan === 'prueba';
 }
 
-export function getDashboardBanner(ps: PlanStatus): { type: 'trial' | 'past_due' | 'none'; message: string } {
+export function getTrialDaysLeft(ps: PlanStatus): number | null {
+  if (ps.plan !== 'prueba' || !ps.trialEndsAt) return null;
+  return Math.max(0, Math.ceil((new Date(ps.trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+}
+
+export function getDashboardBanner(ps: PlanStatus): { type: 'trial' | 'trial_expired' | 'past_due' | 'none'; message: string } {
   if (isSuspended(ps)) {
-    return { type: 'none', message: '' }; // Handled by full-screen block
+    return { type: 'none', message: '' };
   }
   if (isPastDue(ps)) {
     return {
       type: 'past_due',
-      message: 'Tu pago está pendiente. Tienes 7 días para regularizar o tu cuenta será suspendida.',
+      message: 'Tu pago esta pendiente. Tienes 7 dias para regularizar o tu cuenta sera suspendida.',
+    };
+  }
+  if (isTrialExpired(ps)) {
+    return {
+      type: 'trial_expired',
+      message: 'Tu periodo de prueba ha expirado. Contacta con nosotros para activar tu cuenta.',
     };
   }
   if (isTrial(ps)) {
+    const days = getTrialDaysLeft(ps);
     return {
       type: 'trial',
-      message: 'Estás en modo prueba. Contacta con nosotros para activar tu configurador.',
+      message: `Periodo de prueba — ${days} ${days === 1 ? 'dia' : 'dias'} restantes.`,
     };
   }
   return { type: 'none', message: '' };
