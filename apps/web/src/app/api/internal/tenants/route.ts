@@ -82,6 +82,7 @@ export async function POST(request: Request) {
                     options: field.options,
                     sortOrder: idx,
                     required: true,
+                    priceModifiers: field.priceModifiers || {},
                 }))
             );
         }
