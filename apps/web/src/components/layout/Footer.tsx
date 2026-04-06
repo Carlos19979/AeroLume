@@ -5,7 +5,7 @@ const FOOTER_LINKS = [
         title: 'Navegacion',
         links: [
             { label: 'Inicio', href: '/' },
-            { label: 'Producto', href: '/#producto' },
+            { label: 'Configurador', href: '/#configurador' },
             { label: 'Nosotros', href: '/about' },
             { label: 'Contacto', href: '/contact' },
         ],
@@ -13,10 +13,10 @@ const FOOTER_LINKS = [
     {
         title: 'Plataforma',
         links: [
-            { label: 'Widget embebible', href: '/#producto' },
-            { label: 'Dashboard', href: '/#producto' },
-            { label: 'API REST', href: '/#producto' },
-            { label: 'Solicitar demo', href: '/contact' },
+            { label: 'Widget embebible', href: '/#configurador' },
+            { label: 'Dashboard', href: '/#configurador' },
+            { label: 'API REST', href: '/#configurador' },
+            { label: 'Registrate', href: '/signup' },
         ],
     },
 ];

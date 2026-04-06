@@ -33,14 +33,14 @@ export function FinalCTA() {
             <span className="italic" style={{ color: '#7dd3fc' }}>mas velas?</span>
           </h2>
           <p className="mt-6 text-lg text-white/40 max-w-md mx-auto leading-relaxed">
-            Contacta con nosotros y te enseñamos como funciona.
+            Registrate gratis y prueba el configurador durante 7 dias.
           </p>
           <div className="mt-10">
             <Link
-              href="/contact"
+              href="/signup"
               className="group inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl text-sm font-semibold bg-white text-[#0a2540] transition-all duration-300 hover:shadow-[0_8px_40px_rgba(255,255,255,0.15)] hover:-translate-y-0.5"
             >
-              Solicitar demo
+              Registrate gratis
               <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>

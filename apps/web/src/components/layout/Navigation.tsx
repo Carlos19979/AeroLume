@@ -8,7 +8,7 @@ import { Menu, X } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 
 const NAV_LINKS = [
-    { href: '/#producto', label: 'Producto' },
+    { href: '/#configurador', label: 'Configurador' },
     { href: '/#como-funciona', label: 'Como funciona' },
     { href: '/about', label: 'Nosotros' },
     { href: '/contact', label: 'Contacto' },
@@ -71,14 +71,14 @@ export function Navigation() {
                             Acceder
                         </Link>
                         <Link
-                            href="/contact"
+                            href="/signup"
                             className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-300 hover:-translate-y-0.5 ${
                                 isDark
                                     ? 'bg-white text-[#0a2540] hover:shadow-lg hover:shadow-white/15'
                                     : 'bg-[#0a2540] text-white hover:shadow-lg hover:shadow-black/10'
                             }`}
                         >
-                            Solicitar demo
+                            Registrate
                         </Link>
                     </div>
 
@@ -126,11 +126,11 @@ export function Navigation() {
                                 transition={{ delay: 0.4 }}
                             >
                                 <Link
-                                    href="/contact"
+                                    href="/signup"
                                     onClick={() => setMobileOpen(false)}
                                     className="mt-4 inline-flex px-8 py-3 rounded-xl bg-white text-[#0a2540] text-sm font-semibold"
                                 >
-                                    Solicitar demo
+                                    Registrate
                                 </Link>
                             </motion.div>
                         </div>

@@ -54,17 +54,17 @@ export function Hero() {
 
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <Link
-                href="/contact"
+                href="/#configurador"
                 className="group inline-flex items-center gap-2.5 px-7 py-4 rounded-2xl text-sm font-semibold text-[#0a2540] bg-white transition-all duration-300 hover:shadow-[0_8px_40px_rgba(255,255,255,0.15)] hover:-translate-y-0.5"
               >
-                Solicitar demo
+                Prueba el configurador
                 <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
               </Link>
               <Link
-                href="/#producto"
+                href="/signup"
                 className="inline-flex items-center gap-2 px-5 py-4 rounded-2xl text-sm font-medium text-white/50 hover:text-white/80 transition-all duration-300"
               >
-                Conocer mas
+                Registrate
                 <ArrowRight size={14} />
               </Link>
             </div>

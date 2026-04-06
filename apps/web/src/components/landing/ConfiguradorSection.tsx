@@ -25,9 +25,9 @@ const DEMO_TENANT = {
 
 const DEMO_API_KEY = process.env.NEXT_PUBLIC_DEMO_API_KEY ?? '';
 
-export function DemoSection() {
+export function ConfiguradorSection() {
   return (
-    <section className="py-24 bg-gray-50/50">
+    <section id="configurador" className="py-24 bg-gray-50/50">
       <div className="max-w-7xl mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -36,7 +36,7 @@ export function DemoSection() {
           className="text-center mb-12"
         >
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 font-[family-name:var(--font-cormorant)]">
-            Pruebalo ahora
+            Prueba el configurador
           </h2>
           <p className="mt-4 text-lg text-gray-500">
             Asi es como tus clientes configuraran sus velas
@@ -72,14 +72,14 @@ export function DemoSection() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center mt-8"
+          className="text-center mt-10"
         >
           <Link
-            href="/demo"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
+            href="/signup"
+            className="group inline-flex items-center gap-2.5 px-7 py-4 rounded-2xl text-sm font-semibold text-white bg-[#0a2540] transition-all duration-300 hover:shadow-lg hover:shadow-black/10 hover:-translate-y-0.5"
           >
-            Ver a pantalla completa
-            <ArrowRight size={14} />
+            Crea tu cuenta
+            <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </motion.div>
       </div>
