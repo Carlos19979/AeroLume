@@ -15,7 +15,6 @@ type Product = {
   basePrice: string | null;
   currency: string | null;
   descriptionShort: string | null;
-  descriptionFull: string | null;
   active: boolean | null;
   sortOrder: number | null;
   externalId: string | null;

@@ -219,19 +219,10 @@ Productos de velas configurables por tenant.
 | `name` | text | NOT NULL | Nombre del producto |
 | `slug` | text | NOT NULL | Slug unico por tenant |
 | `sail_type` | sail_type | NOT NULL | Tipo de vela |
-| `gamme` | text | | Linea/gama del producto |
-| `base_price` | numeric | | Precio base |
+| `base_price` | numeric | | Precio base por m² |
 | `currency` | text | default 'EUR' | Moneda |
 | `description_short` | text | | Descripcion corta |
-| `description_full` | text | | Descripcion completa |
 | `images` | text[] | default [] | URLs de imagenes |
-| `sku` | text | | Referencia/SKU |
-| `weight` | text | | Peso |
-| `availability` | text | default 'InStock' | Disponibilidad |
-| `min_boat_length` | numeric | | Eslora minima compatible |
-| `max_boat_length` | numeric | | Eslora maxima compatible |
-| `min_sail_area` | numeric | | Area minima de vela |
-| `max_sail_area` | numeric | | Area maxima de vela |
 | `active` | boolean | default true | Producto activo |
 | `sort_order` | integer | default 0 | Orden de visualizacion |
 | `created_at` | timestamptz | default now() | Fecha creacion |
@@ -416,12 +407,26 @@ pnpm studio
 
 ## Script de Seed
 
-El script de seed (`packages/db/src/seed.ts`) crea datos iniciales para desarrollo. Ejecutar con:
+El script de seed (`packages/db/src/seed.ts`) limpia la BD y crea un entorno de desarrollo completo. Ejecutar con:
 
 ```bash
-cd packages/db
-pnpm seed
+pnpm --filter @aerolume/db seed
 ```
+
+El seed hace lo siguiente:
+
+1. **Trunca todas las tablas** (cascade) y limpia usuarios de Supabase Auth
+2. **Seed barcos** — 4.839 barcos globales desde `boats.json`
+3. **Crea usuario admin** — via Supabase Auth admin API
+4. **Crea tenant** "Aerolume" con plan `pro`/`active`
+5. **Asigna usuario** como `owner` del tenant
+6. **Seed productos** — 14 productos de vela con config fields
+7. **Genera API key** — almacena hash en BD, escribe raw key en `.env`
+8. **Escribe env vars** — `NEXT_PUBLIC_DEMO_API_KEY` y `SUPER_ADMIN_EMAILS` en ambos `.env`
+
+**Requiere:** `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` en `.env`
+
+Despues de ejecutar el seed, reiniciar el dev server para que lea las nuevas env vars.
 
 ## Notas Importantes
 

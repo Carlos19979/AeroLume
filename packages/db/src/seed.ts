@@ -85,6 +85,17 @@ async function cleanDatabase() {
     boats
     CASCADE`);
   console.log('✓ All tables truncated');
+
+  // Clean Supabase Auth users
+  console.log('Cleaning auth users...');
+  const { data: existingUsers } = await supabase.auth.admin.listUsers();
+  if (existingUsers?.users) {
+    for (const user of existingUsers.users) {
+      await supabase.auth.admin.deleteUser(user.id);
+      console.log(`  Deleted auth user: ${user.email}`);
+    }
+  }
+  console.log('✓ Auth users cleaned');
 }
 
 // ─── 2. Boats ───────────────────────────────────────────

@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 
 const DEMO_TENANT = {
     id: 'demo',
-    name: 'Demo Aerolume',
-    slug: 'demo',
+    name: 'Aerolume',
+    slug: 'aerolume',
     themeAccent: '#0b5faa',
     themeAccentDim: '#1a7fd4',
     themeNavy: '#0a2540',

@@ -21,13 +21,10 @@ export async function GET(request: Request) {
       name: products.name,
       slug: products.slug,
       sailType: products.sailType,
-      gamme: products.gamme,
       basePrice: products.basePrice,
       currency: products.currency,
       descriptionShort: products.descriptionShort,
       images: products.images,
-      minBoatLength: products.minBoatLength,
-      maxBoatLength: products.maxBoatLength,
       active: products.active,
       sortOrder: products.sortOrder,
     })

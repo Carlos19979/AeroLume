@@ -167,13 +167,10 @@ curl -H "x-api-key: ak_xxx" \
       "name": "Mayor Crucero Dacron",
       "slug": "mayor-crucero-dacron",
       "sailType": "gvstd",
-      "gamme": "Crucero",
       "basePrice": "1200.00",
       "currency": "EUR",
       "descriptionShort": "Vela mayor standard para crucero",
       "images": ["https://..."],
-      "minBoatLength": "8.00",
-      "maxBoatLength": "15.00",
       "active": true,
       "sortOrder": 0,
       "configFields": [

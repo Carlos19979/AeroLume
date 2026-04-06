@@ -123,7 +123,7 @@ Todos los endpoints de mutacion (POST, PUT, PATCH) validan el body con schemas Z
 
 | Schema | Endpoint | Valida |
 |---|---|---|
-| `createProductSchema` | POST /api/internal/products | Nombre, sailType, basePrice, gamme |
+| `createProductSchema` | POST /api/internal/products | Nombre, sailType, basePrice |
 | `updateProductSchema` | PUT /api/internal/products/[id] | Todos los campos del producto (opcionales) |
 | `createQuoteSchema` | POST /api/v1/quotes | Barco, cliente, items con sailType/productName |
 | `updateQuoteStatusSchema` | PATCH /api/internal/quotes/[id] | Solo el campo status |

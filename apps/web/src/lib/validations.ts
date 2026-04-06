@@ -12,7 +12,6 @@ export const createProductSchema = z.object({
   name: z.string().min(1).max(200),
   sailType: z.enum(['gvstd', 'gvfull', 'gve', 'gse', 'gn', 'spiasy', 'spisym', 'furling', 'gen']),
   basePrice: numericString.optional(),
-  gamme: z.string().max(100).optional(),
 });
 
 export const updateProductSchema = z.object({
@@ -21,17 +20,8 @@ export const updateProductSchema = z.object({
   basePrice: numericString.optional(),
   currency: z.string().max(3).optional(),
   descriptionShort: z.string().max(500).optional(),
-  descriptionFull: z.string().max(5000).optional(),
   active: z.boolean().optional(),
-  gamme: z.string().max(100).optional(),
   images: z.array(z.string().url()).optional(),
-  sku: z.string().max(50).optional(),
-  weight: z.string().max(20).optional(),
-  availability: z.string().max(50).optional(),
-  minBoatLength: numericString.optional().nullable(),
-  maxBoatLength: numericString.optional().nullable(),
-  minSailArea: numericString.optional().nullable(),
-  maxSailArea: numericString.optional().nullable(),
   sortOrder: intNumber.optional(),
 });
 

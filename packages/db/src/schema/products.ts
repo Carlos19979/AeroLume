@@ -16,24 +16,12 @@ export const products = pgTable(
     name: text('name').notNull(),
     slug: text('slug').notNull(),
     sailType: sailTypeEnum('sail_type').notNull(), // gvstd, gvfull, gve, gse, gn, spiasy, spisym, furling, gen
-    gamme: text('gamme'), // product line/range
 
     basePrice: numeric('base_price'),
     currency: text('currency').default('EUR'),
 
     descriptionShort: text('description_short'),
-    descriptionFull: text('description_full'),
-
     images: text('images').array().default([]),
-    sku: text('sku'),
-    weight: text('weight'),
-    availability: text('availability').default('InStock'),
-
-    // Boat compatibility ranges
-    minBoatLength: numeric('min_boat_length'),
-    maxBoatLength: numeric('max_boat_length'),
-    minSailArea: numeric('min_sail_area'),
-    maxSailArea: numeric('max_sail_area'),
 
     active: boolean('active').default(true),
     sortOrder: integer('sort_order').default(0),

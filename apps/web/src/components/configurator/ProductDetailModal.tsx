@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Loader2, ChevronLeft, ChevronRight, ExternalLink, Package, Tag, Ruler, Settings2, Minus, Plus, ShoppingCart } from 'lucide-react';
+import { X, Loader2, ChevronLeft, ChevronRight, ExternalLink, Package, Settings2, Minus, Plus, ShoppingCart } from 'lucide-react';
 
 type ProductDetail = {
     name: string;
@@ -243,16 +243,6 @@ export function ProductDetailModal({
                                     )}
                                 </div>
 
-                                {/* Availability */}
-                                {detail?.availability && (
-                                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
-                                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                        {detail.availability === 'InStock' ? 'En stock' :
-                                         detail.availability === 'PreOrder' ? 'Bajo pedido' :
-                                         detail.availability}
-                                    </div>
-                                )}
-
                                 <div className="mt-5 border-t border-[var(--color-border)]" />
 
                                 {/* Short description / highlights */}
@@ -365,29 +355,6 @@ export function ProductDetailModal({
                                         </a>
                                     </div>
                                 </div>
-
-                                {/* Technical details */}
-                                {(detail?.sku || detail?.weight) && (
-                                    <div className="mt-5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-                                        <div className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]">Datos tecnicos</div>
-                                        <div className="mt-3 space-y-2.5">
-                                            {detail.sku && (
-                                                <div className="flex items-center gap-3 text-sm">
-                                                    <Tag className="h-3.5 w-3.5 text-[var(--color-text-muted)]" />
-                                                    <span className="text-[var(--color-text-muted)]">Referencia:</span>
-                                                    <span className="font-medium text-[var(--color-text)]">{detail.sku}</span>
-                                                </div>
-                                            )}
-                                            {detail.weight && (
-                                                <div className="flex items-center gap-3 text-sm">
-                                                    <Ruler className="h-3.5 w-3.5 text-[var(--color-text-muted)]" />
-                                                    <span className="text-[var(--color-text-muted)]">Peso:</span>
-                                                    <span className="font-medium text-[var(--color-text)]">{detail.weight}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
 
                                 {/* Full description */}
                                 {detail?.fullDescription && (

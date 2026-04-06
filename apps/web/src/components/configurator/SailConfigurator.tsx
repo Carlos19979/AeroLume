@@ -20,7 +20,6 @@ type SailProduct = {
     priceTaxExc: number | null;
     image: string | null;
     link: string | null;
-    gamme: string | null;
     highlights: string[];
     attributes: string[];
     onSale: boolean;
@@ -522,7 +521,7 @@ export default function SailConfigurator() {
                                                             <div className="flex items-start justify-between gap-4">
                                                                 <div>
                                                                     <div className="text-[10px] uppercase tracking-wider text-[var(--color-accent)]">
-                                                                        {product.gamme ?? 'Configuracion sugerida'}
+                                                                        Configuracion sugerida
                                                                     </div>
                                                                     <h4 className="mt-1.5 font-[var(--font-display)] text-xl text-[var(--color-text)]">
                                                                         {product.name}
@@ -571,7 +570,6 @@ export default function SailConfigurator() {
                                                                     params.set('name', product.name);
                                                                     if (product.price !== null) params.set('price', String(product.price));
                                                                     if (product.image) params.set('image', product.image);
-                                                                    if (product.gamme) params.set('gamme', product.gamme);
                                                                     if (product.highlights.length > 0) params.set('highlights', JSON.stringify(product.highlights));
                                                                     if (product.attributes.length > 0) params.set('attributes', JSON.stringify(product.attributes));
                                                                     router.push(`/configurator/product?${params.toString()}`);

@@ -7,8 +7,8 @@ import { EmbedConfigurator } from '@/app/embed/configurator';
 
 const DEMO_TENANT = {
   id: 'demo',
-  name: 'Tu Veleria',
-  slug: 'demo',
+  name: 'Aerolume',
+  slug: 'aerolume',
   themeAccent: '#0b5faa',
   themeAccentDim: '#1a7fd4',
   themeNavy: '#0a2540',
