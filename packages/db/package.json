@@ -14,14 +14,15 @@
     "seed": "tsx src/seed.ts"
   },
   "dependencies": {
+    "@aerolume/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.101.1",
     "drizzle-orm": "^0.44.0",
-    "postgres": "^3.4.5",
-    "@aerolume/shared": "workspace:*"
+    "postgres": "^3.4.5"
   },
   "devDependencies": {
+    "dotenv": "^16.5.0",
     "drizzle-kit": "^0.31.0",
     "tsx": "^4.19.0",
-    "typescript": "^5",
-    "dotenv": "^16.5.0"
+    "typescript": "^5"
   }
 }
