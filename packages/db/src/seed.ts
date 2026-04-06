@@ -1,49 +1,108 @@
 /**
- * Seed script: migrates boats.json and product-config.ts data into Supabase.
+ * Seed script: cleans DB and sets up a complete dev environment.
  *
  * Usage: pnpm --filter @aerolume/db seed
- * Requires DATABASE_URL in .env
+ * Requires DATABASE_URL, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY in .env
  */
 import { config } from 'dotenv';
 import { resolve } from 'path';
 config({ path: resolve(__dirname, '../../../.env') });
+
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
+import { createClient } from '@supabase/supabase-js';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { createHash, randomBytes } from 'crypto';
+
 import { boats } from './schema/boats';
 import { tenants } from './schema/tenants';
-import { products } from './schema/products';
-import { productConfigFields } from './schema/products';
-import { readFileSync } from 'fs';
+import { tenantMembers } from './schema/tenants';
+import { products, productConfigFields } from './schema/products';
+import { apiKeys } from './schema/api-keys';
+import { analyticsEvents } from './schema/analytics';
+import { quotes, quoteItems } from './schema/quotes';
 
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  console.error('DATABASE_URL is required. Copy .env.example to .env and fill in your Supabase credentials.');
+// ─── Config ─────────────────────────────────────────────
+
+const ADMIN_EMAIL = 'carloscode23@icloud.com';
+const ADMIN_PASSWORD = 'Aerolume2026!';
+const TENANT_NAME = 'Aerolume';
+const TENANT_SLUG = 'aerolume';
+
+const DATABASE_URL = process.env.DATABASE_URL;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!DATABASE_URL || !SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+  console.error('Required env vars: DATABASE_URL, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY');
   process.exit(1);
 }
 
-const client = postgres(connectionString);
+const client = postgres(DATABASE_URL);
 const db = drizzle(client);
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
 
-// ─── Boat data ───────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+function upsertEnvVar(envPath: string, key: string, value: string) {
+  if (!existsSync(envPath)) return false;
+  let content = readFileSync(envPath, 'utf-8');
+  const regex = new RegExp(`^${key}=.*$`, 'm');
+  if (regex.test(content)) {
+    content = content.replace(regex, `${key}=${value}`);
+  } else {
+    content = content.trimEnd() + `\n${key}=${value}\n`;
+  }
+  writeFileSync(envPath, content);
+  return true;
+}
+
+// ─── 1. Clean ───────────────────────────────────────────
+
+async function cleanDatabase() {
+  console.log('Cleaning database...');
+  await db.execute(sql`TRUNCATE TABLE
+    analytics_events,
+    quote_items,
+    quotes,
+    api_keys,
+    product_config_fields,
+    products,
+    tenant_members,
+    tenants,
+    boats
+    CASCADE`);
+  console.log('✓ All tables truncated');
+}
+
+// ─── 2. Boats ───────────────────────────────────────────
 
 type RawBoat = Record<string, string>;
 
 async function seedBoats() {
   console.log('Seeding boats...');
-
   const boatsPath = resolve(__dirname, '../../../apps/web/src/data/boats.json');
   const rawBoats: RawBoat[] = JSON.parse(readFileSync(boatsPath, 'utf-8'));
+  console.log(`  Found ${rawBoats.length} boats`);
 
-  console.log(`Found ${rawBoats.length} boats to import`);
-
-  // Insert in batches of 500
   const BATCH_SIZE = 500;
   let inserted = 0;
 
   for (let i = 0; i < rawBoats.length; i += BATCH_SIZE) {
     const batch = rawBoats.slice(i, i + BATCH_SIZE).map((raw) => ({
-      tenantId: null, // Global/shared boat database
+      tenantId: null,
       model: raw.model || raw.boat_model || 'Unknown',
       boatModel: raw.boat_model || null,
       length: raw.length || null,
@@ -76,23 +135,77 @@ async function seedBoats() {
       idSailBoatType: raw.id_sail_boat_type || null,
     }));
 
-    try {
-      await db.insert(boats).values(batch).onConflictDoNothing();
-      inserted += batch.length;
-      console.log(`  Inserted ${inserted}/${rawBoats.length} boats`);
-    } catch (err: any) {
-      console.error(`  Batch ${i}-${i + batch.length} failed:`);
-      console.error('  Cause:', err.cause?.message || err.cause || 'unknown');
-      console.error('  Code:', err.cause?.code);
-      console.error('  Detail:', err.cause?.detail);
-      throw err;
-    }
+    await db.insert(boats).values(batch);
+    inserted += batch.length;
+    console.log(`  Inserted ${inserted}/${rawBoats.length}`);
   }
 
   console.log(`✓ Seeded ${inserted} boats`);
 }
 
-// ─── Demo tenant + products ──────────────────────────────
+// ─── 3. Auth user ───────────────────────────────────────
+
+async function createAuthUser(): Promise<string> {
+  console.log(`Creating auth user (${ADMIN_EMAIL})...`);
+
+  // Check if user already exists
+  const { data: existingUsers } = await supabase.auth.admin.listUsers();
+  const existing = existingUsers?.users?.find(
+    (u) => u.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()
+  );
+
+  if (existing) {
+    console.log(`✓ Auth user already exists: ${existing.id}`);
+    return existing.id;
+  }
+
+  const { data, error } = await supabase.auth.admin.createUser({
+    email: ADMIN_EMAIL,
+    password: ADMIN_PASSWORD,
+    email_confirm: true,
+  });
+
+  if (error) {
+    console.error('Failed to create auth user:', error.message);
+    process.exit(1);
+  }
+
+  console.log(`✓ Created auth user: ${data.user.id}`);
+  console.log(`  Email: ${ADMIN_EMAIL}`);
+  console.log(`  Password: ${ADMIN_PASSWORD}`);
+  return data.user.id;
+}
+
+// ─── 4. Tenant + member ────────────────────────────────
+
+async function createTenant(userId: string): Promise<string> {
+  console.log('Creating tenant...');
+
+  const [tenant] = await db
+    .insert(tenants)
+    .values({
+      name: TENANT_NAME,
+      slug: TENANT_SLUG,
+      locale: 'es',
+      currency: 'EUR',
+      plan: 'pro',
+      subscriptionStatus: 'active',
+    })
+    .returning();
+
+  console.log(`✓ Created tenant: ${tenant.name} (${tenant.id})`);
+
+  await db.insert(tenantMembers).values({
+    tenantId: tenant.id,
+    userId,
+    role: 'owner',
+  });
+
+  console.log(`✓ Assigned ${ADMIN_EMAIL} as owner`);
+  return tenant.id;
+}
+
+// ─── 5. Products ────────────────────────────────────────
 
 const PRODUCT_CONFIGS: Record<string, { name: string; sailType: string; fields: { key: string; label: string; options: string[] }[] }> = {
   '3':  { name: 'Mayor Clásica Horizontal', sailType: 'gvstd', fields: [
@@ -181,67 +294,25 @@ const PRODUCT_CONFIGS: Record<string, { name: string; sailType: string; fields: 
   ]},
 };
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-}
+async function seedProducts(tenantId: string) {
+  console.log('Seeding products...');
 
-async function seedDemoTenant() {
-  console.log('Creating demo tenant...');
-
-  // Check if demo tenant already exists (idempotent)
-  const existing = await db.select().from(tenants).where(eq(tenants.slug, 'demo'));
-  let tenant;
-
-  if (existing.length > 0) {
-    tenant = existing[0];
-    console.log(`✓ Demo tenant already exists: ${tenant.name} (${tenant.id})`);
-  } else {
-    [tenant] = await db
-      .insert(tenants)
-      .values({
-        name: 'Aerolume Demo',
-        slug: 'demo',
-        locale: 'es',
-        currency: 'EUR',
-        plan: 'enterprise',
-        subscriptionStatus: 'active',
-      })
-      .returning();
-
-    console.log(`✓ Created tenant: ${tenant.name} (${tenant.id})`);
-  }
-
-  console.log('Seeding products and config fields...');
-
-  for (const [externalId, config] of Object.entries(PRODUCT_CONFIGS)) {
-    const slug = slugify(config.name);
+  for (const [externalId, cfg] of Object.entries(PRODUCT_CONFIGS)) {
+    const slug = slugify(cfg.name);
 
     const [product] = await db
       .insert(products)
       .values({
-        tenantId: tenant.id,
+        tenantId,
         externalId,
-        name: config.name,
+        name: cfg.name,
         slug,
-        sailType: config.sailType,
+        sailType: cfg.sailType,
         active: true,
       })
-      .onConflictDoNothing({ target: [products.tenantId, products.slug] })
       .returning();
 
-    // If product already existed, skip config fields
-    if (!product) {
-      console.log(`  - ${config.name} already exists, skipping`);
-      continue;
-    }
-
-    // Insert config fields
-    const fieldValues = config.fields.map((field, idx) => ({
+    const fieldValues = cfg.fields.map((field, idx) => ({
       productId: product.id,
       key: field.key,
       label: field.label,
@@ -252,23 +323,77 @@ async function seedDemoTenant() {
     }));
 
     await db.insert(productConfigFields).values(fieldValues);
-
-    console.log(`  ✓ ${config.name} (${config.fields.length} fields)`);
+    console.log(`  ✓ ${cfg.name} (${cfg.fields.length} fields)`);
   }
 
   console.log(`✓ Seeded ${Object.keys(PRODUCT_CONFIGS).length} products`);
 }
 
-// ─── Main ────────────────────────────────────────────────
+// ─── 6. API key ─────────────────────────────────────────
+
+async function createApiKey(tenantId: string) {
+  console.log('Creating API key...');
+
+  const rawKey = 'ak_' + randomBytes(20).toString('hex');
+  const keyHash = createHash('sha256').update(rawKey).digest('hex');
+  const keyPrefix = rawKey.slice(0, 11);
+
+  await db.insert(apiKeys).values({
+    tenantId,
+    keyHash,
+    keyPrefix,
+    name: 'Development',
+    scopes: ['read'],
+    rateLimit: 1000,
+  });
+
+  console.log(`✓ API key created: ${keyPrefix}...`);
+  return rawKey;
+}
+
+// ─── 7. Write env vars ─────────────────────────────────
+
+function writeEnvVars(apiKey: string) {
+  console.log('Writing env vars...');
+
+  const envPaths = [
+    resolve(__dirname, '../../../.env'),
+    resolve(__dirname, '../../../apps/web/.env'),
+  ];
+
+  for (const envPath of envPaths) {
+    if (!existsSync(envPath)) continue;
+    upsertEnvVar(envPath, 'NEXT_PUBLIC_DEMO_API_KEY', apiKey);
+    upsertEnvVar(envPath, 'SUPER_ADMIN_EMAILS', ADMIN_EMAIL);
+    console.log(`  ✓ Updated ${envPath}`);
+  }
+}
+
+// ─── Main ───────────────────────────────────────────────
 
 async function main() {
   console.log('=== Aerolume Database Seed ===\n');
 
   try {
+    await cleanDatabase();
+    console.log('');
     await seedBoats();
     console.log('');
-    await seedDemoTenant();
+    const userId = await createAuthUser();
+    console.log('');
+    const tenantId = await createTenant(userId);
+    console.log('');
+    await seedProducts(tenantId);
+    console.log('');
+    const apiKey = await createApiKey(tenantId);
+    console.log('');
+    writeEnvVars(apiKey);
+
     console.log('\n=== Seed complete! ===');
+    console.log(`\n  Login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
+    console.log(`  API key: ${apiKey}`);
+    console.log(`  Tenant: ${TENANT_NAME} (${TENANT_SLUG})`);
+    console.log(`\n  Restart dev server to pick up new env vars.`);
   } catch (error) {
     console.error('Seed failed:', error);
     process.exit(1);
