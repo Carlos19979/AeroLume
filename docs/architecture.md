@@ -127,15 +127,19 @@ Archivo: `lib/plan-gates.ts`
 
 | Funcion | Condicion | Controla |
 |---|---|---|
-| `canCreateProducts(ps)` | plan=pro, status=active | Crear/editar productos |
-| `canCreateApiKeys(ps)` | plan=pro, status=active | Generar API keys |
-| `canReceiveQuotes(ps)` | plan=pro, status=active | Recibir presupuestos |
-| `canEditTheme(ps)` | plan=pro, status=active o past_due | Personalizar tema |
-| `canEditSettings(ps)` | plan=pro, status=active o past_due | Editar configuracion |
-| `isWidgetEnabled(ps)` | plan=pro, status=active | Widget funcional |
+| `canCreateProducts(ps)` | pro+active o trial activo | Crear/editar productos |
+| `canCreateApiKeys(ps)` | pro+active o trial activo | Generar API keys |
+| `canReceiveQuotes(ps)` | pro+active o trial activo | Recibir presupuestos |
+| `canEditTheme(ps)` | pro+active, pro+past_due, o trial activo | Personalizar tema |
+| `canEditSettings(ps)` | pro+active, pro+past_due, o trial activo | Editar configuracion |
+| `isWidgetEnabled(ps)` | pro+active o trial activo | Widget funcional |
+| `isTrialExpired(ps)` | plan=prueba y trial_ends_at <= now | Trial expirado |
 | `isSuspended(ps)` | status=canceled | Cuenta bloqueada |
 | `isPastDue(ps)` | status=past_due | Pago pendiente |
 | `isTrial(ps)` | plan=prueba | Modo prueba |
+| `getTrialDaysLeft(ps)` | plan=prueba | Dias restantes del trial |
+
+**Trial:** Los usuarios se registran con plan `prueba` y 7 dias de trial. Durante el trial activo tienen acceso completo (mismo que pro). Al expirar, `withTenantAuth` bloquea mutaciones (POST/PUT/DELETE) y `validateApiKey` rechaza las API keys. El dashboard queda en read-only con banner de aviso.
 
 ### Super Admin
 

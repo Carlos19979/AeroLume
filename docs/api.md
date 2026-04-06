@@ -18,15 +18,15 @@ El proceso de validacion de la API key (`validateApiKey`) es:
 2. Verifica que empieza con `ak_`
 3. Calcula el hash SHA-256 de la key y busca coincidencia en la tabla `api_keys`
 4. Verifica que la key no ha expirado (`expires_at`)
-5. Verifica que el tenant tiene plan `pro` y estado `active`
+5. Verifica que el tenant tiene acceso activo (ver abajo)
 6. Si hay `allowedOrigins` configurados y el request tiene header `origin`, valida que el origen esta permitido
 7. Actualiza `last_used_at` (fire and forget)
 
 ### Requisitos del tenant
 
-La API v1 solo funciona cuando el tenant tiene:
-- `plan = 'pro'`
-- `subscription_status = 'active'`
+La API v1 funciona cuando el tenant cumple una de estas condiciones:
+- `plan = 'pro'` y `subscription_status = 'active'`
+- `plan = 'prueba'` y `trial_ends_at > now` (trial activo de 7 dias)
 
 Si no se cumplen, la API devuelve `403 Account inactive`.
 

@@ -120,22 +120,25 @@ La cookie de impersonacion:
 
 ### Permisos por plan
 
-| Accion | prueba (trial) | pro + active | pro + past_due | canceled |
-|---|---|---|---|---|
-| Ver dashboard | Si | Si | Si (con banner) | No (pantalla bloqueada) |
-| Crear productos | No | Si | No | No |
-| Generar API keys | No | Si | No | No |
-| Recibir presupuestos | No | Si | No | No |
-| Editar tema | No | Si | Si | No |
-| Editar configuracion | No | Si | Si | No |
-| Widget funcional | No | Si | No | No |
+| Accion | prueba (trial activo) | prueba (trial expirado) | pro + active | pro + past_due | canceled |
+|---|---|---|---|---|---|
+| Ver dashboard | Si | Si (read-only) | Si | Si (con banner) | No (bloqueado) |
+| Crear/editar productos | Si | No | Si | No | No |
+| Generar API keys | Si | No | Si | No | No |
+| Recibir presupuestos | Si | No | Si | No | No |
+| Editar tema | Si | No | Si | Si | No |
+| Editar configuracion | Si | No | Si | Si | No |
+| Widget funcional | Si | No | Si | No | No |
+
+El trial dura 7 dias desde el registro. Durante el trial activo el usuario tiene acceso completo (igual que pro). Al expirar, el dashboard pasa a read-only y las API keys dejan de funcionar. El desbloqueo se hace manualmente desde `/admin` cambiando el plan a `pro`.
 
 ### Banners en dashboard
 
 | Estado | Banner |
 |---|---|
-| `prueba` | "Estas en modo prueba. Contacta con nosotros para activar tu configurador." |
-| `pro + past_due` | "Tu pago esta pendiente. Tienes 7 dias para regularizar o tu cuenta sera suspendida." |
+| `prueba` (trial activo) | "Periodo de prueba — X dias restantes." (azul) |
+| `prueba` (trial expirado) | "Tu periodo de prueba ha expirado. Contacta con nosotros para activar tu cuenta." (ambar) |
+| `pro + past_due` | "Tu pago esta pendiente. Tienes 7 dias para regularizar o tu cuenta sera suspendida." (rojo) |
 | `canceled` | Pantalla completa de bloqueo (no solo banner) |
 | `pro + active` | Sin banner |
 
