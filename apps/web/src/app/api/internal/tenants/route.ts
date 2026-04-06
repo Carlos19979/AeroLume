@@ -67,6 +67,7 @@ export async function POST(request: Request) {
                 name: cfg.name,
                 slug: productSlug,
                 sailType: cfg.sailType,
+                basePrice: cfg.basePrice,
                 active: true,
             })
             .returning();
