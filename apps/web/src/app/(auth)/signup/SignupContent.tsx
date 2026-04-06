@@ -97,8 +97,8 @@ export default function SignupContent() {
                                 className={inputClass} placeholder="Tu nombre" />
                         </div>
                         <div>
-                            <label htmlFor="signup-company" className="block text-xs font-medium text-white/50 uppercase tracking-wide mb-1.5">Empresa</label>
-                            <input id="signup-company" type="text" autoComplete="organization" value={companyName} onChange={(e) => setCompanyName(e.target.value)}
+                            <label htmlFor="signup-company" className="block text-xs font-medium text-white/50 uppercase tracking-wide mb-1.5">Empresa *</label>
+                            <input id="signup-company" type="text" required autoComplete="organization" value={companyName} onChange={(e) => setCompanyName(e.target.value)}
                                 className={inputClass} placeholder="Tu veleria" />
                         </div>
                     </div>
