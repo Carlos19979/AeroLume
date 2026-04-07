@@ -30,7 +30,8 @@ export const tenants = pgTable('tenants', {
 
   // Subscription
   plan: tenantPlanEnum('plan').default('prueba'),
-  stripeCustomerId: text('stripe_customer_id'),
+  lsCustomerId: text('ls_customer_id'),
+  lsSubscriptionId: text('ls_subscription_id'),
   subscriptionStatus: subscriptionStatusEnum('subscription_status').default('trialing'),
   trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),
 
