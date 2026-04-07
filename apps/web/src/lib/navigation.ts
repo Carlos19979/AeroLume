@@ -1,4 +1,4 @@
-import { Home, Package, Ship, FileText, Palette, Key, BarChart3, Settings } from 'lucide-react';
+import { Home, Package, Ship, FileText, Palette, Key, BarChart3, Settings, CreditCard } from 'lucide-react';
 import { LayoutDashboard, Building2, Users, Activity } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -16,6 +16,7 @@ export const DASHBOARD_NAV: NavItem[] = [
   { href: '/dashboard/theme', label: 'Personalizar', icon: Palette },
   { href: '/dashboard/api-keys', label: 'API Keys', icon: Key },
   { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/dashboard/subscription', label: 'Suscripcion', icon: CreditCard },
   { href: '/dashboard/settings', label: 'Configuracion', icon: Settings },
 ];
 
