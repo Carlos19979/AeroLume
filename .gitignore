@@ -50,3 +50,5 @@ packages/db/drizzle/
 
 # superpowers
 .superpowers/
+
+.vercel

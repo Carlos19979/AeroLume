@@ -8,7 +8,8 @@
     "lint": "tsc --noEmit"
   },
   "devDependencies": {
-    "vite": "^6",
-    "typescript": "^5"
+    "terser": "^5.46.1",
+    "typescript": "^5",
+    "vite": "^6"
   }
 }

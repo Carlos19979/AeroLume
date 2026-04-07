@@ -25,6 +25,7 @@ export async function getTenantForUser(userId: string, userEmail?: string) {
       name: tenants.name,
       slug: tenants.slug,
       plan: tenants.plan,
+      trialEndsAt: tenants.trialEndsAt,
     })
     .from(tenantMembers)
     .innerJoin(tenants, eq(tenantMembers.tenantId, tenants.id))
@@ -44,6 +45,7 @@ export async function getTenantById(tenantId: string) {
       name: tenants.name,
       slug: tenants.slug,
       plan: tenants.plan,
+      trialEndsAt: tenants.trialEndsAt,
     })
     .from(tenants)
     .where(eq(tenants.id, tenantId))

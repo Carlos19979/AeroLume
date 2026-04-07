@@ -25,8 +25,12 @@ import { quotes, quoteItems } from './schema/quotes';
 
 // ─── Config ─────────────────────────────────────────────
 
-const ADMIN_EMAIL = 'carloscode23@icloud.com';
-const ADMIN_PASSWORD = 'Aerolume2026!';
+const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || 'admin@example.com';
+const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
+if (!ADMIN_PASSWORD) {
+  console.error('Required env var: SEED_ADMIN_PASSWORD');
+  process.exit(1);
+}
 const TENANT_NAME = 'Aerolume';
 const TENANT_SLUG = 'aerolume';
 
@@ -319,7 +323,7 @@ async function seedProducts(tenantId: string) {
         externalId,
         name: cfg.name,
         slug,
-        sailType: cfg.sailType,
+        sailType: cfg.sailType as typeof products.$inferInsert.sailType,
         basePrice: cfg.basePrice,
         active: true,
       })

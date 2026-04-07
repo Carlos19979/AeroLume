@@ -106,7 +106,7 @@ export const createConfigFieldSchema = z.object({
   options: z.array(z.string()).optional(),
   sortOrder: z.coerce.number().int().optional(),
   required: z.boolean().default(false),
-  priceModifiers: z.record(z.number()).optional(),
+  priceModifiers: z.record(z.string(), z.number()).optional(),
 });
 
 export const updateConfigFieldSchema = createConfigFieldSchema.partial().extend({
@@ -127,7 +127,7 @@ export const createAnalyticsEventSchema = z.object({
   boatModel: z.string().max(200).optional(),
   productId: z.string().uuid().optional(),
   sailType: z.string().max(20).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   sessionId: z.string().max(100).optional(),
 });
 

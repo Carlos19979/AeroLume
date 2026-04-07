@@ -66,7 +66,7 @@ export async function POST(request: Request) {
                 externalId,
                 name: cfg.name,
                 slug: productSlug,
-                sailType: cfg.sailType,
+                sailType: cfg.sailType as typeof products.$inferInsert.sailType,
                 basePrice: cfg.basePrice,
                 active: true,
             })
