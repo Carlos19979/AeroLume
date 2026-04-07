@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Logo } from '@/components/ui/Logo';
 
 export default function SignupContent() {
@@ -17,7 +16,7 @@ export default function SignupContent() {
     const [city, setCity] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
+    const [emailSent, setEmailSent] = useState(false);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -30,7 +29,14 @@ export default function SignupContent() {
             email,
             password,
             options: {
-                data: { full_name: name },
+                data: {
+                    full_name: name,
+                    company_name: companyName || null,
+                    phone: phone || null,
+                    website: website || null,
+                    country: country || null,
+                    city: city || null,
+                },
             },
         });
 
@@ -46,29 +52,42 @@ export default function SignupContent() {
             return;
         }
 
-        const res = await fetch('/api/internal/tenants', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name: companyName || `${name}'s Workspace`,
-                companyName: companyName || null,
-                phone: phone || null,
-                website: website || null,
-                country: country || null,
-                city: city || null,
-            }),
-        });
-
-        if (!res.ok) {
-            setError('Cuenta creada pero hubo un error al crear el workspace. Contacta soporte.');
-            setLoading(false);
-            return;
-        }
-
-        router.push('/dashboard');
+        setEmailSent(true);
+        setLoading(false);
     }
 
     const inputClass = "w-full px-4 py-3 bg-white/[0.06] border border-white/[0.08] rounded-xl text-sm text-white placeholder:text-white/25 focus:ring-2 focus:ring-[#0b5faa]/50 focus:border-transparent outline-none transition-all";
+
+    if (emailSent) {
+        return (
+            <div className="w-full max-w-sm">
+                <div className="lg:hidden text-center mb-8">
+                    <Link href="/" className="inline-flex items-center gap-2">
+                        <Logo variant="light" />
+                    </Link>
+                </div>
+                <div className="bg-white/[0.06] backdrop-blur-xl rounded-3xl border border-white/[0.08] p-8 shadow-2xl shadow-black/20 text-center">
+                    <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center mx-auto mb-5">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                    </div>
+                    <h1 className="text-2xl font-bold text-white font-[family-name:var(--font-cormorant)]">
+                        Revisa tu email
+                    </h1>
+                    <p className="text-sm text-white/50 mt-3 leading-relaxed">
+                        Hemos enviado un enlace de confirmacion a <strong className="text-white/70">{email}</strong>. Haz clic en el para activar tu cuenta.
+                    </p>
+                    <Link
+                        href="/login"
+                        className="inline-block mt-6 px-6 py-2.5 bg-white/10 text-white text-sm font-medium rounded-xl hover:bg-white/15 transition-colors"
+                    >
+                        Ir a iniciar sesion
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="w-full max-w-sm">
