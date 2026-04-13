@@ -47,8 +47,11 @@
 1. El usuario se autentica via Supabase Auth (email/password)
 2. El middleware refresca la sesion en cada request
 3. Las pages server usan `getAuthenticatedTenant()` para obtener user + tenant
-4. Las API routes internas usan `withTenantAuth()` que valida sesion + pertenencia a tenant
-5. Todas las queries se filtran por `tenantId`
+4. Si el usuario existe pero no tiene tenant:
+   - **Produccion:** Se redirige a login (el tenant se crea en `/auth/callback` tras confirmar email)
+   - **Desarrollo:** Se crea el tenant automaticamente (permite trabajar con email confirmation desactivada)
+5. Las API routes internas usan `withTenantAuth()` que valida sesion + pertenencia a tenant
+6. Todas las queries se filtran por `tenantId`
 
 ### Admin (super admin)
 

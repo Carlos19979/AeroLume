@@ -62,6 +62,14 @@ export default async function MyPage() {
 }
 ```
 
+> **Nota desarrollo local:** `getAuthenticatedTenant()` crea el tenant automaticamente si el usuario no tiene uno y `NODE_ENV === 'development'`. Esto permite trabajar con email confirmation desactivada en Supabase. En produccion, el tenant se crea exclusivamente en `/auth/callback` tras confirmar el email.
+
+### Creacion de tenant
+
+La logica de creacion de tenant esta en `@/lib/create-tenant.ts` (`createTenantForUser`). Se usa desde:
+- `/auth/callback` — tras confirmar email (produccion)
+- `getAuthenticatedTenant()` — fallback automatico (solo desarrollo)
+
 ### Validacion con Zod
 
 - Todos los schemas estan en `apps/web/src/lib/validations.ts`
