@@ -51,4 +51,8 @@ packages/db/drizzle/
 # superpowers
 .superpowers/
 
-.vercel
+# claude code
+.claude/
+
+# playwright mcp
+.playwright-mcp/
