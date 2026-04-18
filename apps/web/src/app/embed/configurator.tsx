@@ -3,6 +3,7 @@
 import { useState, useEffect, useDeferredValue } from 'react';
 import Image from 'next/image';
 import { SAIL_TYPE_LABELS } from '@/lib/constants';
+import { SailPreview } from './sail-preview';
 
 type Tenant = {
   id: string;
@@ -35,10 +36,13 @@ type Product = {
   name: string;
   slug: string;
   sailType: string;
+  variant: 'cruising' | 'cruising_plus' | 'cruising_racing' | null;
   basePrice: string | null;
   currency: string | null;
   descriptionShort: string | null;
+  features: string[] | null;
   configFields: ConfigField[];
+  pricingTiers: PricingTier[];
 };
 
 type ConfigField = {
@@ -50,9 +54,19 @@ type ConfigField = {
   sortOrder: number | null;
   required: boolean | null;
   priceModifiers: Record<string, number> | null;
+  percentModifiers: Record<string, number> | null;
 };
 
-type Step = 'boat' | 'products' | 'configure' | 'contact' | 'done';
+type PricingTier = {
+  id: string;
+  minSqm: string;
+  maxSqm: string;
+  msrpPerSqm: string;
+  sortOrder: number | null;
+};
+
+
+type Step = 'boat' | 'products' | 'configure' | 'preview' | 'contact' | 'done';
 type SailGroup = 'main' | 'head' | 'spi';
 
 const SAIL_GROUPS: Record<SailGroup, { label: string; types: string[]; defaultColor: string }> = {
@@ -74,11 +88,12 @@ const STEPS: { key: Step; label: string }[] = [
   { key: 'boat', label: 'Barco' },
   { key: 'products', label: 'Vela' },
   { key: 'configure', label: 'Opciones' },
+  { key: 'preview', label: 'Vista previa' },
   { key: 'contact', label: 'Contacto' },
 ];
 
 function stepIndex(s: Step): number {
-  if (s === 'done') return 4;
+  if (s === 'done') return STEPS.length;
   return STEPS.findIndex((st) => st.key === s);
 }
 
@@ -93,7 +108,9 @@ function SailIcon({ size = 20, color = 'currentColor' }: { size?: number; color?
 }
 
 export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: Tenant }) {
-  const [parentOrigin, setParentOrigin] = useState('*');
+  // parentOrigin stays null until we trust a referrer origin. We never fall back to '*'
+  // because postMessage payloads can include PII (email, phone, quoteId).
+  const [parentOrigin, setParentOrigin] = useState<string | null>(null);
 
   useEffect(() => {
     if (document.referrer) {
@@ -118,6 +135,9 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerNotes, setCustomerNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [expertMode, setExpertMode] = useState(false);
+  const [customAreas, setCustomAreas] = useState<Record<string, string>>({});
 
   const accent = tenant.themeAccent || '#0b5faa';
   const navy = tenant.themeNavy || '#0a2540';
@@ -139,21 +159,58 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
     return isNaN(n) ? null : n;
   }
 
-  function calculatePrice(): { base: number; extras: { label: string; amount: number }[]; total: number } | null {
+  function getEffectiveArea(product: Pick<Product, 'id' | 'sailType'> | null): number | null {
+    if (!product) return null;
+    const def = getBoatSailArea(selectedBoat, product.sailType);
+    if (!expertMode) return def;
+    const custom = customAreas[product.id];
+    if (custom === undefined || custom === '') return def;
+    const n = Number(custom);
+    return !isFinite(n) || n <= 0 ? def : n;
+  }
+
+  function getPricePerSqm(product: Product, area: number): number {
+    const tier = product.pricingTiers?.find((t) => area >= Number(t.minSqm) && area <= Number(t.maxSqm));
+    if (tier) return Number(tier.msrpPerSqm) || 0;
+    return Number(product.basePrice) || 0;
+  }
+
+  function calculatePrice(): { base: number; extras: { label: string; amount: number }[]; pricePerSqm: number; total: number } | null {
     if (!selectedProduct || !selectedBoat) return null;
-    const area = getBoatSailArea(selectedBoat, selectedProduct.sailType);
-    const pricePerSqm = Number(selectedProduct.basePrice) || 0;
-    if (!area || !pricePerSqm) return null;
-    const base = area * pricePerSqm;
-    const extras: { label: string; amount: number }[] = [];
+    const area = getEffectiveArea(selectedProduct);
+    if (!area) return null;
+    const pricePerSqm = getPricePerSqm(selectedProduct, area);
+    if (!pricePerSqm) return null;
+    const baseArea = area * pricePerSqm;
+
+    let flatSum = 0;
+    let pctSum = 0;
+    const flatExtras: { label: string; amount: number }[] = [];
+    const pctEntries: { label: string; pct: number }[] = [];
+
     for (const field of selectedProduct.configFields) {
-      const selectedOption = config[field.key];
-      if (!selectedOption || !field.priceModifiers) continue;
-      const mod = (field.priceModifiers as Record<string, number>)[selectedOption];
-      if (mod && mod > 0) extras.push({ label: `${field.label}: ${selectedOption}`, amount: mod });
+      const selected = config[field.key];
+      if (!selected) continue;
+      const flat = field.priceModifiers?.[selected];
+      const pct = field.percentModifiers?.[selected];
+      if (typeof flat === 'number' && flat !== 0) {
+        flatSum += flat;
+        flatExtras.push({ label: `${field.label}: ${selected}`, amount: flat });
+      }
+      if (typeof pct === 'number' && pct !== 0) {
+        pctSum += pct;
+        pctEntries.push({ label: `${field.label}: ${selected}`, pct });
+      }
     }
-    const total = base + extras.reduce((sum, e) => sum + e.amount, 0);
-    return { base, extras, total };
+
+    const subtotal = baseArea + flatSum;
+    const total = subtotal * (1 + pctSum);
+    const pctExtras = pctEntries.map((e) => ({
+      label: `${e.label} (+${(e.pct * 100).toFixed(0)}%)`,
+      amount: subtotal * e.pct,
+    }));
+
+    return { base: baseArea, pricePerSqm, extras: [...flatExtras, ...pctExtras], total };
   }
 
   const pricing = calculatePrice();
@@ -164,7 +221,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
   }
 
   function goBack() {
-    const order: Step[] = ['boat', 'products', 'configure', 'contact'];
+    const order: Step[] = ['boat', 'products', 'configure', 'preview', 'contact'];
     const idx = order.indexOf(step);
     if (idx > 0) setStep(order[idx - 1]);
   }
@@ -202,7 +259,12 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
     postMsg('aerolume:product-selected', product);
   }
 
-  function postMsg(type: string, payload: any) { window.parent.postMessage({ type, payload }, parentOrigin); }
+  function postMsg(type: string, payload: any) {
+    // No trusted parent origin → silently no-op (e.g. configurator opened as a top-level page,
+    // or the parent referrer couldn't be parsed). Avoids leaking PII to '*'.
+    if (!parentOrigin) return;
+    window.parent.postMessage({ type, payload }, parentOrigin);
+  }
 
   useEffect(() => {
     const observer = new ResizeObserver(() => postMsg('aerolume:resize', { height: document.body.scrollHeight }));
@@ -250,6 +312,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
               return (
                 <button
                   key={s.key}
+                  data-testid={`embed-step-${s.key}`}
                   onClick={() => { if (done) setStep(s.key); }}
                   disabled={!done && !active}
                   className="relative px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300"
@@ -286,8 +349,13 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
               </span>
               <span className="text-xs font-semibold text-emerald-900">{selectedProduct.name}</span>
               {(() => {
-                const area = getBoatSailArea(selectedBoat, selectedProduct.sailType);
-                return area ? <span className="text-xs text-emerald-400 font-medium">{area.toFixed(1)} m²</span> : null;
+                const area = getEffectiveArea(selectedProduct);
+                const isCustom = expertMode && !!customAreas[selectedProduct.id] && Number(customAreas[selectedProduct.id]) > 0;
+                return area ? (
+                  <span className="text-xs text-emerald-400 font-medium">
+                    {area.toFixed(1)} m²{isCustom ? ' *' : ''}
+                  </span>
+                ) : null;
               })()}
             </div>
           )}
@@ -306,6 +374,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
             </div>
             <input
               type="text"
+              data-testid="embed-boat-search"
               placeholder="Busca tu barco (ej: Bavaria 38, Beneteau 40...)"
               value={query}
               onChange={(e) => { setQuery(e.target.value); setSelectedBoat(null); }}
@@ -320,9 +389,10 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
           {/* Results */}
           {boatResults.length > 0 && (
             <div className="rounded-2xl border border-gray-100 shadow-lg shadow-black/[0.04] overflow-hidden divide-y divide-gray-50 max-h-80 overflow-y-auto">
-              {boatResults.map((boat) => (
+              {boatResults.map((boat, i) => (
                 <button
                   key={boat.id}
+                  data-testid={`embed-boat-result-${i}`}
                   onClick={() => selectBoat(boat)}
                   className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50/80 transition-all duration-150 group"
                 >
@@ -362,6 +432,43 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
       ═══════════════════════════════════════════════ */}
       {step === 'products' && (
         <div className="space-y-6">
+          {/* Expert mode toggle */}
+          <div
+            className="flex items-center justify-between gap-4 rounded-2xl border p-4"
+            style={{
+              borderColor: expertMode ? `${accent}40` : '#f3f4f6',
+              background: expertMode ? `linear-gradient(135deg, ${accent}08, transparent)` : '#fafafa',
+            }}
+          >
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={expertMode ? accent : '#9ca3af'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2l3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1z" />
+                </svg>
+                <p className="text-sm font-semibold" style={{ color: textColor }}>Modo experto</p>
+              </div>
+              <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                {expertMode
+                  ? 'Puedes editar la superficie de cada vela. La superficie personalizada se enviará en el presupuesto.'
+                  : 'Activa para editar manualmente la superficie de cada vela. Por defecto se usa la superficie calculada del barco.'}
+              </p>
+            </div>
+            <button
+              data-testid="embed-expert-toggle"
+              onClick={() => setExpertMode((v) => !v)}
+              role="switch"
+              aria-checked={expertMode}
+              aria-label="Activar modo experto"
+              className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors"
+              style={{ backgroundColor: expertMode ? accent : '#d1d5db' }}
+            >
+              <span
+                className="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
+                style={{ transform: expertMode ? 'translateX(24px)' : 'translateX(4px)' }}
+              />
+            </button>
+          </div>
+
           {productsLoading ? (
             <div className="text-center py-16">
               <div className="w-10 h-10 border-[3px] border-gray-100 border-t-gray-400 rounded-full animate-spin mx-auto" />
@@ -389,27 +496,60 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
                   {/* Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {groupProducts.map((product) => {
-                      const area = getBoatSailArea(selectedBoat, product.sailType);
-                      const pricePerSqm = Number(product.basePrice) || 0;
+                      const defaultArea = getBoatSailArea(selectedBoat, product.sailType);
+                      const area = getEffectiveArea(product);
+                      const isCustom = expertMode && !!customAreas[product.id] && Number(customAreas[product.id]) > 0;
+                      const pricePerSqm = area ? getPricePerSqm(product, area) : 0;
                       const estimatedPrice = area && pricePerSqm ? area * pricePerSqm : null;
                       return (
-                        <button
+                        <div
                           key={product.id}
-                          onClick={() => selectProduct(product)}
-                          className="text-left rounded-2xl p-5 transition-all duration-200 group border border-transparent hover:shadow-lg hover:shadow-black/[0.04] hover:-translate-y-0.5"
+                          data-testid={`embed-product-card-${product.id}`}
+                          role="button"
+                          tabIndex={0}
+                          onClick={(e) => {
+                            if ((e.target as HTMLElement).closest('input, [data-no-select]')) return;
+                            selectProduct(product);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectProduct(product); }
+                          }}
+                          className="text-left rounded-2xl p-5 transition-all duration-200 group border border-transparent hover:shadow-lg hover:shadow-black/[0.04] hover:-translate-y-0.5 cursor-pointer focus:outline-none focus:ring-2"
                           style={{
                             background: `linear-gradient(135deg, rgba(${tint}, 0.04), rgba(${tint}, 0.01))`,
                             borderColor: `rgba(${tint}, 0.12)`,
+                            ['--tw-ring-color' as any]: `rgba(${tint}, 0.4)`,
                           }}
                           onMouseEnter={(e) => { (e.currentTarget.style.borderColor = `rgba(${tint}, 0.35)`); }}
                           onMouseLeave={(e) => { (e.currentTarget.style.borderColor = `rgba(${tint}, 0.12)`); }}
                         >
                           <div className="flex items-start justify-between">
-                            <div className="flex-1">
+                            <div className="flex-1 min-w-0">
                               <p className="font-semibold text-sm leading-tight" style={{ color: textColor }}>{product.name}</p>
                               <p className="text-xs text-gray-400 mt-1">{SAIL_TYPE_LABELS[product.sailType] || product.sailType}</p>
-                              {area && (
-                                <p className="text-xs mt-1 font-medium" style={{ color: `${textColor}e6` }}>{area.toFixed(1)} m² para tu barco</p>
+                              {expertMode ? (
+                                <div className="mt-2 flex items-center gap-1.5" data-no-select>
+                                  <input
+                                    type="number"
+                                    data-testid={`embed-custom-area-${product.id}`}
+                                    step="0.1"
+                                    min="0"
+                                    placeholder={defaultArea ? defaultArea.toFixed(1) : '0'}
+                                    value={customAreas[product.id] ?? ''}
+                                    onChange={(e) => setCustomAreas((prev) => ({ ...prev, [product.id]: e.target.value }))}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onKeyDown={(e) => e.stopPropagation()}
+                                    className="w-20 px-2 py-1 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1"
+                                    style={{ ['--tw-ring-color' as any]: accent }}
+                                  />
+                                  <span className="text-[11px] font-medium" style={{ color: `${textColor}99` }}>
+                                    m²{isCustom ? ' (personalizada)' : defaultArea ? ` (def: ${defaultArea.toFixed(1)})` : ''}
+                                  </span>
+                                </div>
+                              ) : (
+                                area && (
+                                  <p className="text-xs mt-1 font-medium" style={{ color: `${textColor}e6` }}>{area.toFixed(1)} m² para tu barco</p>
+                                )
                               )}
                             </div>
                             {estimatedPrice && (
@@ -422,7 +562,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
                               </div>
                             )}
                           </div>
-                        </button>
+                        </div>
                       );
                     })}
                   </div>
@@ -443,8 +583,13 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
             <div className="px-6 py-4 border-b border-gray-50" style={{ background: `linear-gradient(135deg, ${accent}08, transparent)` }}>
               <h3 className="font-bold" style={{ color: textColor }}>Configurar {selectedProduct.name}</h3>
               {(() => {
-                const area = getBoatSailArea(selectedBoat, selectedProduct.sailType);
-                return area ? <p className="text-xs text-gray-400 mt-0.5">Superficie calculada: {area.toFixed(2)} m²</p> : null;
+                const area = getEffectiveArea(selectedProduct);
+                const isCustom = expertMode && !!customAreas[selectedProduct.id] && Number(customAreas[selectedProduct.id]) > 0;
+                return area ? (
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Superficie {isCustom ? 'personalizada' : 'calculada'}: {area.toFixed(2)} m²
+                  </p>
+                ) : null;
               })()}
             </div>
 
@@ -493,7 +638,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
               <div className="mx-6 mb-6 rounded-2xl overflow-hidden" style={{ background: `linear-gradient(135deg, #0a2540, ${accent})` }}>
                 <div className="p-5 space-y-2">
                   <div className="flex justify-between text-sm text-white/60">
-                    <span>{getBoatSailArea(selectedBoat, selectedProduct.sailType)?.toFixed(2)} m² x {Number(selectedProduct.basePrice).toFixed(0)} {currency}/m²</span>
+                    <span>{getEffectiveArea(selectedProduct)?.toFixed(2)} m² x {pricing.pricePerSqm.toFixed(2)} {currency}/m²</span>
                     <span>{pricing.base.toFixed(0)} {currency}</span>
                   </div>
                   {pricing.extras.map((extra, i) => (
@@ -513,7 +658,8 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
             {/* Continue */}
             <div className="px-6 pb-6">
               <button
-                onClick={() => setStep('contact')}
+                data-testid="embed-continue-configure"
+                onClick={() => setStep('preview')}
                 className="w-full py-3.5 text-white text-sm rounded-2xl font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-black/10 hover:-translate-y-0.5 active:translate-y-0"
                 style={{ backgroundColor: accent }}
               >
@@ -526,7 +672,122 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
       )}
 
       {/* ═══════════════════════════════════════════════
-          STEP 4: CONTACT
+          STEP 4: PREVIEW (sail visual + features)
+      ═══════════════════════════════════════════════ */}
+      {step === 'preview' && selectedProduct && (
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-gray-100 overflow-hidden shadow-sm bg-white">
+            <div className="px-5 py-3.5 border-b border-gray-50" style={{ background: `linear-gradient(135deg, ${accent}08, transparent)` }}>
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <h3 className="font-bold truncate" style={{ color: textColor }}>{selectedProduct.name}</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {SAIL_TYPE_LABELS[selectedProduct.sailType] || selectedProduct.sailType}
+                    <span className="mx-1.5 text-gray-200">·</span>
+                    {getEffectiveArea(selectedProduct)?.toFixed(1)} m²
+                  </p>
+                </div>
+                {pricing && (
+                  <div className="text-right shrink-0">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide">Total</p>
+                    <p className="text-lg font-bold leading-tight" style={{ color: accent }}>
+                      {pricing.total.toFixed(0)}
+                      <span className="text-xs font-medium text-gray-400 ml-0.5">{currency}</span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Split content: visual + info */}
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 p-4">
+              {/* Visual — constrained square-ish */}
+              <div className="md:sticky md:top-4 self-start">
+                <div className="aspect-[4/5] max-h-[360px] mx-auto w-full">
+                  <SailPreview
+                    sailType={selectedProduct.sailType}
+                    variant={selectedProduct.variant}
+                    accent={accent}
+                    reefs={config.rizos === '3 rizos' ? 3 : 2}
+                  />
+                </div>
+              </div>
+
+              {/* Info column */}
+              <div className="flex flex-col min-w-0">
+                {(() => {
+                  const selectedOptions = selectedProduct.configFields
+                    .map((field) => ({ field, value: config[field.key] }))
+                    .filter((x) => x.value);
+                  if (selectedOptions.length === 0) return null;
+                  return (
+                    <div data-testid="embed-config-summary" className="mb-3 rounded-xl border p-3" style={{ borderColor: `${accent}30`, background: `${accent}08` }}>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide mb-1.5" style={{ color: accent }}>Tu configuración</p>
+                      <ul className="space-y-1">
+                        {selectedOptions.map(({ field, value }) => (
+                          <li key={field.key} className="flex items-baseline justify-between gap-2 text-[13px]">
+                            <span className="text-gray-500">{field.label}</span>
+                            <span className="font-semibold text-gray-800 truncate">{value}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })()}
+
+                {selectedProduct.features && selectedProduct.features.length > 0 ? (
+                  <>
+                    <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Incluido de serie</p>
+                    <ul data-testid="embed-features-list" className="grid grid-cols-1 gap-y-1.5 mb-4">
+                      {selectedProduct.features.map((feature, i) => (
+                        <li key={i} className="flex items-start gap-2 text-[13px] text-gray-700 leading-snug">
+                          <svg className="w-3.5 h-3.5 mt-0.5 shrink-0" viewBox="0 0 20 20" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M4 10l4 4 8-8" />
+                          </svg>
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <p className="text-xs text-gray-400 italic mb-4">Sin características adicionales.</p>
+                )}
+
+                {/* Breakdown row */}
+                {pricing && (
+                  <div className="mt-auto pt-3 border-t border-gray-100 text-[11px] text-gray-500 space-y-1">
+                    <div className="flex justify-between">
+                      <span>{getEffectiveArea(selectedProduct)?.toFixed(2)} m² × {pricing.pricePerSqm.toFixed(2)} €/m²</span>
+                      <span className="font-medium text-gray-700">{pricing.base.toFixed(0)} {currency}</span>
+                    </div>
+                    {pricing.extras.map((extra, i) => (
+                      <div key={i} className="flex justify-between">
+                        <span className="truncate mr-2">{extra.label}</span>
+                        <span className="font-medium text-gray-700 shrink-0">+{extra.amount.toFixed(0)} {currency}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="px-4 pb-4 pt-1">
+              <button
+                data-testid="embed-continue-preview"
+                onClick={() => setStep('contact')}
+                className="w-full py-3 text-white text-sm rounded-2xl font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-black/10 hover:-translate-y-0.5 active:translate-y-0"
+                style={{ backgroundColor: accent }}
+              >
+                Solicitar presupuesto
+                <svg className="inline ml-2 -mt-0.5" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 4L10 8L6 12" /></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════
+          STEP 5: CONTACT
       ═══════════════════════════════════════════════ */}
       {step === 'contact' && selectedProduct && (
         <div className="space-y-5">
@@ -575,21 +836,52 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
               )}
 
               <button
+                data-testid="embed-submit-quote"
                 onClick={async () => {
                   if (!customerName.trim() || !customerEmail.trim()) return;
                   setSubmitting(true);
-                  const res = await fetch('/api/v1/quotes', {
-                    method: 'POST',
-                    headers: { ...headers, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      boatId: selectedBoat?.id, boatModel: selectedBoat?.model, boatLength: selectedBoat?.length,
-                      customerName, customerEmail, customerPhone: customerPhone || null, customerNotes: customerNotes || null,
-                      items: [{ productId: selectedProduct.id, sailType: selectedProduct.sailType, productName: selectedProduct.name, unitPrice: pricing?.total ? String(pricing.total) : null, configuration: config }],
-                    }),
-                  });
+                  setSubmitError(null);
+                  const effectiveArea = getEffectiveArea(selectedProduct);
+                  const isCustomArea = expertMode && !!customAreas[selectedProduct.id] && Number(customAreas[selectedProduct.id]) > 0;
+                  let res: Response;
+                  try {
+                    res = await fetch('/api/v1/quotes', {
+                      method: 'POST',
+                      headers: { ...headers, 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        boatId: selectedBoat?.id, boatModel: selectedBoat?.model, boatLength: selectedBoat?.length,
+                        customerName, customerEmail, customerPhone: customerPhone || null, customerNotes: customerNotes || null,
+                        items: [{
+                          productId: selectedProduct.id,
+                          sailType: selectedProduct.sailType,
+                          productName: selectedProduct.name,
+                          sailArea: effectiveArea !== null ? String(effectiveArea) : null,
+                          unitPrice: pricing?.total ? String(pricing.total) : null,
+                          configuration: { ...config, ...(isCustomArea ? { _customSurface: true } : {}) },
+                        }],
+                      }),
+                    });
+                  } catch {
+                    setSubmitting(false);
+                    setSubmitError('No se pudo enviar el presupuesto. Comprueba tu conexion e intentalo de nuevo.');
+                    return;
+                  }
+                  if (!res.ok) {
+                    setSubmitting(false);
+                    setSubmitError('No se pudo enviar el presupuesto. Por favor, intentalo de nuevo en unos instantes.');
+                    return;
+                  }
                   const { data } = await res.json();
-                  track('quote_created', { boatModel: selectedBoat?.model, sailType: selectedProduct.sailType, productId: selectedProduct.id });
-                  postMsg('aerolume:quote-created', { quoteId: data?.id, boat: selectedBoat, product: selectedProduct, configuration: config, customer: { name: customerName, email: customerEmail } });
+                  track('quote_created', { boatModel: selectedBoat?.model, sailType: selectedProduct.sailType, productId: selectedProduct.id, expertMode: isCustomArea });
+                  postMsg('aerolume:quote-created', {
+                    quoteId: data?.id,
+                    boat: selectedBoat,
+                    product: selectedProduct,
+                    configuration: config,
+                    customer: { name: customerName, email: customerEmail },
+                    sailArea: effectiveArea,
+                    customSurface: isCustomArea,
+                  });
                   setSubmitting(false);
                   setStep('done');
                 }}
@@ -609,6 +901,15 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
                   </>
                 )}
               </button>
+              {submitError && (
+                <div
+                  data-testid="embed-submit-error"
+                  role="alert"
+                  className="rounded-2xl px-4 py-3 text-sm bg-red-50 text-red-700 border border-red-100"
+                >
+                  {submitError}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -643,6 +944,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
             onClick={() => {
               setStep('boat'); setSelectedBoat(null); setSelectedProduct(null); setConfig({});
               setCustomerName(''); setCustomerEmail(''); setCustomerPhone(''); setCustomerNotes(''); setQuery('');
+              setExpertMode(false); setCustomAreas({});
             }}
             className="mt-6 px-6 py-2.5 text-sm rounded-2xl border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 anim-btn"
           >

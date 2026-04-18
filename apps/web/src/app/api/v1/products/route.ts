@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { validateApiKey } from '@/lib/api-auth';
-import { db, products, productConfigFields, eq, inArray, and } from '@aerolume/db';
+import { db, products, productConfigFields, productPricingTiers, eq, inArray, and } from '@aerolume/db';
 import { withCors } from '@/lib/cors';
 
 export async function GET(request: Request) {
@@ -12,31 +12,38 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const sailType = url.searchParams.get('sailType');
 
-  const conditions = [eq(products.tenantId, auth.ctx.tenantId)];
+  const conditions = [eq(products.tenantId, auth.ctx.tenantId), eq(products.active, true)];
   if (sailType) conditions.push(eq(products.sailType, sailType as typeof products.sailType.enumValues[number]));
 
+  // Public response: do NOT expose tenantId (internal multi-tenancy detail) or costPerSqm
+  // (internal supplier cost — stripped from per-tier rows below as well).
   const productList = await db
     .select({
       id: products.id,
       name: products.name,
       slug: products.slug,
       sailType: products.sailType,
+      variant: products.variant,
       basePrice: products.basePrice,
+      costPerSqm: products.costPerSqm,
       currency: products.currency,
       descriptionShort: products.descriptionShort,
       images: products.images,
+      features: products.features,
       active: products.active,
       sortOrder: products.sortOrder,
     })
     .from(products)
     .where(and(...conditions));
 
-  // Fetch config fields for all products
   const productIds = productList.map((p) => p.id);
-  let configFields: any[] = [];
+  type ConfigFieldRow = Awaited<ReturnType<typeof selectConfigFields>>[number];
+  type TierRow = Awaited<ReturnType<typeof selectTiers>>[number];
+  let configFields: ConfigFieldRow[] = [];
+  let tiers: TierRow[] = [];
 
-  if (productIds.length > 0) {
-    configFields = await db
+  async function selectConfigFields(ids: string[]) {
+    return db
       .select({
         id: productConfigFields.id,
         productId: productConfigFields.productId,
@@ -47,18 +54,51 @@ export async function GET(request: Request) {
         sortOrder: productConfigFields.sortOrder,
         required: productConfigFields.required,
         priceModifiers: productConfigFields.priceModifiers,
+        percentModifiers: productConfigFields.percentModifiers,
       })
       .from(productConfigFields)
-      .where(inArray(productConfigFields.productId, productIds));
+      .where(inArray(productConfigFields.productId, ids));
   }
 
-  // Group config fields by product
-  const result = productList.map((product) => ({
-    ...product,
-    configFields: configFields
-      .filter((f) => f.productId === product.id)
-      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
-  }));
+  async function selectTiers(ids: string[]) {
+    return db
+      .select({
+        id: productPricingTiers.id,
+        productId: productPricingTiers.productId,
+        minSqm: productPricingTiers.minSqm,
+        maxSqm: productPricingTiers.maxSqm,
+        costPerSqm: productPricingTiers.costPerSqm,
+        msrpPerSqm: productPricingTiers.msrpPerSqm,
+        sortOrder: productPricingTiers.sortOrder,
+      })
+      .from(productPricingTiers)
+      .where(inArray(productPricingTiers.productId, ids));
+  }
+
+  if (productIds.length > 0) {
+    configFields = await selectConfigFields(productIds);
+    tiers = await selectTiers(productIds);
+  }
+
+  // Strip internal cost fields from public response (cost belongs to tenant-only views).
+  const result = productList.map((product) => {
+    const publicFields = { ...product };
+    delete (publicFields as { costPerSqm?: unknown }).costPerSqm;
+    return {
+      ...publicFields,
+      configFields: configFields
+        .filter((f) => f.productId === product.id)
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+      pricingTiers: tiers
+        .filter((t) => t.productId === product.id)
+        .map((t) => {
+          const row = { ...t };
+          delete (row as { costPerSqm?: unknown }).costPerSqm;
+          return row;
+        })
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+    };
+  });
 
   const origin = request.headers.get('origin');
   return withCors(NextResponse.json({ data: result }), origin);
