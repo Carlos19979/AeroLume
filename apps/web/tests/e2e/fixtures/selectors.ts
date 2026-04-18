@@ -33,6 +33,9 @@ export const TID = {
     themeAccent: 'theme-accent-picker',
     planBadge: 'subscription-plan-badge',
     trialCountdown: 'subscription-trial-days-left',
+    trialExpiredBanner: 'dashboard-trial-expired-banner',
+    upgradeCta: 'subscription-upgrade-cta',
+    portalCta: 'subscription-portal-cta',
     analytics: {
       summary: 'analytics-summary',
       total: 'analytics-total',

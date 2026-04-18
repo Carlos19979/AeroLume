@@ -97,7 +97,7 @@ export default async function DashboardLayout({
                     </div>
                 )}
                 {banner.type === 'trial_expired' && (
-                    <div className="bg-amber-50 text-amber-800 text-sm font-medium px-4 py-3 flex items-center justify-between border-b border-amber-200">
+                    <div data-testid="dashboard-trial-expired-banner" className="bg-amber-50 text-amber-800 text-sm font-medium px-4 py-3 flex items-center justify-between border-b border-amber-200">
                         <span>{banner.message}</span>
                         <a href="/dashboard/subscription" className="px-4 py-1.5 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition-colors">Contactar</a>
                     </div>
