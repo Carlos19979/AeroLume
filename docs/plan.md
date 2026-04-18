@@ -121,7 +121,7 @@ Security review por 2 subagentes independientes. Todos los hallazgos aplicados:
 
 ## Fase 6: Mejoras futuras (backlog)
 
-- [ ] i18n — sistema de traducciones (el tenant tiene campo `locale` pero todo esta hardcoded en espanol)
+- [ ] ~~i18n~~ **Aparcado (2026-04-18)** — intento con `next-intl` + `localePrefix: 'as-needed'` falló porque require restructurar rutas bajo `app/[locale]/` (rompe todos los E2E marketing). Decisión: **no implementar hasta que haya un prospect real en otro idioma**. Cuando toque, la opción B (cookie-based sin cambio de URLs) es ~4-6h de trabajo; la opción A (rutas `[locale]`) es 1-2 días con riesgo alto. Ambas documentadas en el cierre de esta sesión.
 - [ ] Notificaciones email — enviar presupuestos por email al cliente
 - [ ] Dashboard analytics mejorado — graficos con Recharts, filtros por fecha
 - [ ] Exportar presupuestos a PDF
