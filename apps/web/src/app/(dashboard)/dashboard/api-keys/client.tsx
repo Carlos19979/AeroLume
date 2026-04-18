@@ -89,7 +89,7 @@ export function ApiKeysClient({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
 
       {/* Created key banner — shown once */}
       {createdKey && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+        <div data-testid="apikey-raw-modal" className="bg-green-50 border border-green-200 rounded-xl p-4">
           <p className="text-sm font-medium text-green-800 mb-2">
             API key creada. Cópiala ahora — no podrás verla de nuevo.
           </p>
@@ -98,6 +98,7 @@ export function ApiKeysClient({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
               {createdKey}
             </code>
             <button
+              data-testid="apikey-copy-raw"
               onClick={() => copyToClipboard(createdKey)}
               className="px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
             >
@@ -143,6 +144,7 @@ export function ApiKeysClient({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
         </div>
       ) : (
         <button
+          data-testid="apikey-create-btn"
           onClick={() => setShowCreate(true)}
           className="px-4 py-2 bg-[var(--color-accent)] text-white text-sm rounded-lg hover:opacity-90"
         >
@@ -169,7 +171,7 @@ export function ApiKeysClient({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {keys.map((key) => (
-                <tr key={key.id}>
+                <tr key={key.id} data-testid={`apikey-row-${key.id}`}>
                   <td className="px-4 py-3 text-gray-900">{key.name}</td>
                   <td className="px-4 py-3">
                     <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
@@ -188,6 +190,7 @@ export function ApiKeysClient({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button
+                      data-testid={`apikey-revoke-${key.id}`}
                       onClick={() => handleRevoke(key.id)}
                       className="text-red-500 hover:text-red-700 text-xs"
                     >

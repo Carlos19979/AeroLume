@@ -28,6 +28,7 @@ type QuoteItem = {
   sailArea: string | null;
   quantity: number | null;
   unitPrice: string | null;
+  cost: string | null;
   configuration: unknown;
   sortOrder: number | null;
   [key: string]: any;
@@ -50,6 +51,11 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
   const totalFromItems = items.reduce((sum, item) => {
     return sum + (item.unitPrice ? Number(item.unitPrice) : 0) * (item.quantity || 1);
   }, 0);
+  const totalCost = items.reduce((sum, item) => {
+    return sum + (item.cost ? Number(item.cost) : 0) * (item.quantity || 1);
+  }, 0);
+  const margin = totalFromItems > 0 && totalCost > 0 ? totalFromItems - totalCost : null;
+  const marginPct = margin !== null && totalFromItems > 0 ? (margin / totalFromItems) * 100 : null;
   const displayTotal = quote.totalPrice ? Number(quote.totalPrice) : totalFromItems || null;
 
   async function updateStatus(newStatus: string) {
@@ -121,7 +127,7 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
                   const cfg = item.configuration as Record<string, string> | null;
                   const entries = cfg && typeof cfg === 'object' ? Object.entries(cfg).filter(([, v]) => v) : [];
                   return (
-                    <div key={item.id} className="p-6">
+                    <div key={item.id} data-testid={`quote-item-${item.id}`} className="p-6">
                       <div className="flex items-start justify-between">
                         <div>
                           <p className="font-semibold text-gray-900">{item.productName}</p>
@@ -138,6 +144,11 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
                             </p>
                           ) : (
                             <p className="text-sm text-gray-500">Sin precio</p>
+                          )}
+                          {item.cost && (
+                            <p className="text-[10px] text-gray-400 mt-0.5">
+                              Coste: {formatPrice(item.cost, cur)}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -165,6 +176,35 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
           )}
         </div>
 
+        {/* Margin analysis (tenant-only) */}
+        {margin !== null && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+            <h3 className="font-semibold text-gray-900 mb-4">Análisis de margen</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">PVP</p>
+                <p data-testid="quote-margin-pvp" className="text-lg font-bold text-gray-900 mt-1">{formatPrice(totalFromItems, cur)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Coste</p>
+                <p data-testid="quote-margin-cost" className="text-lg font-bold text-gray-700 mt-1">{formatPrice(totalCost, cur)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Margen</p>
+                <p data-testid="quote-margin-result" className="text-lg font-bold mt-1" style={{ color: '#0b5faa' }}>
+                  {formatPrice(margin, cur)}
+                  {marginPct !== null && (
+                    <span data-testid="quote-margin-percent" className="text-xs font-medium text-gray-400 ml-1.5">({marginPct.toFixed(1)}%)</span>
+                  )}
+                </p>
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-3">
+              Coste calculado desde tu catálogo al crear el presupuesto. Solo visible para tu equipo.
+            </p>
+          </div>
+        )}
+
         {/* Customer notes */}
         {quote.customerNotes && (
           <div className="bg-white rounded-2xl border border-gray-200 p-6">
@@ -183,6 +223,7 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
           <div className="space-y-2">
             {quote.status === 'draft' && (
               <button
+                data-testid="quote-action-send"
                 onClick={() => updateStatus('sent')}
                 disabled={saving}
                 className="w-full px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors"
@@ -193,6 +234,7 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
             {quote.status === 'sent' && (
               <>
                 <button
+                  data-testid="quote-action-accept"
                   onClick={() => updateStatus('accepted')}
                   disabled={saving}
                   className="w-full px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 disabled:opacity-50 transition-colors"
@@ -200,6 +242,7 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
                   Aceptar presupuesto
                 </button>
                 <button
+                  data-testid="quote-action-reject"
                   onClick={() => updateStatus('rejected')}
                   disabled={saving}
                   className="w-full px-4 py-2.5 bg-white border border-red-200 text-red-600 text-sm font-medium rounded-xl hover:bg-red-50 disabled:opacity-50 transition-colors"
@@ -210,6 +253,7 @@ export function QuoteDetailClient({ quote: initialQuote, items }: { quote: Quote
             )}
             {(quote.status === 'accepted' || quote.status === 'rejected') && (
               <button
+                data-testid="quote-action-draft"
                 onClick={() => updateStatus('draft')}
                 disabled={saving}
                 className="w-full px-4 py-2.5 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 disabled:opacity-50 transition-colors"

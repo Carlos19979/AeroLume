@@ -72,14 +72,14 @@ export function SubscriptionClient({
 
           <div className="space-y-3">
             <div>
-              <p className="text-2xl font-bold text-gray-900">{planInfo.label}</p>
+              <p data-testid="subscription-plan-badge" className="text-2xl font-bold text-gray-900">{planInfo.label}</p>
               <p className="text-sm text-gray-500 mt-1">{planInfo.description}</p>
             </div>
 
             {isTrialActive && (
               <div className="bg-blue-50 rounded-xl p-4">
                 <p className="text-sm text-blue-700">
-                  Te quedan <strong>{trialDaysLeft} dias</strong> de prueba.
+                  Te quedan <strong data-testid="subscription-trial-days-left">{trialDaysLeft} dias</strong> de prueba.
                   Suscribete para mantener el acceso.
                 </p>
               </div>
@@ -116,6 +116,7 @@ export function SubscriptionClient({
             </ul>
 
             <button
+              data-testid="subscription-checkout-btn"
               onClick={handleCheckout}
               disabled={loading}
               className="mt-6 w-full py-3 bg-white text-[var(--color-navy)] font-semibold rounded-xl hover:bg-white/90 transition-colors disabled:opacity-50"

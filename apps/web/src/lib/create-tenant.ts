@@ -1,7 +1,5 @@
-import { db } from '@aerolume/db';
-import { tenants, tenantMembers, products, productConfigFields } from '@aerolume/db';
+import { db, tenants, tenantMembers, cloneBaseCatalogToTenant } from '@aerolume/db';
 import { slugify } from '@/lib/utils';
-import { TRIAL_PRODUCT_CONFIGS } from '@/lib/trial-products';
 
 export async function createTenantForUser(user: { id: string; email?: string; user_metadata?: Record<string, unknown> }) {
     const meta = user.user_metadata ?? {};
@@ -31,36 +29,5 @@ export async function createTenantForUser(user: { id: string; email?: string; us
         role: 'owner',
     });
 
-    // Seed trial products
-    for (const [externalId, cfg] of Object.entries(TRIAL_PRODUCT_CONFIGS)) {
-        const productSlug = slugify(cfg.name);
-
-        const [product] = await db
-            .insert(products)
-            .values({
-                tenantId: tenant.id,
-                externalId,
-                name: cfg.name,
-                slug: productSlug,
-                sailType: cfg.sailType as typeof products.$inferInsert.sailType,
-                basePrice: cfg.basePrice,
-                active: true,
-            })
-            .returning();
-
-        if (cfg.fields.length > 0) {
-            await db.insert(productConfigFields).values(
-                cfg.fields.map((field, idx) => ({
-                    productId: product.id,
-                    key: field.key,
-                    label: field.label,
-                    fieldType: 'select' as const,
-                    options: field.options,
-                    sortOrder: idx,
-                    required: true,
-                    priceModifiers: field.priceModifiers || {},
-                }))
-            );
-        }
-    }
+    await cloneBaseCatalogToTenant(tenant.id);
 }

@@ -78,6 +78,7 @@ export function TenantDetailClient({ tenant, members, quotes, apiKeys }: {
             <p className="text-xs text-blue-500 mt-0.5">Abre el dashboard en una nueva pestaña como si fueras este tenant</p>
           </div>
           <a
+            data-testid={`admin-impersonate-${tenantData.id}`}
             href={`/api/admin/impersonate?tenantId=${tenantData.id}`}
             target="_blank"
             rel="noopener noreferrer"
@@ -145,7 +146,7 @@ export function TenantDetailClient({ tenant, members, quotes, apiKeys }: {
         </div>
 
         {/* Plan actions */}
-        <div className="rounded-2xl bg-white border border-gray-200 p-5 space-y-3">
+        <div data-testid="admin-tenant-plan" className="rounded-2xl bg-white border border-gray-200 p-5 space-y-3">
           <h3 className="text-sm font-semibold text-gray-800">Cambiar plan</h3>
           <div className="space-y-1.5">
             {['prueba', 'pro'].map((plan) => (
@@ -164,7 +165,7 @@ export function TenantDetailClient({ tenant, members, quotes, apiKeys }: {
         </div>
 
         {/* Status actions */}
-        <div className="rounded-2xl bg-white border border-gray-200 p-5 space-y-3">
+        <div data-testid="admin-tenant-status" className="rounded-2xl bg-white border border-gray-200 p-5 space-y-3">
           <h3 className="text-sm font-semibold text-gray-800">Cambiar estado</h3>
           <div className="space-y-1.5">
             {['active', 'canceled', 'past_due'].map((status) => (

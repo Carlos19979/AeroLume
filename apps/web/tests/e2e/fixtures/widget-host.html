@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Aerolume Widget Host (E2E)</title>
+  </head>
+  <body>
+    <div id="aerolume"></div>
+    <script>
+      // Event log populated by Aerolume callbacks. Tests poll __events via
+      // page.waitForFunction.
+      window.__events = [];
+      window.__ready = false;
+    </script>
+    <!--
+      The widget script is injected by the test at runtime via
+      `page.addScriptTag({ path: '.../apps/widget/dist/aerolume.iife.js' })`
+      to avoid depending on the widget's Vite dev server shape.
+      In CI the widget build runs before Playwright.
+    -->
+    <script>
+      // The Aerolume.init call is also performed by the test after the script
+      // tag has been added. This is controlled via __API_KEY__ injected into
+      // the page context before init.
+      window.__initAerolume = function () {
+        if (!window.Aerolume || !window.__API_KEY__) return false;
+        window.Aerolume.init({
+          apiKey: window.__API_KEY__,
+          container: '#aerolume',
+          onBoatSelected: function (b) { window.__events.push({ type: 'boat', payload: b }); },
+          onProductSelected: function (p) { window.__events.push({ type: 'product', payload: p }); },
+          onQuoteCreated: function (q) { window.__events.push({ type: 'quote', payload: q }); },
+        });
+        window.__ready = true;
+        return true;
+      };
+    </script>
+  </body>
+</html>

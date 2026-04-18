@@ -117,7 +117,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
             </button>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <ColorField label="Color principal" value={accent} onChange={(v) => updateField('themeAccent', v)} />
+            <div data-testid="theme-accent-picker"><ColorField label="Color principal" value={accent} onChange={(v) => updateField('themeAccent', v)} testid="theme-accent-hex" /></div>
             <ColorField label="Color secundario" value={theme.themeAccentDim || DEFAULTS.themeAccentDim!} onChange={(v) => updateField('themeAccentDim', v)} />
             <ColorField label="Navy (fondo)" value={navy} onChange={(v) => updateField('themeNavy', v)} />
             <ColorField label="Texto" value={text} onChange={(v) => updateField('themeText', v)} />
@@ -179,12 +179,14 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
         </div>
 
         {/* Save */}
-        <SaveButton
-          saving={saving}
-          saved={saved}
-          onClick={handleSave}
-          className="px-6 py-2.5 bg-[var(--color-accent)] text-white text-sm font-semibold rounded-xl hover:opacity-90 disabled:opacity-50 transition-all"
-        />
+        <div data-testid="theme-save">
+          <SaveButton
+            saving={saving}
+            saved={saved}
+            onClick={handleSave}
+            className="px-6 py-2.5 bg-[var(--color-accent)] text-white text-sm font-semibold rounded-xl hover:opacity-90 disabled:opacity-50 transition-all"
+          />
+        </div>
       </div>
 
       {/* ── Preview ── */}
@@ -373,13 +375,13 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
   );
 }
 
-function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function ColorField({ label, value, onChange, testid }: { label: string; value: string; onChange: (v: string) => void; testid?: string }) {
   return (
     <div>
       <label className="block text-xs text-gray-500 mb-1.5">{label}</label>
       <div className="flex items-center gap-2">
         <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="w-9 h-9 rounded-lg border cursor-pointer" />
-        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} className="flex-1 border rounded-lg px-2.5 py-1.5 text-xs font-mono" placeholder="#000000" />
+        <input type="text" data-testid={testid} value={value} onChange={(e) => onChange(e.target.value)} className="flex-1 border rounded-lg px-2.5 py-1.5 text-xs font-mono" placeholder="#000000" />
       </div>
     </div>
   );

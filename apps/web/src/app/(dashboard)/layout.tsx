@@ -85,9 +85,9 @@ export default async function DashboardLayout({
             <Sidebar userName={userName} userEmail={userEmail} />
             <div className="flex-1 flex flex-col min-w-0">
                 {impersonating && (
-                    <div className="bg-amber-500 text-amber-950 text-xs font-medium px-4 py-2 flex items-center justify-between">
+                    <div data-testid="admin-impersonate-banner" className="bg-amber-500 text-amber-950 text-xs font-medium px-4 py-2 flex items-center justify-between">
                         <span>Viendo como: <strong>{impersonating.name}</strong> (impersonacion)</span>
-                        <a href="/api/admin/impersonate/stop" className="underline hover:no-underline">Salir</a>
+                        <a data-testid="admin-stop-impersonate" href="/api/admin/impersonate/stop" className="underline hover:no-underline">Salir</a>
                     </div>
                 )}
                 {banner.type === 'trial' && (

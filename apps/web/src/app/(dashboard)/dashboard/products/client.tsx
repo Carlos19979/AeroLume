@@ -101,6 +101,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
           <div className="flex gap-3">
             <input
               type="text"
+              data-testid="product-create-name"
               placeholder="Nombre del producto"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
@@ -108,6 +109,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
               onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
             />
             <select
+              data-testid="product-create-saltype"
               value={newSailType}
               onChange={(e) => setNewSailType(e.target.value)}
               className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
@@ -117,6 +119,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
               ))}
             </select>
             <button
+              data-testid="product-create-submit"
               onClick={handleCreate}
               disabled={loading || !newName.trim()}
               className="px-4 py-2 bg-[var(--color-accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
@@ -133,6 +136,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
         </div>
       ) : (
         <button
+          data-testid="product-create-button"
           onClick={() => setShowCreate(true)}
           className="px-4 py-2 bg-[var(--color-accent)] text-white text-sm rounded-lg hover:opacity-90"
         >
@@ -158,7 +162,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
             </thead>
             <tbody className="divide-y divide-gray-100">
               {productsList.map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50">
+                <tr key={product.id} data-testid={`product-row-${product.id}`} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <button
                       onClick={() => router.push(`/dashboard/products/${product.id}`)}
@@ -191,6 +195,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
                   </td>
                   <td className="px-4 py-3 text-right space-x-3">
                     <button
+                      data-testid={`product-toggle-active-${product.id}`}
                       onClick={() => handleToggleActive(product.id, product.active)}
                       className="text-xs text-gray-500 hover:text-gray-600"
                     >
@@ -203,6 +208,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
                       Editar
                     </button>
                     <button
+                      data-testid={`product-delete-${product.id}`}
                       onClick={() => handleDelete(product.id)}
                       className="text-red-500 hover:text-red-700 text-xs"
                     >

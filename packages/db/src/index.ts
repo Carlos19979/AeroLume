@@ -5,4 +5,5 @@ export * from './schema/quotes';
 export * from './schema/api-keys';
 export * from './schema/analytics';
 export { db } from './client';
-export { eq, and, or, desc, asc, sql, inArray } from 'drizzle-orm';
+export { cloneBaseCatalogToTenant } from './clone-catalog';
+export { eq, and, or, desc, asc, sql, inArray, isNull, isNotNull } from 'drizzle-orm';

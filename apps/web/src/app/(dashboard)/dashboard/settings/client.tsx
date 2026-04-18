@@ -162,6 +162,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
             <div>
               <label className="block text-sm text-gray-600 mb-1">Idioma</label>
               <select
+                data-testid="settings-locale"
                 value={locale}
                 onChange={(e) => setLocale(e.target.value)}
                 className="w-full border rounded-lg px-3 py-2 text-sm"
@@ -177,6 +178,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
             <div>
               <label className="block text-sm text-gray-600 mb-1">Moneda</label>
               <select
+                data-testid="settings-currency"
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
                 className="w-full border rounded-lg px-3 py-2 text-sm"
@@ -196,6 +198,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
           <div>
             <label className="block text-sm text-gray-600 mb-1">Orígenes permitidos</label>
             <textarea
+              data-testid="settings-allowed-origins"
               value={originsText}
               onChange={(e) => setOriginsText(e.target.value)}
               rows={4}
@@ -211,6 +214,7 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
             <label className="block text-sm text-gray-600 mb-1">Webhook URL</label>
             <input
               type="url"
+              data-testid="settings-webhook-url"
               value={webhookUrl}
               onChange={(e) => setWebhookUrl(e.target.value)}
               className="w-full border rounded-lg px-3 py-2 text-sm font-mono"
@@ -223,12 +227,14 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
         </div>
 
         {/* Save */}
-        <SaveButton
-          saving={saving}
-          saved={saved}
-          onClick={handleSave}
-          className="px-6 py-2 bg-[var(--color-accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
-        />
+        <div data-testid="settings-save">
+          <SaveButton
+            saving={saving}
+            saved={saved}
+            onClick={handleSave}
+            className="px-6 py-2 bg-[var(--color-accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
+          />
+        </div>
       </div>
 
       {/* Sidebar */}

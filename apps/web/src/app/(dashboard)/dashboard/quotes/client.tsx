@@ -121,7 +121,7 @@ export function QuotesClient({ initialQuotes }: { initialQuotes: QuoteRow[] }) {
               {filtered.map((quote) => {
                 const status = QUOTE_STATUS_LABELS[quote.status] || QUOTE_STATUS_LABELS.draft;
                 return (
-                  <tr key={quote.id} className="hover:bg-gray-50">
+                  <tr key={quote.id} data-testid={`quote-row-${quote.id}`} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="text-gray-900 font-medium">
                         {quote.customerName || 'Sin nombre'}
@@ -155,6 +155,7 @@ export function QuotesClient({ initialQuotes }: { initialQuotes: QuoteRow[] }) {
                       <div className="flex items-center justify-end gap-2">
                         {quote.status === 'draft' && (
                           <button
+                            data-testid={`quote-send-${quote.id}`}
                             onClick={() => handleUpdateStatus(quote.id, 'sent')}
                             className="text-blue-500 hover:text-blue-700 text-xs"
                           >
@@ -164,12 +165,14 @@ export function QuotesClient({ initialQuotes }: { initialQuotes: QuoteRow[] }) {
                         {quote.status === 'sent' && (
                           <>
                             <button
+                              data-testid={`quote-accept-${quote.id}`}
                               onClick={() => handleUpdateStatus(quote.id, 'accepted')}
                               className="text-green-500 hover:text-green-700 text-xs"
                             >
                               Aceptar
                             </button>
                             <button
+                              data-testid={`quote-reject-${quote.id}`}
                               onClick={() => handleUpdateStatus(quote.id, 'rejected')}
                               className="text-red-500 hover:text-red-700 text-xs"
                             >
@@ -184,6 +187,7 @@ export function QuotesClient({ initialQuotes }: { initialQuotes: QuoteRow[] }) {
                           Ver
                         </button>
                         <button
+                          data-testid={`quote-delete-${quote.id}`}
                           onClick={() => handleDelete(quote.id)}
                           className="text-red-400 hover:text-red-600 text-xs"
                         >

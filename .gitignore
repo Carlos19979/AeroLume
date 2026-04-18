@@ -56,3 +56,9 @@ packages/db/drizzle/
 
 # playwright mcp
 .playwright-mcp/
+
+# playwright tests
+apps/web/playwright-report/
+apps/web/test-results/
+apps/web/playwright/.cache/
+**/.last-run.json

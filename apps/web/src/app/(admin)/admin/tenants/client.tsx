@@ -148,7 +148,7 @@ export function TenantsClient({ tenants }: { tenants: TenantRow[] }) {
               </thead>
               <tbody>
                 {filtered.map((t, i) => (
-                  <tr key={t.id} className={`hover:bg-gray-50 transition-colors ${i < filtered.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                  <tr key={t.id} data-testid={`admin-tenant-row-${t.id}`} className={`hover:bg-gray-50 transition-colors ${i < filtered.length - 1 ? 'border-b border-gray-50' : ''}`}>
                     <td className="px-5 py-3">
                       <p className="text-gray-800 font-medium">{t.companyName || t.name}</p>
                     </td>

@@ -52,6 +52,7 @@ export const quoteItems = pgTable(
     sailArea: numeric('sail_area'),
     quantity: integer('quantity').default(1),
     unitPrice: numeric('unit_price'),
+    cost: numeric('cost'),
     configuration: jsonb('configuration').default({}),
     sortOrder: integer('sort_order').default(0),
   },
