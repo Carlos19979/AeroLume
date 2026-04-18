@@ -4,37 +4,76 @@
  * The quotes route explicitly strips `cost` from webhook bodies:
  *   items: items.map(i => ({ productId, sailType, ..., unitPrice }))  — no cost
  *
- * TODO: To fully verify this at runtime you would need to spin up an HTTP server
- * inside beforeAll that captures the inbound webhook POST, point the tenant's
- * webhookUrl at it (e.g. http://host.docker.internal:<PORT> or
- * http://localhost:<PORT> from the Next.js server's perspective), and assert
- * the parsed body has no `cost` key on any item.
+ * Test 1 uses a local mock HTTP server (startMockWebhook) to capture the outbound
+ * webhook POST from the Next.js server and asserts no `cost` key appears on items.
  *
- * The current test infrastructure does not expose a reliable loopback address
- * that the running Next.js dev server can reach back to from within Node. Setting
- * up a Playwright `page.route` mock would not intercept outbound server-side
- * fetch calls (it only mocks browser network). A proper solution requires
- * a dedicated mock-webhook helper in the fixture layer.
- *
- * Until that infrastructure is added, the two tests below verify the contract
- * at the SOURCE level (the route source was read and audited) and at the DB
- * level (cost column is populated but NOT returned by the GET endpoint either).
+ * The server URL uses the nip.io wildcard DNS trick:
+ *   127.0.0.1.nip.io → resolves to 127.0.0.1 via public DNS
+ *   isInternalUrl() only string-matches "localhost", "127.0.0.1", "::1", "10.*",
+ *   "192.168.*", "172.16-31.*", ".internal", ".local" — none match "127.0.0.1.nip.io",
+ *   so the webhook POST is allowed through while still reaching our local mock server.
  */
 import { test, expect } from '../fixtures/auth';
 import { apiClient, dbQuery } from '../fixtures/api';
+import { startMockWebhook } from '../fixtures/webhook-mock';
 
 const BASE = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
 
 test.describe('security: webhook payload excludes cost field', () => {
-  test.skip(
-    true,
-    'TODO: requires loopback HTTP mock server accessible from the Next.js process — ' +
-    'add a MockWebhookServer fixture that binds to a free port and inject webhookUrl ' +
-    'via SQL before each test, then assert captured body.items[*].cost is undefined.',
-  );
+  test('webhook body has no cost on any item', async ({ tenant }) => {
+    // Start a local mock server that captures POST bodies.
+    const mock = await startMockWebhook();
 
-  test('webhook body has no cost on any item', async () => {
-    // Skipped — see test.skip above
+    try {
+      // Point this tenant's webhookUrl at the mock server.
+      await dbQuery(
+        `UPDATE tenants SET webhook_url = $1 WHERE id = $2`,
+        [mock.url, tenant.tenantId],
+      );
+
+      const ownProducts = await dbQuery<{ id: string }>(
+        'SELECT id FROM products WHERE tenant_id = $1 LIMIT 1',
+        [tenant.tenantId],
+      );
+      expect(ownProducts.length).toBeGreaterThan(0);
+
+      const api = apiClient(BASE, tenant.apiKey);
+      const res = await api.post<{ data: { id: string; status: string } }>('/api/v1/quotes', {
+        boatModel: 'Webhook Cost Test',
+        currency: 'EUR',
+        items: [
+          {
+            productId: ownProducts[0].id,
+            sailType: 'gvstd',
+            productName: 'Test Sail',
+            quantity: 1,
+            sailArea: '30',
+          },
+        ],
+      });
+      expect(res.status).toBe(200);
+
+      // The webhook is fire-and-forget from the route — poll up to 5 s.
+      const deadline = Date.now() + 5_000;
+      while (mock.captured.length === 0 && Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, 200));
+      }
+
+      expect(mock.captured.length).toBeGreaterThan(0);
+
+      const payload = mock.captured[0] as {
+        event: string;
+        data: { items: Array<Record<string, unknown>> };
+      };
+
+      expect(payload.event).toBe('quote.created');
+
+      for (const item of payload.data.items) {
+        expect(item).not.toHaveProperty('cost');
+      }
+    } finally {
+      await mock.close();
+    }
   });
 });
 

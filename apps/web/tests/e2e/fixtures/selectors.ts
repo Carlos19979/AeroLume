@@ -33,6 +33,17 @@ export const TID = {
     themeAccent: 'theme-accent-picker',
     planBadge: 'subscription-plan-badge',
     trialCountdown: 'subscription-trial-days-left',
+    analytics: {
+      summary: 'analytics-summary',
+      total: 'analytics-total',
+      boatSearch: 'analytics-boat-search',
+      quoteCreated: 'analytics-quote-created',
+      productView: 'analytics-product-view',
+      byType: 'analytics-by-type',
+      topBoats: 'analytics-top-boats',
+      topSailTypes: 'analytics-top-sail-types',
+      perDay: 'analytics-per-day',
+    },
   },
   admin: {
     tenantRow: (id: string) => `admin-tenant-row-${id}`,

@@ -167,11 +167,45 @@ describe('cloneBaseCatalogToTenant', () => {
     expect(fieldCount).toBe(baseFieldCount);
   });
 
-  it.skip('empty base catalog: returns 0 without throwing', async () => {
-    // Skipped: emptying the shared base catalog (tenantId IS NULL) in a test
-    // is destructive and would break concurrent/sequential tests that rely on it.
-    // To test this in isolation, seed a test DB with no base products and verify
-    // cloneBaseCatalogToTenant returns 0.
+  it('empty base catalog: returns 0 without throwing', async () => {
+    // Isolation strategy: open a drizzle transaction, delete all base-catalog rows
+    // inside it, call cloneBaseCatalogToTenant with the tx as the db argument, assert
+    // the return value is 0, then throw a sentinel error so drizzle rolls back the
+    // DELETE — the real base catalog is never permanently modified.
+    const d = getDb();
+    const SENTINEL = 'ROLLBACK_SENTINEL';
+
+    let result: number | undefined;
+
+    await d
+      .transaction(async (tx) => {
+        // Cast tx to the same DbLike type the function accepts.
+        const txDb = tx as unknown as Parameters<typeof cloneBaseCatalogToTenant>[1];
+
+        // Delete dependent rows first (FK order), then base products.
+        await tx.execute(
+          dsql`DELETE FROM product_config_fields WHERE product_id IN (SELECT id FROM products WHERE tenant_id IS NULL)`,
+        );
+        await tx.execute(
+          dsql`DELETE FROM product_pricing_tiers WHERE product_id IN (SELECT id FROM products WHERE tenant_id IS NULL)`,
+        );
+        await tx.execute(dsql`DELETE FROM products WHERE tenant_id IS NULL`);
+
+        // With an empty base catalog the function must return 0.
+        result = await cloneBaseCatalogToTenant(
+          '00000000-0000-0000-0000-000000000001',
+          txDb,
+        );
+
+        // Force rollback so the real base catalog is restored.
+        throw new Error(SENTINEL);
+      })
+      .catch((err: unknown) => {
+        if (err instanceof Error && err.message === SENTINEL) return; // expected
+        throw err; // unexpected error — re-throw so the test fails
+      });
+
+    expect(result).toBe(0);
   });
 
   it('idempotency: cloning same tenant twice throws unique constraint error', async () => {

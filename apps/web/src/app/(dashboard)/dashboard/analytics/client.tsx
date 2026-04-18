@@ -16,32 +16,36 @@ export function AnalyticsClient({ data }: { data: AnalyticsData }) {
   return (
     <>
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-testid="analytics-summary">
         <StatCard
           label="Eventos totales"
           value={data.total}
           color="text-gray-900"
+          testId="analytics-total"
         />
         <StatCard
           label="Presupuestos"
           value={data.byType.find((t) => t.eventType === 'quote_created')?.count ?? 0}
           color="text-green-600"
+          testId="analytics-quote-created"
         />
         <StatCard
           label="Barcos buscados"
           value={data.byType.find((t) => t.eventType === 'boat_search')?.count ?? 0}
           color="text-blue-600"
+          testId="analytics-boat-search"
         />
         <StatCard
           label="Productos vistos"
           value={data.byType.find((t) => t.eventType === 'product_view')?.count ?? 0}
           color="text-purple-600"
+          testId="analytics-product-view"
         />
       </div>
 
       {/* Activity chart (last 30 days) */}
       {data.perDay.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-6" data-testid="analytics-per-day">
           <h3 className="font-medium text-gray-900 mb-4">Actividad (últimos 30 días)</h3>
           <div className="flex items-end gap-1 h-32">
             {data.perDay.map((day) => (
@@ -69,7 +73,7 @@ export function AnalyticsClient({ data }: { data: AnalyticsData }) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Events by type */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-6" data-testid="analytics-by-type">
           <h3 className="font-medium text-gray-900 mb-4">Eventos por tipo</h3>
           {data.byType.length === 0 ? (
             <p className="text-sm text-gray-500">Sin datos todavía.</p>
@@ -88,7 +92,7 @@ export function AnalyticsClient({ data }: { data: AnalyticsData }) {
         </div>
 
         {/* Top boats */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-6" data-testid="analytics-top-boats">
           <h3 className="font-medium text-gray-900 mb-4">Barcos más buscados</h3>
           {data.topBoats.length === 0 ? (
             <p className="text-sm text-gray-500">Sin datos todavía.</p>
@@ -108,7 +112,7 @@ export function AnalyticsClient({ data }: { data: AnalyticsData }) {
         </div>
 
         {/* Top sail types */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-6" data-testid="analytics-top-sail-types">
           <h3 className="font-medium text-gray-900 mb-4">Tipos de vela populares</h3>
           {data.topSailTypes.length === 0 ? (
             <p className="text-sm text-gray-500">Sin datos todavía.</p>
@@ -139,9 +143,9 @@ export function AnalyticsClient({ data }: { data: AnalyticsData }) {
   );
 }
 
-function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
+function StatCard({ label, value, color, testId }: { label: string; value: number; color: string; testId?: string }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
+    <div className="bg-white rounded-xl border border-gray-200 p-4 text-center" data-testid={testId}>
       <div className={`text-2xl font-semibold ${color}`}>{value.toLocaleString('es')}</div>
       <div className="text-xs text-gray-500 mt-1">{label}</div>
     </div>
