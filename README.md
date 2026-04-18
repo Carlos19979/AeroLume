@@ -185,10 +185,15 @@ apps/web/tests/
 | Smoke, auth, configurator | E2E (Playwright) | 18 |
 | Dashboard (products, quotes, boats, settings, api-keys, theme) | E2E | 28 |
 | Admin (tenants, impersonation, boats globales, gate) | E2E | 12 |
-| API public + internal + webhooks | E2E | 16 |
-| Security (SSRF, CORS, spoofing, cross-tenant) | E2E | 6 |
+| API public + internal + webhooks + analytics ingest | E2E | 26 |
+| Security (SSRF, CORS, spoofing, cross-tenant, cost) | E2E | 7 |
 | Widget (postMessage flow) | E2E | 2 |
-| **Total** | | **154** |
+| Marketing / landing (home, about, contact, nav) | E2E | 24 |
+| Analytics dashboard + aggregations | E2E | 8 |
+| Visual snapshots (SailPreview) | E2E | 11 |
+| **Total** | | **207** |
+
+> **Skips:** 1 test — `analytics/dashboard-analytics-page.spec.ts` "date-range filter" (UI aún no lo implementa). Ver [docs/testing.md §8 Sprint 3](./docs/testing.md).
 
 Hay 2 tests marcados como `skip` intencional (documentados en [docs/testing.md](./docs/testing.md) §8 Sprint 3).
 

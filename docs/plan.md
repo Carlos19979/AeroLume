@@ -74,14 +74,21 @@ Ver detalle completo en [`docs/testing.md`](./testing.md).
   - `trialEndsAt` faltaba en plan gate de `internal/products` e `internal/api-keys`
   - `updateTenantSettingsSchema` sin `.nullable()` para `companyName`, `Email`, `Phone`, `Address`
 
-#### Pendiente (Sprint 3)
+#### Sprint 3 (40a2db1, 2026-04-18) ✅
 
-- [ ] Visual snapshot tests del SailPreview
-- [ ] Landing/marketing E2E coverage
-- [ ] Analytics aggregations tests
-- [ ] Promover 2 tests `skip` a full coverage:
-  - Clone-catalog con DB base aislada (requiere fixture DB limpia)
-  - Webhook con mock server HTTP (requiere servidor HTTP local en test)
+- [x] Visual snapshot tests del SailPreview — dev-harness `/sail-preview-harness` + 11 baseline PNGs
+- [x] Landing/marketing E2E coverage — 24 tests (home, about, contact, navigation)
+- [x] Analytics aggregations tests — 18 tests (1 skip: date-range filter, UI no lo tiene)
+- [x] Promover 2 tests `skip` a full coverage:
+  - Clone-catalog empty base catalog → transaction + sentinel rollback
+  - Webhook body sin cost → fixture `webhook-mock.ts` + `127.0.0.1.nip.io` para bypassear `isInternalUrl`
+
+**Totales:** 207 tests (206 passed + 1 skipped). Ver [docs/testing.md](./testing.md) §8.
+
+#### Siguiente Sprint (sin planificar)
+
+- [ ] Date-range filter en la UI de `/dashboard/analytics` + test del filtro
+- [ ] Tests de webhook bajo concurrencia (múltiples quotes a la vez, el webhook no debería bloquear la respuesta al cliente)
 
 ---
 

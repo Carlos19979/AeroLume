@@ -764,14 +764,16 @@ Orden recomendado para implementación incremental:
 - [x] **Seguridad negativa** (20 tests): `ssrf-webhook-internal-ip`, `cors-public-api`, `api-key-spoofing`, `cross-tenant-quotes-leak` (regresión del bug del review), `webhook-payload-no-cost`.
 - [x] **Vitest unitarios**: `validations.test.ts` (64 tests), `clone-catalog.test.ts` (5+1 skipped).
 
-### Sprint 3 — Polish
+### Sprint 3 — Polish ✅ Completado (2026-04-18, commit `40a2db1`)
 
-- [ ] Snapshots visuales del SailPreview
-- [ ] Marketing/landing
-- [ ] Analytics aggregations
-- [ ] Levantar los 2 tests actualmente `skip`:
-  - `unit/clone-catalog.test.ts` "empty base catalog returns 0" — requiere DB de test aislada (vaciar el catálogo base en la DB compartida rompe el resto).
-  - `e2e/security/webhook-payload-no-cost.spec.ts` "webhook body has no cost" — requiere un mock HTTP server en puerto libre accesible desde el proceso Next.js.
+**Resultado:** 135 E2E + 72 unit = 207 tests (206 passed + 1 skipped).
+
+- [x] **Snapshots visuales SailPreview** (11 tests): dev-harness en `/sail-preview-harness` con notFound() en prod. Baseline PNGs en `tests/e2e/visual/sail-preview.spec.ts-snapshots/` cubriendo gvstd/gvfull/gve/gn/gse/gen/furling/spisym × cruising/cruising_racing × reefs + accent custom.
+- [x] **Marketing / landing** (24 tests): `home`, `about`, `contact`, `navigation`. Incluye carga sin errores JS, FAQ toggle, viewport mobile, contact form client-side, nav links a /login y /signup.
+- [x] **Analytics aggregations** (17 passed + 1 skipped): ingest POST `/api/v1/analytics` (Zod + CORS + 401/400), agregados internos `total/byType/topBoats/topSailTypes/perDay` con tenant isolation, dashboard page con los 4 stat cards. **1 skip:** date-range filter — la UI aún no lo implementa (TODO).
+- [x] **Skips resueltos:**
+  - `unit/clone-catalog.test.ts` "empty base catalog returns 0" — transaction + sentinel rollback (delete productos base dentro de tx → clone → throw sentinel → rollback). Catálogo base nunca se altera.
+  - `e2e/security/webhook-payload-no-cost.spec.ts` "webhook body has no cost" — fixture `webhook-mock.ts` (http.createServer en loopback random port) + URL reescrita como `127.0.0.1.nip.io:<port>` para bypassear `isInternalUrl` sin tocar código prod.
 
 ---
 
