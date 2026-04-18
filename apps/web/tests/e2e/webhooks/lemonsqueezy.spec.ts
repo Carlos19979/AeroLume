@@ -508,3 +508,89 @@ test.describe('LemonSqueezy webhook — unknown event', () => {
     expect(after.ls_subscription_id).toBe(before.ls_subscription_id);
   });
 });
+
+// ---------------------------------------------------------------------------
+// 7. subscription_expired → status=expired, plan downgraded to prueba
+// ---------------------------------------------------------------------------
+
+test.describe('LemonSqueezy webhook — subscription_expired', () => {
+  let skipReason = '';
+  let userId = '';
+  let tenantId = '';
+
+  test.beforeAll(async ({ baseURL }, testInfo) => {
+    const secret = getSecret();
+    if (!secret) {
+      skipReason = 'LEMONSQUEEZY_WEBHOOK_SECRET not set in .env.local';
+      return;
+    }
+    const base = getBaseURL(baseURL);
+    const ok = await serverHasSecret(base, secret);
+    if (!ok) {
+      skipReason =
+        'Dev server does not have LEMONSQUEEZY_WEBHOOK_SECRET — restart the dev server after setting it in .env.local';
+      return;
+    }
+    userId = await makeUser(testInfo.workerIndex);
+    // Start as an active pro tenant so we can verify the downgrade.
+    const created = await createTestTenant({ ownerUserId: userId, plan: 'pro' });
+    tenantId = created.tenantId;
+    await dbQuery(
+      `UPDATE tenants
+       SET ls_subscription_id = 'ls-sub-expired-001', ls_customer_id = 'ls-cust-expired-001',
+           subscription_status = 'active'
+       WHERE id = $1::uuid`,
+      [tenantId],
+    );
+  });
+
+  test.afterAll(async () => {
+    if (tenantId) await cleanupTenant(tenantId).catch(() => undefined);
+    if (userId) await deleteUser(userId);
+  });
+
+  test('sets subscription_status=expired and downgrades plan to prueba', async ({ baseURL }) => {
+    test.skip(!!skipReason, skipReason);
+
+    const secret = getSecret();
+    const base = getBaseURL(baseURL);
+    const body = buildPayload('subscription_expired', tenantId, {
+      subscriptionId: 'ls-sub-expired-001',
+      customerId: 'ls-cust-expired-001',
+    });
+    const sig = sign(body, secret);
+
+    const { status } = await postWebhook(base, body, sig);
+    expect(status).toBe(200);
+
+    const row = await fetchTenantSub(tenantId);
+    expect(row.subscription_status).toBe('expired');
+    expect(row.plan).toBe('prueba');
+  });
+
+  test('is idempotent — sending subscription_expired twice leaves DB stable', async ({
+    baseURL,
+  }) => {
+    test.skip(!!skipReason, skipReason);
+
+    const secret = getSecret();
+    const base = getBaseURL(baseURL);
+    const body = buildPayload('subscription_expired', tenantId, {
+      subscriptionId: 'ls-sub-expired-001',
+      customerId: 'ls-cust-expired-001',
+    });
+    const sig = sign(body, secret);
+
+    // First call (may already be expired from previous test — that's fine)
+    const first = await postWebhook(base, body, sig);
+    expect(first.status).toBe(200);
+
+    // Second call — same payload
+    const second = await postWebhook(base, body, sig);
+    expect(second.status).toBe(200);
+
+    const row = await fetchTenantSub(tenantId);
+    expect(row.subscription_status).toBe('expired');
+    expect(row.plan).toBe('prueba');
+  });
+});

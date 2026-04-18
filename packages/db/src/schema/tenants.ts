@@ -1,7 +1,7 @@
 import { pgTable, uuid, text, timestamp, boolean, pgEnum, unique } from 'drizzle-orm/pg-core';
 
 export const tenantPlanEnum = pgEnum('tenant_plan', ['prueba', 'pro', 'enterprise']);
-export const subscriptionStatusEnum = pgEnum('subscription_status', ['trialing', 'active', 'past_due', 'canceled']);
+export const subscriptionStatusEnum = pgEnum('subscription_status', ['trialing', 'active', 'past_due', 'canceled', 'expired']);
 export const memberRoleEnum = pgEnum('member_role', ['owner', 'admin', 'viewer']);
 
 export const tenants = pgTable('tenants', {

@@ -13,6 +13,7 @@ export default async function SubscriptionPage() {
       subscriptionStatus: tenants.subscriptionStatus,
       trialEndsAt: tenants.trialEndsAt,
       lsSubscriptionId: tenants.lsSubscriptionId,
+      lsCustomerId: tenants.lsCustomerId,
     })
     .from(tenants)
     .where(eq(tenants.id, auth.tenant.id))
@@ -24,6 +25,7 @@ export default async function SubscriptionPage() {
       status={tenant?.subscriptionStatus ?? 'trialing'}
       trialEndsAt={tenant?.trialEndsAt?.toISOString() ?? null}
       hasSubscription={!!tenant?.lsSubscriptionId}
+      lsCustomerId={tenant?.lsCustomerId ?? null}
     />
   );
 }

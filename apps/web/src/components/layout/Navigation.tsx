@@ -10,6 +10,7 @@ import { Logo } from '@/components/ui/Logo';
 const NAV_LINKS = [
     { href: '/#configurador', label: 'Configurador' },
     { href: '/#como-funciona', label: 'Como funciona' },
+    { href: '/pricing', label: 'Precios', testId: 'pricing-nav-link' },
     { href: '/about', label: 'Nosotros' },
     { href: '/contact', label: 'Contacto' },
 ];
@@ -48,6 +49,7 @@ export function Navigation() {
                             <Link
                                 key={link.href}
                                 href={link.href}
+                                {...(link.testId ? { 'data-testid': link.testId } : {})}
                                 className={`px-4 py-2 text-[13px] tracking-[0.05em] transition-all duration-300 rounded-lg ${
                                     isDark
                                         ? 'text-white/60 hover:text-white hover:bg-white/8'

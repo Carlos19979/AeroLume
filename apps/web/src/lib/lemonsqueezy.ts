@@ -49,6 +49,23 @@ export async function createCheckoutUrl(tenantId: string, tenantEmail: string): 
   return json.data.attributes.url;
 }
 
+export async function createCustomerPortalUrl(customerId: string): Promise<string> {
+  const res = await fetch(`${LS_API_BASE}/customers/${customerId}`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`LemonSqueezy customer fetch failed: ${err}`);
+  }
+
+  const json = await res.json();
+  const url = json.data?.attributes?.urls?.customer_portal;
+  if (!url) throw new Error('Customer portal URL not found in response');
+  return url;
+}
+
 export function verifyWebhookSignature(payload: string, signature: string): boolean {
   const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
   if (!secret) throw new Error('LEMONSQUEEZY_WEBHOOK_SECRET not set');

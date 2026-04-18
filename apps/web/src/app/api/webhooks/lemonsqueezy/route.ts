@@ -48,10 +48,17 @@ export async function POST(req: NextRequest) {
       break;
     }
 
-    case 'subscription_cancelled':
-    case 'subscription_expired': {
+    case 'subscription_cancelled': {
       await db.update(tenants)
         .set({ subscriptionStatus: 'canceled' })
+        .where(eq(tenants.id, tenantId));
+      break;
+    }
+
+    case 'subscription_expired': {
+      // Grace period ended — revoke pro access entirely and downgrade plan.
+      await db.update(tenants)
+        .set({ subscriptionStatus: 'expired', plan: 'prueba', trialEndsAt: null })
         .where(eq(tenants.id, tenantId));
       break;
     }
