@@ -113,7 +113,7 @@ describe('cloneBaseCatalogToTenant', () => {
     const tenantId = await insertTenant(`e2e-clone-test-${Date.now()}`);
     createdTenantIds.push(tenantId);
 
-    const count = await cloneBaseCatalogToTenant(tenantId, d as Parameters<typeof cloneBaseCatalogToTenant>[1]);
+    const count = await cloneBaseCatalogToTenant(tenantId, d as unknown as Parameters<typeof cloneBaseCatalogToTenant>[1]);
 
     expect(count).toBe(baseProductCount);
   });
@@ -123,7 +123,7 @@ describe('cloneBaseCatalogToTenant', () => {
     const tenantId = await insertTenant(`e2e-clone-test-${Date.now()}`);
     createdTenantIds.push(tenantId);
 
-    await cloneBaseCatalogToTenant(tenantId, d as Parameters<typeof cloneBaseCatalogToTenant>[1]);
+    await cloneBaseCatalogToTenant(tenantId, d as unknown as Parameters<typeof cloneBaseCatalogToTenant>[1]);
 
     const clonedProds = await d.select().from(products).where(eq(products.tenantId, tenantId));
     expect(clonedProds.length).toBe(baseProductCount);
@@ -134,7 +134,7 @@ describe('cloneBaseCatalogToTenant', () => {
     const tenantId = await insertTenant(`e2e-clone-test-${Date.now()}`);
     createdTenantIds.push(tenantId);
 
-    await cloneBaseCatalogToTenant(tenantId, d as Parameters<typeof cloneBaseCatalogToTenant>[1]);
+    await cloneBaseCatalogToTenant(tenantId, d as unknown as Parameters<typeof cloneBaseCatalogToTenant>[1]);
 
     const clonedProds = await d.select().from(products).where(eq(products.tenantId, tenantId));
     const clonedIds = clonedProds.map((p) => p.id);
@@ -153,7 +153,7 @@ describe('cloneBaseCatalogToTenant', () => {
     const tenantId = await insertTenant(`e2e-clone-test-${Date.now()}`);
     createdTenantIds.push(tenantId);
 
-    await cloneBaseCatalogToTenant(tenantId, d as Parameters<typeof cloneBaseCatalogToTenant>[1]);
+    await cloneBaseCatalogToTenant(tenantId, d as unknown as Parameters<typeof cloneBaseCatalogToTenant>[1]);
 
     const clonedProds = await d.select().from(products).where(eq(products.tenantId, tenantId));
     const clonedIds = clonedProds.map((p) => p.id);
@@ -214,11 +214,11 @@ describe('cloneBaseCatalogToTenant', () => {
     createdTenantIds.push(tenantId);
 
     // First clone must succeed.
-    await cloneBaseCatalogToTenant(tenantId, d as Parameters<typeof cloneBaseCatalogToTenant>[1]);
+    await cloneBaseCatalogToTenant(tenantId, d as unknown as Parameters<typeof cloneBaseCatalogToTenant>[1]);
 
     // Second clone must throw — unique constraint on (tenant_id, slug).
     await expect(
-      cloneBaseCatalogToTenant(tenantId, d as Parameters<typeof cloneBaseCatalogToTenant>[1]),
+      cloneBaseCatalogToTenant(tenantId, d as unknown as Parameters<typeof cloneBaseCatalogToTenant>[1]),
     ).rejects.toThrow();
   });
 });
