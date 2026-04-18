@@ -8,7 +8,7 @@ import { SaveButton, useSaveState } from '@/components/ui/SaveButton';
 
 type Product = {
   id: string;
-  tenantId: string;
+  tenantId: string | null;
   name: string;
   slug: string;
   sailType: string;
@@ -19,7 +19,7 @@ type Product = {
   sortOrder: number | null;
   externalId: string | null;
   createdAt: Date | null;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 type ConfigField = {
@@ -28,10 +28,11 @@ type ConfigField = {
   key: string;
   label: string;
   fieldType: string | null;
-  options: any;
+  options: unknown;
   sortOrder: number | null;
   required: boolean | null;
-  priceModifiers: any;
+  priceModifiers: unknown;
+  percentModifiers?: unknown;
 };
 
 export function ProductEditClient({
@@ -41,7 +42,7 @@ export function ProductEditClient({
   product: Product;
   initialFields: ConfigField[];
 }) {
-  const router = useRouter();
+  const _router = useRouter();
   const [product, setProduct] = useState(initialProduct);
   const [fields, setFields] = useState(initialFields);
   const { saving, saved, save } = useSaveState();
@@ -53,9 +54,9 @@ export function ProductEditClient({
   const [active, setActive] = useState(product.active ?? true);
 
   const [showAddField, setShowAddField] = useState(false);
-  const [newFieldKey, setNewFieldKey] = useState('');
-  const [newFieldLabel, setNewFieldLabel] = useState('');
-  const [newFieldOptions, setNewFieldOptions] = useState('');
+  const [_newFieldKey, _setNewFieldKey] = useState('');
+  const [_newFieldLabel, _setNewFieldLabel] = useState('');
+  const [_newFieldOptions, _setNewFieldOptions] = useState('');
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [savingField, setSavingField] = useState(false);
   const [error, setError] = useState<string | null>(null);

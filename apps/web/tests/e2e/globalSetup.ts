@@ -43,7 +43,7 @@ export default async function globalSetup(): Promise<void> {
         `[e2e:globalSetup] No tenants found in DB. Run 'pnpm db:seed' before running E2E tests.`,
       );
     }
-    // eslint-disable-next-line no-console
+     
     console.log(`[e2e:globalSetup] OK — ${count} tenant(s) present in DB.`);
   } finally {
     await sql.end({ timeout: 2 });
@@ -81,7 +81,7 @@ async function provisionAdminUser(): Promise<void> {
       password: ADMIN_PASSWORD,
     });
     if (signIn?.user) {
-      // eslint-disable-next-line no-console
+       
       console.log('[e2e:globalSetup] Admin user already exists with correct password.');
       return;
     }
@@ -95,7 +95,7 @@ async function provisionAdminUser(): Promise<void> {
   });
 
   if (created?.user) {
-    // eslint-disable-next-line no-console
+     
     console.log('[e2e:globalSetup] Admin user created.');
     return;
   }
@@ -108,7 +108,7 @@ async function provisionAdminUser(): Promise<void> {
     const found = listData.users.find((u: { email?: string }) => u.email === ADMIN_EMAIL);
     if (found) {
       await serviceClient.auth.admin.updateUserById(found.id, { password: ADMIN_PASSWORD });
-      // eslint-disable-next-line no-console
+       
       console.log('[e2e:globalSetup] Admin user password reset.');
       return;
     }
@@ -116,6 +116,6 @@ async function provisionAdminUser(): Promise<void> {
     page++;
   }
 
-  // eslint-disable-next-line no-console
+   
   console.warn('[e2e:globalSetup] Could not provision admin user — admin tests may fail.');
 }

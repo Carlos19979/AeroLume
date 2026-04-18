@@ -1,6 +1,7 @@
-import { db, tenants, tenantMembers, analyticsEvents, boats, sql, desc, eq } from '@aerolume/db';
+import { db, tenants, analyticsEvents, boats, sql, desc, eq } from '@aerolume/db';
 import { EVENT_TYPE_LABELS, SUBSCRIPTION_STATUS_LABELS } from '@/lib/constants';
 import { formatDateShort, formatDateTime } from '@/lib/format';
+import Link from 'next/link';
 
 export default async function AdminOverviewPage() {
   const [tenantCount] = await db.select({ count: sql<number>`count(*)::int` }).from(tenants);
@@ -18,7 +19,7 @@ export default async function AdminOverviewPage() {
   const recentUsers = await db.execute(sql`
     SELECT id, email, raw_user_meta_data->>'full_name' as full_name, created_at
     FROM auth.users ORDER BY created_at DESC LIMIT 5
-  `) as any[];
+  `) as { id: string; email: string; full_name: string | null; created_at: string }[];
 
   // Recent events
   const recentEvents = await db
@@ -41,13 +42,13 @@ export default async function AdminOverviewPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <a href="/admin/tenants" className="rounded-2xl bg-white border border-gray-200 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all">
+        <Link href="/admin/tenants" className="rounded-2xl bg-white border border-gray-200 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all">
           <p className="text-2xl font-bold text-gray-900">{tenantCount?.count ?? 0}</p>
           <p className="text-xs text-gray-500 mt-1">Tenants</p>
           <div className="mt-3 h-1 rounded-full bg-gray-100">
             <div className="h-1 rounded-full bg-blue-500" style={{ width: '60%' }} />
           </div>
-        </a>
+        </Link>
         <a href="/admin/logs" className="rounded-2xl bg-white border border-gray-200 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all">
           <p className="text-2xl font-bold text-gray-900">{eventCount?.count ?? 0}</p>
           <p className="text-xs text-gray-500 mt-1">Eventos</p>
@@ -69,7 +70,7 @@ export default async function AdminOverviewPage() {
         <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-800">Ultimos tenants</h3>
-            <a href="/admin/tenants" className="text-xs text-blue-600 hover:underline">Ver todos</a>
+            <Link href="/admin/tenants" className="text-xs text-blue-600 hover:underline">Ver todos</Link>
           </div>
           <div className="divide-y divide-gray-50">
             {recentTenants.map((t) => (
@@ -96,7 +97,7 @@ export default async function AdminOverviewPage() {
             <a href="/admin/users" className="text-xs text-blue-600 hover:underline">Ver todos</a>
           </div>
           <div className="divide-y divide-gray-50">
-            {recentUsers.map((u: any) => (
+            {recentUsers.map((u) => (
               <div key={u.id} className="flex items-center justify-between px-5 py-3">
                 <div>
                   <p className="text-sm font-medium text-gray-800">{u.full_name || u.email?.split('@')[0]}</p>

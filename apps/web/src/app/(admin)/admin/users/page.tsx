@@ -1,4 +1,6 @@
 import { db, tenantMembers, tenants, eq, sql } from '@aerolume/db';
+
+type RawUser = { id: string; email: string; full_name: string | null; email_confirmed_at: string | null; created_at: string };
 import { formatDate } from '@/lib/format';
 
 export default async function AdminUsersPage() {
@@ -9,7 +11,7 @@ export default async function AdminUsersPage() {
     ORDER BY au.created_at DESC
   `);
 
-  const users = (usersResult as any[]);
+  const users = usersResult as unknown as RawUser[];
 
   // Get memberships
   const members = await db
@@ -23,7 +25,7 @@ export default async function AdminUsersPage() {
     .innerJoin(tenants, eq(tenantMembers.tenantId, tenants.id));
 
   // Build user list with memberships
-  const userList = users.map((u: any) => ({
+  const userList = users.map((u) => ({
     id: u.id,
     email: u.email,
     fullName: u.full_name,
@@ -68,7 +70,7 @@ export default async function AdminUsersPage() {
                   {u.memberships.length === 0 ? (
                     <span className="text-xs text-gray-300">Sin tenant</span>
                   ) : (
-                    u.memberships.map((m: any) => (
+                    u.memberships.map((m) => (
                       <a key={m.tenantId} href={`/admin/tenants/${m.tenantId}`} className="text-xs text-blue-600 hover:text-blue-500 block">
                         {m.tenantName}
                       </a>
@@ -76,7 +78,7 @@ export default async function AdminUsersPage() {
                   )}
                 </td>
                 <td className="px-5 py-3">
-                  {u.memberships.map((m: any) => (
+                  {u.memberships.map((m) => (
                     <span key={m.tenantId} className={`text-xs px-1.5 py-0.5 rounded block w-fit mb-0.5 ${
                       m.role === 'owner' ? 'bg-amber-100 text-amber-700' :
                       m.role === 'admin' ? 'bg-blue-100 text-blue-700' :

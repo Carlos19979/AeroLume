@@ -4,7 +4,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch<T = any>(url: string, options?: RequestInit): Promise<T> {
+export async function apiFetch<T = unknown>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

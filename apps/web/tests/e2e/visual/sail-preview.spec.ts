@@ -15,14 +15,14 @@
  *   tests/e2e/visual/sail-preview.spec.ts-snapshots/
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 const HARNESS = '/sail-preview-harness';
 const SNAPSHOT_OPTS = { maxDiffPixels: 100 };
 
 /** Navigate to the harness and return the container locator. */
 async function goTo(
-  page: Parameters<Parameters<typeof test>[2]>[0],
+  page: Page,
   params: { sailType: string; variant: string; reefs?: number; accent?: string },
 ) {
   const qs = new URLSearchParams({ sailType: params.sailType, variant: params.variant });

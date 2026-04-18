@@ -18,7 +18,7 @@ export const PUT = withAdminAuth(async (request, _ctx, params) => {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
   const data = validation.data;
-  const updates: Record<string, any> = { updatedAt: new Date() };
+  const updates: Record<string, unknown> = { updatedAt: new Date() };
 
   if (data.plan) updates.plan = data.plan;
   if (data.subscriptionStatus) updates.subscriptionStatus = data.subscriptionStatus;

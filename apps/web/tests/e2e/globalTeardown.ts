@@ -17,7 +17,7 @@ export default async function globalTeardown(): Promise<void> {
   const dbUrl = process.env.E2E_DATABASE_URL;
 
   if (!supabaseUrl || !serviceKey || !dbUrl) {
-    // eslint-disable-next-line no-console
+     
     console.warn('[e2e:globalTeardown] Missing env vars — skipping cleanup.');
     return;
   }
@@ -50,12 +50,12 @@ export default async function globalTeardown(): Promise<void> {
     }
 
     if (e2eUsers.length === 0) {
-      // eslint-disable-next-line no-console
+       
       console.log('[e2e:globalTeardown] No e2e-* users found — nothing to clean up.');
       return;
     }
 
-    // eslint-disable-next-line no-console
+     
     console.log(`[e2e:globalTeardown] Found ${e2eUsers.length} e2e user(s) — cleaning up.`);
 
     for (const user of e2eUsers) {
@@ -67,7 +67,7 @@ export default async function globalTeardown(): Promise<void> {
         for (const row of tenantRows) {
           try {
             await sql`DELETE FROM tenants WHERE id = ${row.tenant_id}::uuid`;
-            // eslint-disable-next-line no-console
+             
             console.log(`  - deleted tenant ${row.tenant_id} (user ${user.email})`);
           } catch (err) {
             console.warn(`  ! failed to delete tenant ${row.tenant_id}:`, (err as Error).message);
@@ -78,7 +78,7 @@ export default async function globalTeardown(): Promise<void> {
         if (delErr) {
           console.warn(`  ! failed to delete user ${user.email}:`, delErr.message);
         } else {
-          // eslint-disable-next-line no-console
+           
           console.log(`  - deleted user ${user.email}`);
         }
       } catch (err) {

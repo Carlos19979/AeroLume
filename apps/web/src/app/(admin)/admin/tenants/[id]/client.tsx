@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { SUBSCRIPTION_STATUS_LABELS } from '@/lib/constants';
 import { formatDate } from '@/lib/format';
 
-type Tenant = { [key: string]: any };
-type Member = { id: string; userId: string; role: string; [key: string]: any };
+type Tenant = { id: string; name: string; slug: string; plan: string; subscriptionStatus: string; companyName?: string | null; phone?: string | null; website?: string | null; city?: string | null; country?: string | null; createdAt?: Date | null; [key: string]: unknown };
+type Member = { id: string; userId: string; role: string };
 type QuoteRow = { id: string; boatModel: string | null; customerName: string | null; status: string; createdAt: Date | null };
 type ApiKeyRow = { id: string; keyPrefix: string; name: string; createdAt: Date | null };
 

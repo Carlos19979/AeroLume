@@ -37,7 +37,7 @@ type BoatDetail = BoatRow & {
   spisym: string | null;
   spiasy: string | null;
   furling: string | null;
-  [key: string]: any;
+  [key: string]: string | null | boolean;
 };
 
 type Pagination = {

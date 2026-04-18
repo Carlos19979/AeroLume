@@ -1,0 +1,49 @@
+name: CI
+
+# Fast feedback workflow — lint, typecheck, and unit tests.
+# The heavy E2E suite lives in .github/workflows/e2e.yml and runs independently.
+# Both block merge via branch protection rules (configurable in the repo settings).
+
+on:
+  pull_request:
+    branches: [master, main]
+  push:
+    branches: [master, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-typecheck-unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (eslint)
+        run: pnpm --filter @aerolume/web lint
+
+      - name: Typecheck (tsc --noEmit)
+        run: pnpm --filter @aerolume/web typecheck
+
+      - name: Typecheck widget (tsc --noEmit via lint script)
+        run: pnpm --filter @aerolume/widget lint
+
+      - name: Typecheck db package
+        run: pnpm --filter @aerolume/db lint
+
+      - name: Unit tests (vitest)
+        run: pnpm --filter @aerolume/web test

@@ -1,6 +1,7 @@
 import { getAuthenticatedTenant } from '@/lib/auth-page';
 import { db, products, productConfigFields, eq, and } from '@aerolume/db';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import { ProductEditClient } from './client';
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -28,9 +29,9 @@ export default async function ProductEditPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <a href="/dashboard/products" className="text-gray-500 hover:text-gray-600">
+        <Link href="/dashboard/products" className="text-gray-500 hover:text-gray-600">
           &larr; Productos
-        </a>
+        </Link>
         <h2 className="text-2xl font-semibold text-gray-900">{product.name}</h2>
       </div>
       <ProductEditClient product={product} initialFields={fields} />

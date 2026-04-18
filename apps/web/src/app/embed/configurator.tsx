@@ -28,7 +28,7 @@ type Boat = {
   model: string;
   boatModel: string | null;
   length: string | null;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 type Product = {
@@ -115,6 +115,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
   useEffect(() => {
     if (document.referrer) {
       try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time parent origin detection on mount
         setParentOrigin(new URL(document.referrer).origin);
       } catch {}
     }
@@ -216,7 +217,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
   const pricing = calculatePrice();
   const currency = selectedProduct?.currency || tenant.currency || 'EUR';
 
-  function track(eventType: string, extra?: Record<string, any>) {
+  function track(eventType: string, extra?: Record<string, unknown>) {
     fetch('/api/v1/analytics', { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ eventType, ...extra }) }).catch(() => {});
   }
 
@@ -230,6 +231,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
 
   useEffect(() => {
     const value = deferredQuery.trim();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset search results when query is too short
     if (value.length < 2) { setBoatResults([]); return; }
     const controller = new AbortController();
     setSearchLoading(true);
@@ -242,6 +244,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
 
   useEffect(() => {
     if (!selectedBoat) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- set loading flag before async fetch
     setProductsLoading(true);
     fetch('/api/v1/products', { headers }).then((r) => r.json())
       .then(({ data }) => { setProducts((data || []).filter((p: Product) => p.configFields)); setProductsLoading(false); })
@@ -259,7 +262,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
     postMsg('aerolume:product-selected', product);
   }
 
-  function postMsg(type: string, payload: any) {
+  function postMsg(type: string, payload: unknown) {
     // No trusted parent origin → silently no-op (e.g. configurator opened as a top-level page,
     // or the parent referrer couldn't be parsed). Avoids leaking PII to '*'.
     if (!parentOrigin) return;
@@ -518,7 +521,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
                           style={{
                             background: `linear-gradient(135deg, rgba(${tint}, 0.04), rgba(${tint}, 0.01))`,
                             borderColor: `rgba(${tint}, 0.12)`,
-                            ['--tw-ring-color' as any]: `rgba(${tint}, 0.4)`,
+                            ['--tw-ring-color' as keyof React.CSSProperties]: `rgba(${tint}, 0.4)`,
                           }}
                           onMouseEnter={(e) => { (e.currentTarget.style.borderColor = `rgba(${tint}, 0.35)`); }}
                           onMouseLeave={(e) => { (e.currentTarget.style.borderColor = `rgba(${tint}, 0.12)`); }}
@@ -540,7 +543,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
                                     onClick={(e) => e.stopPropagation()}
                                     onKeyDown={(e) => e.stopPropagation()}
                                     className="w-20 px-2 py-1 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1"
-                                    style={{ ['--tw-ring-color' as any]: accent }}
+                                    style={{ ['--tw-ring-color' as keyof React.CSSProperties]: accent }}
                                   />
                                   <span className="text-[11px] font-medium" style={{ color: `${textColor}99` }}>
                                     m²{isCustom ? ' (personalizada)' : defaultArea ? ` (def: ${defaultArea.toFixed(1)})` : ''}

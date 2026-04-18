@@ -18,7 +18,7 @@ type Quote = {
   currency: string | null;
   createdAt: Date | null;
   updatedAt: Date | null;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 type QuoteItem = {
@@ -31,7 +31,7 @@ type QuoteItem = {
   cost: string | null;
   configuration: unknown;
   sortOrder: number | null;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 function formatPrice(value: string | number | null, currency: string) {

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Package, FileText, Ship, BarChart3, Plus, ArrowRight } from 'lucide-react';
 import { MetricCard } from '../components/metric-card';
 import { FadeInUp } from '../components/animations';
@@ -71,7 +72,7 @@ export function DashboardClient({
             {/* Quick actions */}
             <FadeInUp delay={0.25}>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <a
+                    <Link
                         href="/dashboard/products"
                         className="flex items-center gap-3 p-4 rounded-2xl bg-white border border-gray-100 hover:border-[var(--color-accent)]/30 hover:shadow-md transition-all duration-200 group"
                     >
@@ -83,8 +84,8 @@ export function DashboardClient({
                             <p className="text-xs text-gray-500">Añadir al catalogo</p>
                         </div>
                         <ArrowRight size={16} className="ml-auto text-gray-500 group-hover:text-[var(--color-accent)] transition-colors" />
-                    </a>
-                    <a
+                    </Link>
+                    <Link
                         href="/dashboard/quotes"
                         className="flex items-center gap-3 p-4 rounded-2xl bg-white border border-gray-100 hover:border-emerald-200 hover:shadow-md transition-all duration-200 group"
                     >
@@ -96,7 +97,7 @@ export function DashboardClient({
                             <p className="text-xs text-gray-500">Gestionar solicitudes</p>
                         </div>
                         <ArrowRight size={16} className="ml-auto text-gray-500 group-hover:text-emerald-500 transition-colors" />
-                    </a>
+                    </Link>
                     <a
                         href="/dashboard/api-keys"
                         className="flex items-center gap-3 p-4 rounded-2xl bg-white border border-gray-100 hover:border-violet-200 hover:shadow-md transition-all duration-200 group"

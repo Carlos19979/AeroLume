@@ -1,5 +1,6 @@
 import { db, tenants, tenantMembers, quotes, apiKeys, eq, desc } from '@aerolume/db';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import { TenantDetailClient } from './client';
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -17,11 +18,11 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <a href="/admin/tenants" className="text-white/30 hover:text-white/60 text-sm">&larr; Tenants</a>
+        <Link href="/admin/tenants" className="text-white/30 hover:text-white/60 text-sm">&larr; Tenants</Link>
         <h2 className="text-xl font-bold text-white">{tenant.name}</h2>
         <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/40">{tenant.plan}</span>
       </div>
-      <TenantDetailClient tenant={tenant} members={members} quotes={quoteList} apiKeys={keys} />
+      <TenantDetailClient tenant={tenant as unknown as Parameters<typeof TenantDetailClient>[0]['tenant']} members={members} quotes={quoteList} apiKeys={keys} />
     </div>
   );
 }

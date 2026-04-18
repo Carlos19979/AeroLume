@@ -37,7 +37,7 @@ function getServiceClient(): SupabaseClient {
  * per worker-test use, and tears everything down afterwards.
  */
 export const test = base.extend<Fixtures>({
-  // eslint-disable-next-line no-empty-pattern
+   
   tenant: async ({}, use, testInfo) => {
     const supabase = getServiceClient();
     const email = `e2e-${testInfo.workerIndex}-${Date.now()}@aerolume.test`;
@@ -70,6 +70,7 @@ export const test = base.extend<Fixtures>({
         apiKey,
       };
 
+      // eslint-disable-next-line react-hooks/rules-of-hooks -- `use` here is Playwright's fixture callback, not React's `use` hook
       await use(fixture);
     } finally {
       // Teardown — cascade removes tenant-owned rows; then remove the auth user.
