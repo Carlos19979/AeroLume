@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { validateApiKey } from '@/lib/api-auth';
-import { db, quotes, quoteItems, products, productPricingTiers, productConfigFields, tenants, eq, inArray, and, or, isNull } from '@aerolume/db';
-import { isInternalUrl } from '@/lib/url-validation';
+import { db, quotes, quoteItems, products, productPricingTiers, productConfigFields, eq, inArray, and, or, isNull } from '@aerolume/db';
 import { withCors } from '@/lib/cors';
 import { validateBody, createQuoteSchema } from '@/lib/validations';
 import { priceItem } from '@/lib/pricing';
+import { dispatchQuoteWebhook } from '@/lib/quote-webhook';
 
 export async function POST(request: Request) {
   const auth = await validateApiKey(request);
@@ -102,46 +102,27 @@ export async function POST(request: Request) {
   }
 
   // Send webhook notification (fire and forget)
-  const [tenant] = await db
-    .select({ webhookUrl: tenants.webhookUrl })
-    .from(tenants)
-    .where(eq(tenants.id, auth.ctx.tenantId))
-    .limit(1);
-
-  if (tenant?.webhookUrl && !isInternalUrl(tenant.webhookUrl)) {
-    // `redirect: 'manual'` defends against redirect-based SSRF: the original URL was checked
-    // against internal IPs by isInternalUrl, but a 30x to e.g. 169.254.169.254 would otherwise
-    // bypass that. `cost` is the internal supplier cost — never include it in outbound payloads.
-    fetch(tenant.webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      redirect: 'manual',
-      body: JSON.stringify({
-        event: 'quote.created',
-        data: {
-          id: quote.id,
-          status: quote.status,
-          boatModel: quote.boatModel,
-          boatLength: quote.boatLength,
-          customerName: quote.customerName,
-          customerEmail: quote.customerEmail,
-          customerPhone: quote.customerPhone,
-          customerNotes: quote.customerNotes,
-          currency: quote.currency,
-          items: items.map((i) => ({
-            productId: i.productId,
-            sailType: i.sailType,
-            productName: i.productName,
-            sailArea: i.sailArea,
-            quantity: i.quantity,
-            unitPrice: i.unitPrice,
-            configuration: i.configuration,
-          })),
-          createdAt: quote.createdAt,
-        },
-      }),
-    }).catch(() => {});
-  }
+  dispatchQuoteWebhook(auth.ctx.tenantId, 'quote.created', {
+    id: quote.id,
+    status: quote.status,
+    boatModel: quote.boatModel,
+    boatLength: quote.boatLength,
+    customerName: quote.customerName,
+    customerEmail: quote.customerEmail,
+    customerPhone: quote.customerPhone,
+    customerNotes: quote.customerNotes,
+    currency: quote.currency,
+    createdAt: quote.createdAt,
+    items: items.map((i) => ({
+      productId: i.productId,
+      sailType: i.sailType,
+      productName: i.productName,
+      sailArea: i.sailArea,
+      quantity: i.quantity,
+      unitPrice: i.unitPrice,
+      configuration: i.configuration as Record<string, unknown>,
+    })),
+  }).catch(() => {});
 
   const origin = request.headers.get('origin');
   return withCors(NextResponse.json({ data: { id: quote.id, status: quote.status } }), origin);
