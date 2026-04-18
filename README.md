@@ -241,6 +241,7 @@ El `globalSetup.ts` falla-rápido si alguna de las 4 vars E2E_* falta.
 - [docs/widget.md](./docs/widget.md) — Integración, eventos, postMessage
 - [docs/security.md](./docs/security.md) — API keys, SSRF, Zod, headers, CORS
 - [docs/testing.md](./docs/testing.md) — Plan de pruebas E2E + estado Sprint 1/2/3
+- [docs/deploy.md](./docs/deploy.md) — Vercel, variables de entorno, migraciones, checklist pre-producción
 - [docs/development.md](./docs/development.md) — Convenciones de código y guías
 
 ---

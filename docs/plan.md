@@ -93,20 +93,16 @@ Ver detalle completo en [`docs/testing.md`](./testing.md).
 
 ---
 
-## Fase 5: CI/CD y Deploy
+## Fase 5: CI/CD y Deploy ✅ Completado (2026-04-18)
 
-No hay pipeline de integracion continua ni configuracion de deploy documentada.
+Vercel ya despliega la app (cuenta y setup preexistentes). CI de GitHub Actions cubre E2E desde Sprint 1; este sprint añade lint + typecheck + unit.
 
 ### Tareas
 
-- [x] Crear GitHub Actions workflow (`e2e.yml`) — Sprint 1 (f19abde)
-- [ ] Añadir steps de lint y type check al pipeline
-- [ ] Configurar deploy en Vercel (o plataforma elegida):
-  - Variables de entorno en produccion
-  - Dominio personalizado
-  - Preview deployments por PR
-- [ ] Configurar Drizzle migrations en deploy (migrate on build o manual)
-- [ ] Documentar proceso de deploy en `docs/`
+- [x] GitHub Actions workflow `e2e.yml` — Sprint 1 (f19abde)
+- [x] Nuevo workflow `ci.yml` con lint (ESLint), typecheck (tsc --noEmit en web + widget + db) y unit (vitest). Script `typecheck` añadido a `apps/web/package.json`.
+- [x] Variables de entorno y flujo de deploy Vercel documentados en `docs/deploy.md` (install/build commands monorepo, env vars Supabase/LS/super-admin, webhook LS, migraciones en 3 opciones, preview deploys, rollback, checklist pre-producción).
+- [x] Migraciones Drizzle: opción A (manual antes del merge, recomendada) documentada en `docs/deploy.md`. Opciones B (CI step) y C (build command) descartadas con razones.
 
 ---
 
