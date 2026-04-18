@@ -134,7 +134,7 @@ export function BoatsAdminClient({ initialBoats }: { initialBoats: BoatRow[] }) 
 
       {/* Create button / form */}
       {showCreate ? (
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+        <div data-testid="admin-boat-create-form" className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-gray-900">Nuevo barco global</h3>
             <button onClick={() => setShowCreate(false)} className="text-gray-500 hover:text-gray-600"><X size={18} /></button>
@@ -142,7 +142,7 @@ export function BoatsAdminClient({ initialBoats }: { initialBoats: BoatRow[] }) 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="col-span-2">
               <label className="block text-xs text-gray-500 mb-1">Modelo *</label>
-              <input type="text" value={newModel} onChange={(e) => setNewModel(e.target.value)}
+              <input data-testid="admin-boat-model-input" type="text" value={newModel} onChange={(e) => setNewModel(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm" placeholder="ej: BAVARIA 38 CRUISER" />
             </div>
             <div>
@@ -178,6 +178,7 @@ export function BoatsAdminClient({ initialBoats }: { initialBoats: BoatRow[] }) 
             </div>
           </div>
           <button
+            data-testid="admin-boat-save-btn"
             onClick={handleCreate}
             disabled={saving || !newModel.trim()}
             className="px-5 py-2 bg-[var(--color-accent)] text-white text-sm font-medium rounded-xl hover:opacity-90 disabled:opacity-50"
@@ -187,6 +188,7 @@ export function BoatsAdminClient({ initialBoats }: { initialBoats: BoatRow[] }) 
         </div>
       ) : (
         <button
+          data-testid="admin-boat-create-btn"
           onClick={() => setShowCreate(true)}
           className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white text-sm font-medium rounded-xl hover:opacity-90"
         >
