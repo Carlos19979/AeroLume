@@ -13,9 +13,8 @@ Los componentes `SailConfigurator.tsx` y `ProductDetailModal.tsx` hacian fetch a
 
 ### Tareas
 
-- [ ] Verificar si `SailConfigurator.tsx` y `ProductDetailModal.tsx` estan en uso en alguna pagina activa
-- [ ] Si estan en uso: migrar los fetch a `/api/v1/products` y datos de la DB propia del tenant
-- [ ] Si no estan en uso (dead code del configurador legacy): eliminarlos
+- [x] Verificar uso de `SailConfigurator.tsx` y `ProductDetailModal.tsx` — ningún import fuera de sus propios archivos (grep confirmó 0 referencias).
+- [x] Eliminar dead code: ambos archivos + directorio vacío `components/configurator/` borrados (commit siguiente). El configurador activo vive en `apps/web/src/app/embed/configurator.tsx`.
 - [x] Verificar que el embed (`/embed/configurator.tsx`) funciona correctamente con las rutas v1 — cubierto por E2E (Sprint 1, f19abde)
 - [x] Test manual completo del flujo: buscar barco → ver productos → crear presupuesto — cubierto por E2E happy path + expert mode + tiers (Sprint 1, f19abde)
 
