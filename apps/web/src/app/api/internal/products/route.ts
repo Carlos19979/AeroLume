@@ -27,7 +27,7 @@ export const GET = withTenantAuth(async (_request, { tenant }) => {
 
 export const POST = withTenantAuth(async (request, { tenant }) => {
   // Check plan
-  const [full] = await db.select({ plan: tenants.plan, subscriptionStatus: tenants.subscriptionStatus }).from(tenants).where(eq(tenants.id, tenant.id)).limit(1);
+  const [full] = await db.select({ plan: tenants.plan, subscriptionStatus: tenants.subscriptionStatus, trialEndsAt: tenants.trialEndsAt }).from(tenants).where(eq(tenants.id, tenant.id)).limit(1);
   if (full && !canCreateProducts(full)) {
     return NextResponse.json({ error: 'Plan limit reached' }, { status: 403 });
   }

@@ -26,7 +26,7 @@ export const GET = withTenantAuth(async (_request, { tenant }) => {
 // POST: create a new key
 export const POST = withTenantAuth(async (request, { tenant }) => {
   // Check plan
-  const [full] = await db.select({ plan: tenants.plan, subscriptionStatus: tenants.subscriptionStatus }).from(tenants).where(eq(tenants.id, tenant.id)).limit(1);
+  const [full] = await db.select({ plan: tenants.plan, subscriptionStatus: tenants.subscriptionStatus, trialEndsAt: tenants.trialEndsAt }).from(tenants).where(eq(tenants.id, tenant.id)).limit(1);
   if (full && !canCreateApiKeys(full)) {
     return NextResponse.json({ error: 'Feature not available on current plan' }, { status: 403 });
   }
