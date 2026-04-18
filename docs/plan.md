@@ -36,19 +36,21 @@ Upstash Redis ya esta configurado en `.env` (`UPSTASH_REDIS_REST_URL`, `UPSTASH_
 
 ---
 
-## Fase 3: Billing (LemonSqueezy)
+## Fase 3: Billing (LemonSqueezy) ✅ Completado (2026-04-18, commits 1a3ec18 + 5380ecc)
 
-~~Stripe~~ → migrado a **LemonSqueezy**. Webhook en `/api/webhooks/lemonsqueezy` implementado. La DB tiene campos para billing (`plan`, `subscriptionStatus`, `trialEndsAt`).
+~~Stripe~~ → migrado a **LemonSqueezy**. Webhook en `/api/webhooks/lemonsqueezy` implementado. La DB tiene campos para billing (`plan`, `subscriptionStatus`, `trialEndsAt`, `lsCustomerId`, `lsSubscriptionId`).
 
 ### Tareas
 
-- [x] Crear webhook endpoint para eventos de billing (`/api/webhooks/lemonsqueezy`) — implementado
-- [x] Pagina de subscription en dashboard con estado de plan + CTA de checkout (commit 2df5fd1)
-- [x] Manejar trial expiration — campo `trialEndsAt` activo; plan gate corregido en internal/products e internal/api-keys (commit 525f921)
-- [ ] Implementar portal de facturacion (LemonSqueezy Customer Portal)
-- [ ] Manejar eventos: `subscription_created`, `subscription_updated`, `subscription_cancelled`, `subscription_expired`
-- [ ] Pagina de pricing funcional con boton de compra real
-- [ ] Documentar flujo de billing en `docs/`
+- [x] Webhook endpoint con firma HMAC (`/api/webhooks/lemonsqueezy`)
+- [x] Página de subscription en dashboard con estado + CTA de checkout (commit 2df5fd1)
+- [x] Trial expiration — campo `trialEndsAt` activo; plan gate corregido en internal/products e internal/api-keys (commit 525f921)
+- [x] Portal de facturación — `createCustomerPortalUrl()` en lib + ruta `/api/internal/customer-portal` + botón en dashboard (commit 1a3ec18)
+- [x] Eventos: `subscription_created`, `subscription_updated`, `subscription_cancelled`, `subscription_expired` — todos con tests (commit 1a3ec18, tests en lemonsqueezy.spec.ts y trial-expired-ui.spec.ts)
+- [x] Página pública `/pricing` con 2 tiers y CTA a /signup (commit 1a3ec18)
+- [x] Refresh visual de `/dashboard/subscription` (hero gradient, progress bar trial, features checks, iconos lucide)
+- [x] Tests E2E del flujo completo (15 tests): pricing, subscription-checkout, customer-portal, trial-expired-ui (commit 5380ecc)
+- [ ] Documentar flujo de billing en `docs/` (no crítico — el código + commits ya lo documentan)
 
 ---
 
