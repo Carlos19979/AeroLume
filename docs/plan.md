@@ -1,6 +1,6 @@
 # Plan de desarrollo — Aerolume
 
-Ultima actualizacion: 2026-04-06
+Ultima actualizacion: 2026-04-18
 
 ---
 
@@ -16,8 +16,8 @@ Los componentes `SailConfigurator.tsx` y `ProductDetailModal.tsx` hacian fetch a
 - [ ] Verificar si `SailConfigurator.tsx` y `ProductDetailModal.tsx` estan en uso en alguna pagina activa
 - [ ] Si estan en uso: migrar los fetch a `/api/v1/products` y datos de la DB propia del tenant
 - [ ] Si no estan en uso (dead code del configurador legacy): eliminarlos
-- [ ] Verificar que el embed (`/embed/configurator.tsx`) funciona correctamente con las rutas v1
-- [ ] Test manual completo del flujo: buscar barco → ver productos → crear presupuesto
+- [x] Verificar que el embed (`/embed/configurator.tsx`) funciona correctamente con las rutas v1 — cubierto por E2E (Sprint 1, f19abde)
+- [x] Test manual completo del flujo: buscar barco → ver productos → crear presupuesto — cubierto por E2E happy path + expert mode + tiers (Sprint 1, f19abde)
 
 ---
 
@@ -36,17 +36,17 @@ Upstash Redis ya esta configurado en `.env` (`UPSTASH_REDIS_REST_URL`, `UPSTASH_
 
 ---
 
-## Fase 3: Stripe / Billing
+## Fase 3: Billing (LemonSqueezy)
 
-La DB tiene campos para billing (`stripeCustomerId`, `plan`, `subscriptionStatus`, `trialEndsAt`) pero no hay integracion real. Cambiar de plan requiere intervencion manual del super admin.
+~~Stripe~~ → migrado a **LemonSqueezy**. Webhook en `/api/webhooks/lemonsqueezy` implementado. La DB tiene campos para billing (`plan`, `subscriptionStatus`, `trialEndsAt`).
 
 ### Tareas
 
-- [ ] Crear webhook endpoint `/api/webhooks/stripe` para eventos de Stripe
-- [ ] Manejar eventos: `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.updated`, `customer.subscription.deleted`
-- [ ] Crear flujo de checkout: boton en dashboard → Stripe Checkout → callback → actualizar plan
-- [ ] Implementar portal de facturacion (Stripe Customer Portal)
-- [ ] Manejar trial expiration (cron job o webhook)
+- [x] Crear webhook endpoint para eventos de billing (`/api/webhooks/lemonsqueezy`) — implementado
+- [x] Pagina de subscription en dashboard con estado de plan + CTA de checkout (commit 2df5fd1)
+- [x] Manejar trial expiration — campo `trialEndsAt` activo; plan gate corregido en internal/products e internal/api-keys (commit 525f921)
+- [ ] Implementar portal de facturacion (LemonSqueezy Customer Portal)
+- [ ] Manejar eventos: `subscription_created`, `subscription_updated`, `subscription_cancelled`, `subscription_expired`
 - [ ] Pagina de pricing funcional con boton de compra real
 - [ ] Documentar flujo de billing en `docs/`
 
@@ -54,27 +54,34 @@ La DB tiene campos para billing (`stripeCustomerId`, `plan`, `subscriptionStatus
 
 ## Fase 4: Tests
 
-Cero tests en el proyecto. Priorizar tests de lo critico.
+### Estado actual — Sprint 1 + Sprint 2 completados (2026-04-17/18)
 
-### Tareas
+**Totales: 82 E2E + 72 unit = 154 tests. 152 passed, 2 skipped intencionales.**
 
-- [ ] Configurar Vitest para el monorepo
-- [ ] Tests unitarios para utilidades criticas:
-  - `lib/validations.ts` — schemas Zod con inputs validos e invalidos
-  - `lib/api-keys.ts` — generacion y hash
-  - `lib/url-validation.ts` — isInternalUrl con IPs internas y externas
-  - `lib/plan-gates.ts` — cada combinacion plan/status
-  - `packages/shared/utils/` — normalize, format, toNumber
-- [ ] Tests de integracion para API routes:
-  - v1/products — tenant isolation, sailType filter
-  - v1/quotes — creacion con validacion, webhook dispatch
-  - internal/api-keys — crear, listar, revocar
-  - admin/impersonate — solo super admin
-- [ ] Tests e2e con Playwright:
-  - Flujo de login → dashboard
-  - CRUD de productos
-  - Flujo del configurador embed
-- [ ] Configurar en CI (cuando exista pipeline)
+Ver detalle completo en [`docs/testing.md`](./testing.md).
+
+#### Sprint 1 (f19abde, 2026-04-17)
+- [x] Configurar Playwright + Vitest con fixtures (auth, tenant, api, selectors, widget-host.html), globalSetup/Teardown
+- [x] CI workflow `.github/workflows/e2e.yml`
+- [x] 17 E2E specs: smoke, auth signup+clone, configurador happy path/expert mode/tiers/reefs, dashboard products list + quote detail margin, api-public pricing, api-internal tenant isolation + trial gate, widget postMessage
+- [x] 1 spec vitest: pricing unitario
+
+#### Sprint 2 (0a2202f, 2026-04-18)
+- [x] 32 E2E specs nuevos: seguridad negativa (5) + LS webhooks (1) + CRUDs dashboard (6) + admin panel (5)
+- [x] 2 specs vitest nuevos: validations (64 tests) + clone-catalog (5+1 tests)
+- [x] Fixture `admin-auth.ts`; provision del super-admin movida a `globalSetup.ts`
+- [x] Tests revelaron y corrigieron 3 bugs reales en prod (commit 525f921):
+  - `trialEndsAt` faltaba en plan gate de `internal/products` e `internal/api-keys`
+  - `updateTenantSettingsSchema` sin `.nullable()` para `companyName`, `Email`, `Phone`, `Address`
+
+#### Pendiente (Sprint 3)
+
+- [ ] Visual snapshot tests del SailPreview
+- [ ] Landing/marketing E2E coverage
+- [ ] Analytics aggregations tests
+- [ ] Promover 2 tests `skip` a full coverage:
+  - Clone-catalog con DB base aislada (requiere fixture DB limpia)
+  - Webhook con mock server HTTP (requiere servidor HTTP local en test)
 
 ---
 
@@ -84,17 +91,27 @@ No hay pipeline de integracion continua ni configuracion de deploy documentada.
 
 ### Tareas
 
-- [ ] Crear GitHub Actions workflow:
-  - Lint (`pnpm lint`)
-  - Type check (`tsc --noEmit`)
-  - Tests (`pnpm test`)
-  - Build (`pnpm build`)
+- [x] Crear GitHub Actions workflow (`e2e.yml`) — Sprint 1 (f19abde)
+- [ ] Añadir steps de lint y type check al pipeline
 - [ ] Configurar deploy en Vercel (o plataforma elegida):
   - Variables de entorno en produccion
   - Dominio personalizado
   - Preview deployments por PR
 - [ ] Configurar Drizzle migrations en deploy (migrate on build o manual)
 - [ ] Documentar proceso de deploy en `docs/`
+
+---
+
+## Seguridad — Hallazgos resueltos (2026-04-18, commit 6495454)
+
+Security review por 2 subagentes independientes. Todos los hallazgos aplicados:
+
+- [x] **C1** — Cross-tenant leak en `POST /api/v1/quotes`: lookup de products sin filtro `tenantId` → corregido
+- [x] **H1** — `cost` expuesto en webhook payload → eliminado del payload
+- [x] **H2** — `tenantId` expuesto en respuesta publica de `/api/v1/products` → eliminado de la respuesta
+- [x] **H3** — `postMessage` con fallback `targetOrigin='*'` → corregido a `document.referrer`
+- [x] **M1** — SSRF por seguimiento de redirects en webhook fetch → `redirect: 'error'` aplicado
+- [x] **W1** — Submit del configurador no chequeaba `res.ok` (exito silencioso en 4xx) → corregido
 
 ---
 
@@ -108,12 +125,15 @@ No hay pipeline de integracion continua ni configuracion de deploy documentada.
 - [ ] Modo oscuro en dashboard
 - [ ] 2FA para super admins
 - [ ] Audit log para acciones de admin (impersonacion, cambios de plan)
+- [ ] Rate limiting real — `validateApiKey()` nunca comprueba el campo `rateLimit` (ver Fase 2)
+- [ ] Quote webhooks — `POST` a `webhookUrl` del tenant al crear presupuesto (documentado en plan, no implementado en codigo)
+- [ ] Contact form — destino de submission desconocido (no hay webhook, email ni CRM integrado)
+- [ ] `SUPER_ADMIN_EMAILS` — añadir al `.env.example` (actualmente es un requisito operacional no documentado)
 
 ---
 
 ## Notas
 
 - Cada fase deberia ser un PR independiente
-- Prioridad: Fase 1 > 2 > 3 > 4 > 5 > 6
-- La fase 1 es critica porque puede haber funcionalidad rota en produccion
-- La fase 2 es el ultimo paso para llegar a 10/10 en seguridad
+- Prioridad actualizada: Fase 2 (rate limiting) > Fase 3 (billing completar) > Fase 4 Sprint 3 (tests) > Fase 5 (CI/CD completar) > Fase 6
+- La Fase 1 original esta mayormente cubierta por los E2E — solo queda verificar/eliminar los componentes legacy

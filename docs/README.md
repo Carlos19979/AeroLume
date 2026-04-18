@@ -176,5 +176,3 @@ Todas las variables se configuran en `apps/web/.env.local`:
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Clave publica de Stripe | Stripe Dashboard > API Keys > Publishable key |
 | `NEXT_PUBLIC_APP_URL` | URL base de la app | `http://localhost:3000` en local, dominio en produccion |
 | `SUPER_ADMIN_EMAILS` | Emails de super admins separados por coma | Definir manualmente (ej: `admin@aerolume.com,otro@aerolume.com`) |
-
-> **Nota:** `SUPER_ADMIN_EMAILS` no aparece en `.env.example` pero es necesaria para acceder al panel de administracion. Se lee como una lista separada por comas.

@@ -94,6 +94,14 @@ Archivos: `apps/web/tests/unit/`
 
 #### Playwright (E2E — requieren dev server)
 
+**Prerequisitos antes de correr E2E:**
+
+- Supabase accesible con `NEXT_PUBLIC_SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` configurados.
+- DB Postgres con migraciones y seed ya aplicados: `pnpm db:migrate && pnpm db:seed`.
+- Usuario admin cuyo email esté en `SUPER_ADMIN_EMAILS` y `SEED_ADMIN_PASSWORD` seteado — el `globalSetup.ts` lo provisiona automáticamente si existe.
+- `LEMONSQUEEZY_WEBHOOK_SECRET` definido; si falta, los tests de webhooks hacen skip automático (no fallan).
+- Browsers Playwright instalados: `pnpm --filter @aerolume/web exec playwright install chromium`.
+
 | Comando | Qué hace |
 |---------|----------|
 | `pnpm test:e2e` | Corre toda la suite E2E (arranca web + widget si no están ya corriendo) |
@@ -115,6 +123,36 @@ pnpm exec playwright test tests/e2e/security/
 ```
 
 Ver reporte HTML tras una corrida fallida: `pnpm exec playwright show-report`.
+
+**Ejemplos prácticos:**
+
+```bash
+# Correr un solo archivo
+pnpm exec playwright test tests/e2e/configurator/full-happy-path.spec.ts
+
+# Correr un solo test por nombre
+pnpm exec playwright test -g "tier 10-20"
+
+# UI interactiva (recomendado para depurar localmente)
+pnpm exec playwright test --ui
+
+# Ver trace de un fallo
+pnpm exec playwright show-trace test-results/<test-name>/trace.zip
+
+# Debug paso a paso de un archivo concreto
+pnpm exec playwright test tests/e2e/configurator/full-happy-path.spec.ts --debug
+
+# Listar todos los tests sin ejecutarlos
+pnpm exec playwright test --list
+```
+
+#### Troubleshooting E2E
+
+- **"Web server timeout"** — si el dev server tarda más de 120 s en arrancar (primera compilación con Turbopack), aumentar `timeout` en la sección `webServer` de `apps/web/playwright.config.ts`, o arrancar el servidor manualmente con `pnpm dev` antes de lanzar `pnpm test:e2e`.
+- **"Stale Turbopack cache"** — si los tests fallan con errores tipo `Could not parse module .../next@X.Y.Z_.../node_modules/next/...`, matar el dev server y borrar `apps/web/.next/`.
+- **"Connection pool exhausted"** — al correr muchos workers en paralelo, reducir `workers` en `playwright.config.ts` de 4 a 2, o aumentar el `max` de la pool en `tests/e2e/fixtures/tenant.ts` (actualmente 3).
+- **"Flaky auth fixture cleanup"** — los warnings `[auth fixture] cleanupTenant failed: ...` en stdout son informativos (la cascada de la DB ya elimina el tenant); no afectan el resultado del test.
+- **"Webkit / Mobile projects fail"** — por defecto solo se corre chromium. Para los demás navegadores: `pnpm exec playwright install webkit` y quitar `--project=chromium` del comando.
 
 #### Estructura de tests
 
@@ -138,6 +176,21 @@ apps/web/tests/
     ├── security/                   # SSRF, CORS, spoofing, cross-tenant
     └── widget/                     # postMessage flow
 ```
+
+#### Cobertura actual
+
+| Área | Tipo | Tests |
+|------|------|------:|
+| Pricing, validations, clone-catalog | Unit (Vitest) | 72 |
+| Smoke, auth, configurator | E2E (Playwright) | 18 |
+| Dashboard (products, quotes, boats, settings, api-keys, theme) | E2E | 28 |
+| Admin (tenants, impersonation, boats globales, gate) | E2E | 12 |
+| API public + internal + webhooks | E2E | 16 |
+| Security (SSRF, CORS, spoofing, cross-tenant) | E2E | 6 |
+| Widget (postMessage flow) | E2E | 2 |
+| **Total** | | **154** |
+
+Hay 2 tests marcados como `skip` intencional (documentados en [docs/testing.md](./docs/testing.md) §8 Sprint 3).
 
 Ver [docs/testing.md](./docs/testing.md) para el plan completo y el detalle de cada spec.
 

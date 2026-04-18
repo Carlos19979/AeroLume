@@ -77,13 +77,45 @@ Antes de hacer cambios significativos, lee la documentacion relevante en `docs/`
 - CORS headers en todas las rutas v1
 - Todas las mutaciones API validadas con Zod — nunca usar `body.field`, siempre `data.field` del schema validado
 
+### Catalogo base
+- Al crear un tenant, llamar `cloneBaseCatalogToTenant(tenantId, db?)` de `@aerolume/db` — nunca replicar la logica de clonado
+- Pasar `db` explicito cuando el caller tiene su propia conexion (scripts, fixtures)
+- Implementacion: `packages/db/src/clone-catalog.ts` (no transaccional — decision deliberada para evitar regresiones de concurrencia en E2E)
+
+### Pricing server-side
+- El calculo de precios (tiers, modifiers, fallback a basePrice) vive en `apps/web/src/lib/pricing.ts` — funcion pura `priceItem()`
+- Llamar siempre desde el server en `/api/v1/quotes`; nunca confiar en `unitPrice`/`cost` enviados por el cliente
+
+### Nullable en validations
+- Los schemas Zod que recibe el embed o el dashboard deben aceptar `null` en campos opcionales que el cliente envia como `null` en lugar de `undefined` (patron actual)
+- Cuando añadas un campo opcional-string, usa `.nullable()` — ver `createQuoteSchema` y `updateTenantSettingsSchema` como referencia
+
+### Trial gate
+- Los checks de plan en rutas internas que mutan deben leer `trialEndsAt` del tenant (no solo `plan`)
+- `canCreateProducts`, `canCreateApiKey`, etc. aceptan el par `{ plan, trialEndsAt }`
+
+### Testing
+- Frameworks: **Playwright** (E2E) + **Vitest** (unit)
+- Configs: `apps/web/playwright.config.ts` / `apps/web/vitest.config.ts`
+- Layout:
+  - Unit: `apps/web/tests/unit/**/*.test.ts`
+  - E2E: `apps/web/tests/e2e/<area>/**/*.spec.ts` — areas: `smoke`, `auth`, `configurator`, `dashboard`, `admin`, `api-public`, `api-internal`, `security`, `webhooks`, `widget`
+- Fixtures: importar `test`/`expect` desde `../fixtures/auth` (no desde `@playwright/test`) para obtener tenant + user + API key por test. Para specs de admin, usar `../fixtures/admin-auth`
+- Selectores: todo `data-testid` nuevo debe registrarse en `apps/web/tests/e2e/fixtures/selectors.ts` bajo el namespace correcto (`dashboard:` o `admin:`). Nunca duplicar literales en los specs
+- DB assertions: usar `dbQuery` de `fixtures/api.ts` (params posicionales, resultados como strings — castear columnas numeric/date con `::text`)
+- Super admin E2E: la provision del super-admin ocurre una sola vez en `globalSetup.ts`. Los specs solo leen/login; no llamar `updateUserById` en `beforeAll`
+- Comandos: ver `README.md` para el listado completo
+
 ## Comandos
 
+Ver `README.md` para el listado completo. Los mas usados:
+
 ```bash
-pnpm dev          # Dev server (turbo)
-pnpm build        # Build all packages
-pnpm lint         # Lint all packages
-pnpm db:generate  # Generar migraciones Drizzle
-pnpm db:migrate   # Aplicar migraciones
-pnpm db:seed      # Seed de datos de prueba
+pnpm dev                                                        # Dev server (turbo)
+pnpm build                                                      # Build all packages
+pnpm lint                                                       # Lint all packages
+pnpm test                                                       # Unit tests (vitest)
+pnpm test:e2e                                                   # E2E tests (playwright)
+pnpm exec playwright test --project=chromium tests/e2e/<dir>/  # E2E de un area
+pnpm --filter @aerolume/db migrate                              # Aplicar migraciones
 ```
