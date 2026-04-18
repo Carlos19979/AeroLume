@@ -47,9 +47,9 @@ Replicar todas las variables definidas en `apps/web/.env.local` (sin las `E2E_*`
 **Demo / embed:**
 - `NEXT_PUBLIC_DEMO_API_KEY` — API key del tenant demo para el configurador público de la landing.
 
-**Vercel KV (rate limiting):**
-- `KV_REST_API_URL` — URL REST del KV store. Vercel la inyecta automáticamente al conectar la DB.
-- `KV_REST_API_TOKEN` — Token de autenticación. También inyectado automáticamente por Vercel.
+**Upstash Redis (rate limiting):**
+- `UPSTASH_REDIS_REST_URL` — REST URL de la DB Redis de Upstash.
+- `UPSTASH_REDIS_REST_TOKEN` — Token REST (copia el "UPSTASH_REDIS_REST_TOKEN" del dashboard, no el read-only).
 
 **Seed (sólo si corres `pnpm db:seed` desde Vercel, que no es lo habitual):**
 - `SEED_ADMIN_PASSWORD`
@@ -107,22 +107,28 @@ Vercel mantiene histórico de deploys. Para volver atrás:
 1. Vercel dashboard → Deployments → selecciona el deploy anterior → "Promote to Production".
 2. Si el rollback incluye una migración de DB destructiva, aplicar también el rollback de la migración (Drizzle no genera `down.sql` automáticamente — toca escribir el SQL inverso a mano).
 
-## Vercel KV (rate limiting)
+## Upstash Redis (rate limiting)
 
-Aerolume usa Vercel KV (Upstash Redis) para rate limiting por API key. Sin KV, el rate limiting se desactiva gracefully (warn en logs, todos los requests pasan).
+Aerolume usa Upstash Redis directamente (sin la integración Vercel KV) para rate limiting por API key. Sin Upstash, el rate limiting se desactiva gracefully (warn en logs, todos los requests pasan).
 
-### Crear la base de datos KV
+### Crear la base de datos Redis
 
-1. Vercel dashboard → Storage → **Create Database** → selecciona **KV**.
-2. Ponle nombre (ej: `aerolume-kv`) y selecciona la región más cercana a tu DB de Postgres.
-3. En "Connect to Project", selecciona tu proyecto Aerolume.
-4. Vercel inyecta `KV_REST_API_URL` y `KV_REST_API_TOKEN` automáticamente en todos los entornos (production, preview, development).
+1. Registrarse / login en [upstash.com](https://upstash.com) → **Redis** → **Create Database**.
+2. Selecciona la región más cercana a tu deployment Vercel (p.ej. `eu-west-1` si tu app corre en Europa).
+3. Tipo: **Regional** (más barato); **Global** solo si necesitas multi-región.
+4. Tras crear, en la pestaña **REST** copiar los valores de `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`.
 
-### Verificar la conexión
+### Configurar en Vercel
 
-Después de conectar, en Vercel → Settings → Environment Variables deberías ver `KV_REST_API_URL` y `KV_REST_API_TOKEN` marcadas como "Added by Integration".
+En Vercel → Settings → Environment Variables añadir manualmente:
+- `UPSTASH_REDIS_REST_URL` = valor copiado.
+- `UPSTASH_REDIS_REST_TOKEN` = valor copiado.
 
-Para testear localmente: ejecuta `vercel env pull` para traer las variables a `.env.local`, luego corre `pnpm test:e2e --grep "rate limiting"` en `apps/web`.
+Aplicar a Production, Preview y Development (o solo los que necesites).
+
+### Local
+
+Para testear localmente, pegar los mismos 2 valores en `apps/web/.env.local` y correr `pnpm --filter @aerolume/web exec playwright test tests/e2e/security/rate-limit.spec.ts`.
 
 ## Checklist pre-producción
 
@@ -134,7 +140,7 @@ Antes de hacer público el dominio:
 - [ ] DB de producción sembrada: `pnpm db:migrate && pnpm db:seed` (o sólo migrate si ya hay datos).
 - [ ] CORS del `/api/v1/*` verificado (los orígenes permitidos se gestionan por tenant en la tabla `allowed_origins`; añadir los de producción).
 - [ ] CI verde (`ci.yml` + `e2e.yml`).
-- [ ] Vercel KV creado y conectado al proyecto (ver seccion abajo).
+- [ ] Upstash Redis creado y sus 2 env vars (`UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`) configuradas en Vercel.
 
 ---
 

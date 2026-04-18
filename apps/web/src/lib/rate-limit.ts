@@ -1,5 +1,5 @@
 import { Ratelimit } from '@upstash/ratelimit';
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
 
 export type RateLimitResult = {
   success: boolean;
@@ -11,23 +11,38 @@ export type RateLimitResult = {
 // Cache limiters by "limit:windowSec" key to avoid recreating on every request
 const limiterCache = new Map<string, Ratelimit>();
 
-let warnedMissingKv = false;
+let redisClient: Redis | null = null;
+let warnedMissingUpstash = false;
+
+function getRedis(): Redis | null {
+  if (redisClient) return redisClient;
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) {
+    if (!warnedMissingUpstash) {
+      console.warn(
+        '[rate-limit] UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN not set — rate limiting disabled',
+      );
+      warnedMissingUpstash = true;
+    }
+    return null;
+  }
+  redisClient = new Redis({ url, token });
+  return redisClient;
+}
 
 /**
  * Check rate limit for a given identifier (typically the API key ID).
- * - If KV_REST_API_URL is not set, logs a warning once and allows the request through.
- * - Uses sliding window algorithm via Upstash Ratelimit + Vercel KV.
+ * - If Upstash Redis is not configured, logs a warning once and allows the request through.
+ * - Uses sliding window algorithm via Upstash Ratelimit.
  */
 export async function checkRateLimit(
   identifier: string,
   limit = 100,
   windowSec = 3600,
 ): Promise<RateLimitResult> {
-  if (!process.env.KV_REST_API_URL) {
-    if (!warnedMissingKv) {
-      console.warn('[rate-limit] KV_REST_API_URL not set — rate limiting disabled');
-      warnedMissingKv = true;
-    }
+  const redis = getRedis();
+  if (!redis) {
     return { success: true, limit: Infinity, remaining: Infinity, reset: 0 };
   }
 
@@ -36,7 +51,7 @@ export async function checkRateLimit(
 
   if (!limiter) {
     limiter = new Ratelimit({
-      redis: kv,
+      redis,
       limiter: Ratelimit.slidingWindow(limit, `${windowSec} s`),
       prefix: 'aerolume:rl',
     });

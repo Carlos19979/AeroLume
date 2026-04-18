@@ -265,7 +265,7 @@ El handler de envio del embed ahora valida el status antes de avanzar a la panta
 
 ### Algoritmo
 
-Aerolume usa **sliding window** via [`@upstash/ratelimit`](https://github.com/upstash/ratelimit-js) respaldado por Vercel KV (Upstash Redis). Cada API key tiene su propio contador independiente, con la ventana y el limite configurados por tenant.
+Aerolume usa **sliding window** via [`@upstash/ratelimit`](https://github.com/upstash/ratelimit-js) respaldado por Upstash Redis. Cada API key tiene su propio contador independiente, con la ventana y el limite configurados por tenant.
 
 ### Configuracion por tenant
 
@@ -285,7 +285,7 @@ Cuando se supera el limite, la respuesta es `429 Too Many Requests` con `{ "erro
 
 ### Comportamiento sin KV
 
-Si `KV_REST_API_URL` no esta configurado (desarrollo local sin KV), el rate limiting se desactiva gracefully: se permite todo el trafico y se emite un warning en los logs una sola vez. Los headers `X-RateLimit-*` devuelven `Infinity` / `0`.
+Si `UPSTASH_REDIS_REST_URL` no esta configurado (desarrollo local sin Upstash), el rate limiting se desactiva gracefully: se permite todo el trafico y se emite un warning en los logs una sola vez. Los headers `X-RateLimit-*` devuelven `Infinity` / `0`.
 
 ### Testear localmente
 
@@ -295,7 +295,7 @@ Con KV configurado, ejecutar:
 cd apps/web && pnpm test:e2e --grep "rate limiting"
 ```
 
-Sin KV, el spec hace skip automaticamente (`test.skip(!process.env.KV_REST_API_URL, ...)`).
+Sin Upstash, el spec hace skip automaticamente (`test.skip(!process.env.UPSTASH_REDIS_REST_URL, ...)`).
 
 El spec esta en `tests/e2e/security/rate-limit.spec.ts`. Crea un tenant con `rateLimit=3`, hace 3 requests exitosas verificando que `X-RateLimit-Remaining` decrementa, y confirma que la 4a request devuelve `429`.
 
