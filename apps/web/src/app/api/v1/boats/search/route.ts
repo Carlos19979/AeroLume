@@ -6,6 +6,7 @@ import { withCors } from '@/lib/cors';
 export async function GET(request: Request) {
   const auth = await validateApiKey(request);
   if (!auth.ok) {
+    if ('rateLimited' in auth) return auth.response;
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 

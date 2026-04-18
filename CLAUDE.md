@@ -34,6 +34,7 @@ Antes de hacer cambios significativos, lee la documentacion relevante en `docs/`
 - `docs/widget.md` — Integracion, eventos, postMessage
 - `docs/security.md` — API keys, SSRF, Zod, headers, CORS
 - `docs/development.md` — Convenciones de codigo y guias
+- `docs/i18n.md` — Internacionalizacion: locales, mensajes, como migrar paginas
 
 ## Convenciones criticas
 

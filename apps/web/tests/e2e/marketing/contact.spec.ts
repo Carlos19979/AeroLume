@@ -46,19 +46,17 @@ test.describe('marketing: contact page (/contact)', () => {
     await page.fill('#name', 'Carlos Test');
     await page.fill('#email', 'carlos@test.com');
     await page.fill('#subject', 'Reset test');
-    await page.fill('#message', 'Body');
+    await page.fill('#message', 'Mensaje suficientemente largo para pasar la validacion de Zod min(10).');
     await page.getByRole('button', { name: /enviar mensaje/i }).click();
     await expect(page.getByText('Mensaje enviado')).toBeVisible();
     await page.getByRole('button', { name: /enviar otro mensaje/i }).click();
-    // Form should be back
     await expect(page.locator('#name')).toBeVisible();
   });
 
-  test('empty submit: form fields have no required attr so submit passes — success state shown', async ({ page }) => {
-    // ContactContent fields are not marked `required`, so submitting empty
-    // goes straight to success state. This test documents that behaviour.
+  test('empty submit is blocked by required attrs — browser native validation', async ({ page }) => {
     await page.goto('/contact');
     await page.getByRole('button', { name: /enviar mensaje/i }).click();
-    await expect(page.getByText('Mensaje enviado')).toBeVisible();
+    await expect(page.getByText('Mensaje enviado')).not.toBeVisible({ timeout: 1000 });
+    await expect(page.locator('#name')).toBeVisible();
   });
 });

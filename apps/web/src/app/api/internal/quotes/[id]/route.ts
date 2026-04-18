@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
-import { db, quotes, quoteItems, eq, and } from '@aerolume/db';
+import { db, quotes, quoteItems, tenants, eq, and } from '@aerolume/db';
 import { withTenantAuth } from '@/lib/auth-helpers';
 import { validateBody, updateQuoteSchema } from '@/lib/validations';
 import { dispatchQuoteWebhook } from '@/lib/quote-webhook';
+import { sendEmail } from '@/lib/email/resend';
+import { quoteCustomerTemplate } from '@/lib/email/templates/quote-customer';
 
 export const GET = withTenantAuth(async (_request, { tenant }, params) => {
   const { id } = params;
@@ -31,6 +33,13 @@ export const PUT = withTenantAuth(async (request, { tenant }, params) => {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
   const data = validation.data;
+
+  // Fetch before state to detect status transitions
+  const [before] = await db
+    .select({ status: quotes.status, customerEmail: quotes.customerEmail })
+    .from(quotes)
+    .where(and(eq(quotes.id, id), eq(quotes.tenantId, tenant.id)))
+    .limit(1);
 
   const [updated] = await db
     .update(quotes)
@@ -79,6 +88,41 @@ export const PUT = withTenantAuth(async (request, { tenant }, params) => {
       })
     )
     .catch((err) => console.error('[quote-webhook] PUT dispatch error:', err));
+
+  // Customer email when transitioning draft → sent
+  if (data.status === 'sent' && before?.status !== 'sent' && updated.customerEmail) {
+    const customerEmail = updated.customerEmail;
+    ;(async () => {
+      try {
+        const [tenantRow] = await db
+          .select({ name: tenants.name, companyName: tenants.companyName })
+          .from(tenants)
+          .where(eq(tenants.id, tenant.id))
+          .limit(1);
+        const tenantName = tenantRow?.companyName ?? tenantRow?.name ?? 'Aerolume';
+        const items = await db.select().from(quoteItems).where(eq(quoteItems.quoteId, id));
+        sendEmail({
+          to: customerEmail,
+          ...quoteCustomerTemplate({
+            customerName: updated.customerName ?? 'Cliente',
+            boatModel: updated.boatModel ?? '',
+            items: items.map((i) => ({
+              productName: i.productName,
+              sailType: i.sailType,
+              sailArea: i.sailArea,
+              unitPrice: i.unitPrice,
+              quantity: i.quantity,
+            })),
+            totalPrice: updated.totalPrice,
+            currency: updated.currency ?? 'EUR',
+            tenantName,
+          }),
+        }).catch((err) => console.error('[email] sent customer:', err));
+      } catch (err) {
+        console.error('[email] draft→sent email error:', err);
+      }
+    })();
+  }
 
   return NextResponse.json({ data: updated });
 });

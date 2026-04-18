@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server';
 import { validateApiKey } from '@/lib/api-auth';
-import { db, quotes, quoteItems, products, productPricingTiers, productConfigFields, eq, inArray, and, or, isNull } from '@aerolume/db';
+import { db, quotes, quoteItems, products, productPricingTiers, productConfigFields, tenants, tenantMembers, eq, inArray, and, or, isNull } from '@aerolume/db';
 import { withCors } from '@/lib/cors';
 import { validateBody, createQuoteSchema } from '@/lib/validations';
 import { priceItem } from '@/lib/pricing';
 import { dispatchQuoteWebhook } from '@/lib/quote-webhook';
+import { sendEmail } from '@/lib/email/resend';
+import { quoteCustomerTemplate } from '@/lib/email/templates/quote-customer';
+import { quoteTenantNotificationTemplate } from '@/lib/email/templates/quote-tenant-notification';
 
 export async function POST(request: Request) {
   const auth = await validateApiKey(request);
   if (!auth.ok) {
+    if ('rateLimited' in auth) return auth.response;
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
@@ -101,6 +105,76 @@ export async function POST(request: Request) {
     items = await db.insert(quoteItems).values(itemValues).returning();
   }
 
+  // Email notifications (fire and forget) — both customer + tenant owner
+  ;(async () => {
+    try {
+      // Resolve tenant name and owner email in parallel
+      const [tenantRow] = await db
+        .select({ name: tenants.name, companyName: tenants.companyName })
+        .from(tenants)
+        .where(eq(tenants.id, auth.ctx.tenantId))
+        .limit(1);
+      const tenantName = tenantRow?.companyName ?? tenantRow?.name ?? 'Aerolume';
+
+      const emailItems = items.map((i) => ({
+        productName: i.productName,
+        sailType: i.sailType,
+        sailArea: i.sailArea,
+        unitPrice: i.unitPrice,
+        quantity: i.quantity,
+      }));
+
+      // Customer email
+      if (data.customerEmail) {
+        sendEmail({
+          to: data.customerEmail,
+          ...quoteCustomerTemplate({
+            customerName: quote.customerName ?? 'Cliente',
+            boatModel: quote.boatModel ?? '',
+            items: emailItems,
+            totalPrice: null,
+            currency: quote.currency ?? 'EUR',
+            tenantName,
+          }),
+        }).catch((err) => console.error('[email] customer:', err));
+      }
+
+      // Tenant owner notification
+      const [ownerMember] = await db
+        .select({ userId: tenantMembers.userId })
+        .from(tenantMembers)
+        .where(and(eq(tenantMembers.tenantId, auth.ctx.tenantId), eq(tenantMembers.role, 'owner')))
+        .limit(1);
+      if (ownerMember) {
+        const { createClient } = await import('@supabase/supabase-js');
+        const admin = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { auth: { autoRefreshToken: false, persistSession: false } },
+        );
+        const { data: userData } = await admin.auth.admin.getUserById(ownerMember.userId);
+        const ownerEmail = userData?.user?.email;
+        if (ownerEmail) {
+          sendEmail({
+            to: ownerEmail,
+            ...quoteTenantNotificationTemplate({
+              customerName: quote.customerName ?? 'Desconocido',
+              customerEmail: data.customerEmail ?? '',
+              customerPhone: quote.customerPhone,
+              customerNotes: quote.customerNotes,
+              boatModel: quote.boatModel ?? '',
+              items: emailItems,
+              totalPrice: null,
+              currency: quote.currency ?? 'EUR',
+            }),
+          }).catch((err) => console.error('[email] tenant notification:', err));
+        }
+      }
+    } catch (err) {
+      console.error('[email] quote notification error:', err);
+    }
+  })();
+
   // Send webhook notification (fire and forget)
   dispatchQuoteWebhook(auth.ctx.tenantId, 'quote.created', {
     id: quote.id,
@@ -125,7 +199,12 @@ export async function POST(request: Request) {
   }).catch(() => {});
 
   const origin = request.headers.get('origin');
-  return withCors(NextResponse.json({ data: { id: quote.id, status: quote.status } }), origin);
+  const res = withCors(NextResponse.json({ data: { id: quote.id, status: quote.status } }), origin);
+  const rl = auth.ctx.rateLimitResult;
+  res.headers.set('X-RateLimit-Limit', String(rl.limit));
+  res.headers.set('X-RateLimit-Remaining', String(rl.remaining));
+  res.headers.set('X-RateLimit-Reset', String(rl.reset));
+  return res;
 }
 
 export async function OPTIONS(request: Request) {

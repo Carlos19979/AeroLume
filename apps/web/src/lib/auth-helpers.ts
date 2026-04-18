@@ -64,6 +64,29 @@ export function withAdminAuth(handler: AdminHandler) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
 
+      // MFA gate — only enforced when ENFORCE_SUPER_ADMIN_MFA=1
+      if (process.env.ENFORCE_SUPER_ADMIN_MFA === '1') {
+        const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aalData) {
+          const { currentLevel, nextLevel } = aalData;
+          if (currentLevel === 'aal1' && nextLevel === 'aal1') {
+            // No factor enrolled — must enroll
+            return NextResponse.json(
+              { error: 'MFA required', code: 'mfa_enroll' },
+              { status: 403 },
+            );
+          }
+          if (currentLevel === 'aal1' && nextLevel === 'aal2') {
+            // Factor enrolled but not yet challenged this session
+            return NextResponse.json(
+              { error: 'MFA required', code: 'mfa_challenge' },
+              { status: 403 },
+            );
+          }
+          // currentLevel === 'aal2' → OK
+        }
+      }
+
       const params = routeCtx?.params ? await routeCtx.params : {};
       return await handler(req, { user: { id: user.id, email: user.email! } }, params);
     } catch (error) {

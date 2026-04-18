@@ -28,10 +28,36 @@ const FAQ = [
 export default function ContactContent() {
     const [openFaq, setOpenFaq] = useState<number | null>(null);
     const [submitted, setSubmitted] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
-    function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        setSubmitted(true);
+        setSubmitError(null);
+        const form = e.currentTarget;
+        const formData = new FormData(form);
+        const subject = String(formData.get('subject') ?? '').trim();
+        const messageBody = String(formData.get('message') ?? '').trim();
+        const payload = {
+            name: String(formData.get('name') ?? '').trim(),
+            email: String(formData.get('email') ?? '').trim(),
+            phone: null as string | null,
+            message: subject ? `[${subject}]\n\n${messageBody}` : messageBody,
+        };
+        try {
+            const res = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            if (res.ok) {
+                setSubmitted(true);
+            } else {
+                const json = await res.json().catch(() => ({}));
+                setSubmitError(json.error ?? 'Error al enviar el mensaje. Intentalo de nuevo.');
+            }
+        } catch {
+            setSubmitError('Error de red. Comprueba tu conexion e intentalo de nuevo.');
+        }
     }
 
     return (
@@ -83,6 +109,8 @@ export default function ContactContent() {
                                     <label htmlFor="name" className="block text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]">Nombre</label>
                                     <input
                                         id="name"
+                                        name="name"
+                                        required
                                         type="text"
                                         className="mt-2 w-full rounded-lg border border-[var(--color-border)] bg-white px-4 py-3 text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none transition-colors focus:border-[var(--color-accent)]/40"
                                         placeholder="Tu nombre"
@@ -92,6 +120,8 @@ export default function ContactContent() {
                                     <label htmlFor="email" className="block text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]">Email</label>
                                     <input
                                         id="email"
+                                        name="email"
+                                        required
                                         type="email"
                                         className="mt-2 w-full rounded-lg border border-[var(--color-border)] bg-white px-4 py-3 text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none transition-colors focus:border-[var(--color-accent)]/40"
                                         placeholder="tu@email.com"
@@ -102,6 +132,7 @@ export default function ContactContent() {
                                 <label htmlFor="subject" className="block text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]">Asunto</label>
                                 <input
                                     id="subject"
+                                    name="subject"
                                     type="text"
                                     className="mt-2 w-full rounded-lg border border-[var(--color-border)] bg-white px-4 py-3 text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none transition-colors focus:border-[var(--color-accent)]/40"
                                     placeholder="Sobre que quieres hablar?"
@@ -111,6 +142,9 @@ export default function ContactContent() {
                                 <label htmlFor="message" className="block text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]">Mensaje</label>
                                 <textarea
                                     id="message"
+                                    name="message"
+                                    required
+                                    minLength={10}
                                     rows={5}
                                     className="mt-2 w-full resize-none rounded-lg border border-[var(--color-border)] bg-white px-4 py-3 text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none transition-colors focus:border-[var(--color-accent)]/40"
                                     placeholder="Escribe tu mensaje..."

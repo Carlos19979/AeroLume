@@ -9,6 +9,8 @@ export async function middleware(request: NextRequest) {
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
     response.headers.set('X-DNS-Prefetch-Control', 'on');
+    // Expose pathname to server components (used by MFA gate in admin layout)
+    response.headers.set('x-pathname', request.nextUrl.pathname);
     return response;
 }
 

@@ -7,6 +7,7 @@ import { validateBody, createAnalyticsEventSchema } from '@/lib/validations';
 export async function POST(request: Request) {
   const auth = await validateApiKey(request);
   if (!auth.ok) {
+    if ('rateLimited' in auth) return auth.response;
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 

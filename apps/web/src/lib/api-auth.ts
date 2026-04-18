@@ -1,16 +1,20 @@
+import { NextResponse } from 'next/server';
 import { db, apiKeys, tenants, eq } from '@aerolume/db';
 import { hashApiKey } from '@/lib/api-keys';
+import { checkRateLimit, type RateLimitResult } from '@/lib/rate-limit';
 
 export type ApiKeyContext = {
   tenantId: string;
   keyId: string;
   scopes: string[];
   rateLimit: number;
+  rateLimitResult: RateLimitResult;
 };
 
 type ValidationResult =
   | { ok: true; ctx: ApiKeyContext }
-  | { ok: false; error: string; status: number };
+  | { ok: false; error: string; status: number }
+  | { ok: false; rateLimited: true; response: NextResponse };
 
 /**
  * Validate an API key from a request.
@@ -84,13 +88,28 @@ export async function validateApiKey(request: Request): Promise<ValidationResult
     .then(() => {})
     .catch(() => {});
 
+  const keyRateLimit = found.rateLimit ?? 1000;
+  const rateLimitResult = await checkRateLimit(found.id, keyRateLimit);
+
+  if (!rateLimitResult.success) {
+    const response = NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429 },
+    );
+    response.headers.set('X-RateLimit-Limit', String(rateLimitResult.limit));
+    response.headers.set('X-RateLimit-Remaining', '0');
+    response.headers.set('X-RateLimit-Reset', String(rateLimitResult.reset));
+    return { ok: false, rateLimited: true, response };
+  }
+
   return {
     ok: true,
     ctx: {
       tenantId: found.tenantId,
       keyId: found.id,
       scopes: found.scopes ?? ['read'],
-      rateLimit: found.rateLimit ?? 1000,
+      rateLimit: keyRateLimit,
+      rateLimitResult,
     },
   };
 }

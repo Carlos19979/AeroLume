@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSuperAdmin } from '@/lib/admin';
 import { AdminSidebar } from './sidebar';
+import { headers } from 'next/headers';
 
 export default async function AdminLayout({
     children,
@@ -13,6 +14,27 @@ export default async function AdminLayout({
 
     if (!user || !isSuperAdmin(user.email)) {
         redirect('/dashboard');
+    }
+
+    // MFA gate (SSR) — only enforced when ENFORCE_SUPER_ADMIN_MFA=1
+    if (process.env.ENFORCE_SUPER_ADMIN_MFA === '1') {
+        const headersList = await headers();
+        const pathname = headersList.get('x-pathname') ?? '';
+        // Skip MFA gate for the MFA pages themselves to avoid redirect loops
+        const isMfaPage = pathname.startsWith('/admin/mfa');
+
+        if (!isMfaPage) {
+            const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+            if (aalData) {
+                const { currentLevel, nextLevel } = aalData;
+                if (currentLevel === 'aal1' && nextLevel === 'aal1') {
+                    redirect('/admin/mfa');
+                }
+                if (currentLevel === 'aal1' && nextLevel === 'aal2') {
+                    redirect(`/admin/mfa/challenge?redirectTo=${encodeURIComponent(pathname || '/admin')}`);
+                }
+            }
+        }
     }
 
     return (

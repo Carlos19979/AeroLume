@@ -258,3 +258,101 @@ Ver seccion "Embed postMessage" arriba. Sin parent origin confiable, no se emite
 ### W1 — Submit del configurador sin chequeo de `res.ok`
 
 El handler de envio del embed ahora valida el status antes de avanzar a la pantalla de exito. Si el server responde 4xx/5xx, se muestra un banner de error en lugar de fingir exito silencioso (que ocurria cuando, por ejemplo, la validacion Zod rechazaba el payload).
+
+---
+
+## Rate limiting
+
+### Algoritmo
+
+Aerolume usa **sliding window** via [`@upstash/ratelimit`](https://github.com/upstash/ratelimit-js) respaldado por Vercel KV (Upstash Redis). Cada API key tiene su propio contador independiente, con la ventana y el limite configurados por tenant.
+
+### Configuracion por tenant
+
+El campo `rate_limit` en la tabla `api_keys` define el numero maximo de requests por hora (default: `1000`). Se puede cambiar desde el admin o directamente en la DB.
+
+### Headers de respuesta
+
+Todas las respuestas de `/api/v1/*` incluyen:
+
+| Header | Descripcion |
+|---|---|
+| `X-RateLimit-Limit` | Limite total configurado para la key |
+| `X-RateLimit-Remaining` | Requests restantes en la ventana actual |
+| `X-RateLimit-Reset` | Unix timestamp (ms) cuando se resetea la ventana |
+
+Cuando se supera el limite, la respuesta es `429 Too Many Requests` con `{ "error": "Rate limit exceeded" }`.
+
+### Comportamiento sin KV
+
+Si `KV_REST_API_URL` no esta configurado (desarrollo local sin KV), el rate limiting se desactiva gracefully: se permite todo el trafico y se emite un warning en los logs una sola vez. Los headers `X-RateLimit-*` devuelven `Infinity` / `0`.
+
+### Testear localmente
+
+Con KV configurado, ejecutar:
+
+```bash
+cd apps/web && pnpm test:e2e --grep "rate limiting"
+```
+
+Sin KV, el spec hace skip automaticamente (`test.skip(!process.env.KV_REST_API_URL, ...)`).
+
+El spec esta en `tests/e2e/security/rate-limit.spec.ts`. Crea un tenant con `rateLimit=3`, hace 3 requests exitosas verificando que `X-RateLimit-Remaining` decrementa, y confirma que la 4a request devuelve `429`.
+
+---
+
+## MFA / 2FA (TOTP)
+
+### Quien esta forzado
+
+Los super admins (emails en `SUPER_ADMIN_EMAILS`) son los unico usuarios que pueden acceder a las rutas `/admin/*`. El gate MFA solo se activa cuando la variable de entorno `ENFORCE_SUPER_ADMIN_MFA=1` esta seteada. En desarrollo y tests sin esa var, el acceso admin funciona sin MFA (para no romper tests existentes).
+
+### Enrollment flow
+
+1. El super admin visita cualquier ruta `/admin/*`.
+2. El layout server (`(admin)/layout.tsx`) detecta que `currentLevel=aal1 && nextLevel=aal1` (sin factor) → redirect a `/admin/mfa`.
+3. En `/admin/mfa` el servidor crea un factor TOTP via `supabase.auth.mfa.enroll()` y muestra el QR code + secret.
+4. El usuario escanea el QR con su app (Google Authenticator, Authy, 1Password, etc.).
+5. Introduce el codigo de 6 digitos → el cliente llama `mfa.challenge()` + `mfa.verify()`.
+6. Al verificar con exito, la sesion pasa a `aal2` y se redirige a `/admin`.
+
+### Challenge flow (sesiones posteriores)
+
+1. El super admin hace login normal (email + password) → sesion en `aal1`.
+2. Al visitar `/admin/*`, el layout detecta `currentLevel=aal1 && nextLevel=aal2` (factor enrollado, no desafiado) → redirect a `/admin/mfa/challenge?redirectTo=...`.
+3. El usuario introduce el codigo de 6 digitos → `supabase.auth.mfa.challengeAndVerify()`.
+4. Sesion pasa a `aal2`, redirect al destino original.
+
+### Gate en API routes
+
+`withAdminAuth` en `auth-helpers.ts` tambien aplica el gate para llamadas directas a `/api/admin/*`:
+- `mfa_enroll` (403): no hay factor enrollado.
+- `mfa_challenge` (403): hay factor pero la sesion es `aal1`.
+
+### Recovery (sin codigos nativos)
+
+Supabase no provee recovery codes nativos para TOTP. Si un super admin pierde acceso a su app de autenticacion:
+
+1. Conectarse a la DB de produccion con acceso de servicio.
+2. Ejecutar:
+   ```sql
+   DELETE FROM auth.mfa_factors WHERE user_id = '<user-uuid>';
+   ```
+3. Esto elimina todos los factores TOTP del usuario.
+4. El usuario puede hacer login normal y volver a enroll en `/admin/mfa`.
+
+Alternativamente, usando la API de servicio de Supabase:
+```bash
+curl -X DELETE \
+  'https://<project>.supabase.co/auth/v1/admin/users/<user-id>/factors/<factor-id>' \
+  -H 'apikey: <service-role-key>' \
+  -H 'Authorization: Bearer <service-role-key>'
+```
+
+### Troubleshooting
+
+**Codigo incorrecto / expirado**: Los codigos TOTP son validos por 30 segundos. Si el reloj del dispositivo esta desfasado (>30s), los codigos seran invalidos. Sincronizar el reloj del dispositivo (NTP). La mayoria de apps de autenticacion avisan cuando el reloj esta desincronizado.
+
+**Factor en estado `unverified`**: Si el usuario cerro el navegador durante el enrollment antes de verificar, el factor queda en estado `unverified`. Al volver a `/admin/mfa` el sistema cancela el factor pendiente y crea uno nuevo. Si hay multiples factores sin verificar (limite de Supabase), ir a `/admin/mfa/settings` para eliminarlos manualmente.
+
+**`mfa.enroll()` falla con limite de factores**: Supabase limita el numero de factores por usuario. Ir a `/admin/mfa/settings` y eliminar los factores no usados.

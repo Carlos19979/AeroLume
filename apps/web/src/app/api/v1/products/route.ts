@@ -6,6 +6,7 @@ import { withCors } from '@/lib/cors';
 export async function GET(request: Request) {
   const auth = await validateApiKey(request);
   if (!auth.ok) {
+    if ('rateLimited' in auth) return auth.response;
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
@@ -101,7 +102,12 @@ export async function GET(request: Request) {
   });
 
   const origin = request.headers.get('origin');
-  return withCors(NextResponse.json({ data: result }), origin);
+  const res = withCors(NextResponse.json({ data: result }), origin);
+  const rl = auth.ctx.rateLimitResult;
+  res.headers.set('X-RateLimit-Limit', String(rl.limit));
+  res.headers.set('X-RateLimit-Remaining', String(rl.remaining));
+  res.headers.set('X-RateLimit-Reset', String(rl.reset));
+  return res;
 }
 
 export async function OPTIONS(request: Request) {
