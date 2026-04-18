@@ -209,6 +209,8 @@ Todas las rutas de mutacion requieren autenticacion. Las rutas legacy sin autent
 
 La comunicacion via `postMessage` desde el embed usa `document.referrer` como origen destino en lugar de wildcard `'*'`, limitando los mensajes al dominio que cargo el iframe.
 
+Si `document.referrer` esta vacio (Referrer-Policy: no-referrer, navegacion directa, etc.) el configurador **no emite el mensaje** en lugar de caer a `'*'` — mejor perder una notificacion que filtrar PII (email, nombre, telefono, quoteId) a un parent no confiable. El submit handler tambien chequea `res.ok` antes de mostrar la pantalla de exito; un 4xx/5xx muestra un banner de error (`data-testid="embed-submit-error"`) en vez de fingir exito silencioso.
+
 ## Formularios de Auth
 
 Los formularios de login y registro incluyen atributos `autocomplete` en los campos de email y password para facilitar la integracion con password managers (`autocomplete="email"`, `autocomplete="current-password"`, `autocomplete="new-password"`).
@@ -218,3 +220,41 @@ Los formularios de login y registro incluyen atributos `autocomplete` en los cam
 Cada route group de Next.js (`(dashboard)`, `(admin)`) tiene error boundaries (`error.tsx`) que capturan errores no manejados y muestran una pagina de error amigable sin exponer detalles de implementacion.
 
 Los wrappers `withTenantAuth` y `withAdminAuth` tambien capturan excepciones y devuelven `500 Internal server error` generico, registrando el error real solo en `console.error`.
+
+---
+
+## Review de seguridad — Abril 2026
+
+Review ejecutado sobre el diff de Sprint 1 (dos subagentes independientes auditaron `git diff HEAD` + archivos untracked). Todos los parches estan aplicados en el commit `6495454`. Los tests de `tests/e2e/security/` (Sprint 2) son regresiones directas de cada hallazgo.
+
+### C1 — Cross-tenant pricing leak en `POST /api/v1/quotes`
+
+**Riesgo:** un tenant con API key valida podia enviar `productId` de otro tenant y recibir de vuelta su `cost` interno, tiers y MSRP (fuga de margen + informacion competitiva).
+
+**Fix** (`apps/web/src/app/api/v1/quotes/route.ts`): el lookup de `products` se scopeo con `and(inArray(products.id, productIds), or(eq(tenantId, ctx.tenantId), isNull(tenantId)))`. El catalogo base (`tenantId IS NULL`) sigue siendo quotable; el del tenant propio tambien; productos ajenos no resuelven. Los items con `productId` no resuelto quedan con `productId: null`, `unitPrice: null`, `cost: null` (no se rechaza la request para no romper lineas custom).
+
+**Regresion:** `tests/e2e/security/cross-tenant-quotes-leak.spec.ts`.
+
+### H1 — Fuga de `cost` via webhook
+
+El payload que se envia al webhook del tenant ya no incluye `cost` por item. Antes, si el tenant apuntaba el webhook a un CRM/Zapier externo, su coste interno de proveedor se exportaba fuera del perimetro. El `cost` sigue guardandose en DB (para el dashboard de margen) y en la respuesta HTTP de `POST /api/v1/quotes`, que requiere API key.
+
+**Regresion:** `tests/e2e/security/webhook-payload-no-cost.spec.ts`.
+
+### H2 — `tenantId` en respuesta publica de `/api/v1/products`
+
+El endpoint publico ya no devuelve `tenantId` en la proyeccion. Era innecesario (el caller ya tiene su propio tenant via la API key) y facilitaba fingerprinting.
+
+### H3 — `postMessage` con targetOrigin `'*'` como fallback
+
+Ver seccion "Embed postMessage" arriba. Sin parent origin confiable, no se emite el mensaje en lugar de usar wildcard.
+
+### M1 — SSRF por redireccion en webhooks
+
+`fetch(webhookUrl, { redirect: 'manual', ... })`. Antes, aunque `isInternalUrl` validaba la URL original, un 30x a `http://169.254.169.254/` (metadata AWS) o `http://127.0.0.1:8080/` se seguia por defecto. Ahora las redirecciones se ignoran — el webhook o llega directo o no llega.
+
+**Regresion:** `tests/e2e/security/ssrf-webhook-internal-ip.spec.ts`.
+
+### W1 — Submit del configurador sin chequeo de `res.ok`
+
+El handler de envio del embed ahora valida el status antes de avanzar a la pantalla de exito. Si el server responde 4xx/5xx, se muestra un banner de error en lugar de fingir exito silencioso (que ocurria cuando, por ejemplo, la validacion Zod rechazaba el payload).

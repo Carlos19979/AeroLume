@@ -724,46 +724,54 @@ jobs:
 
 Orden recomendado para implementación incremental:
 
-### Sprint 1 — Infra + flujos críticos (3-4 días)
+### Sprint 1 — Infra + flujos críticos ✅ Completado (2026-04-17/18)
+
+**Resultado:** 17/17 E2E + 2/2 unit pasan en chromium. Fixes aplicados en ruta: `jsonb_array_length → cardinality` (features es `text[]`), `.nullable()` en `createQuoteSchema`, host del widget usa baseURL en vez de about:blank, probe Vite apunta a `/@vite/client`.
 
 **Día 1 — Infra**
-- [ ] Instalar `@playwright/test`, `vitest`, init config.
-- [ ] `globalSetup`/`globalTeardown` con limpieza de `e2e-*` users.
-- [ ] `fixtures/auth.ts` + `fixtures/api.ts`.
-- [ ] Añadir TODOS los `data-testid` listados en §6.3.
+- [x] Instalar `@playwright/test`, `vitest`, init config.
+- [x] `globalSetup`/`globalTeardown` con limpieza de `e2e-*` users.
+- [x] `fixtures/auth.ts` + `fixtures/api.ts` + `fixtures/tenant.ts` + `fixtures/selectors.ts`.
+- [x] Añadir `data-testid` en componentes clave (embed, dashboard, admin).
 
 **Día 2 — Configurador**
-- [ ] `configurator/full-happy-path.spec.ts`
-- [ ] `configurator/expert-mode-variant-isolation.spec.ts` (regresión bug)
-- [ ] `configurator/pricing-tiers-by-area.spec.ts`
-- [ ] `configurator/third-reef-option.spec.ts`
+- [x] `configurator/full-happy-path.spec.ts`
+- [x] `configurator/expert-mode-variant-isolation.spec.ts` (regresión bug)
+- [x] `configurator/pricing-tiers-by-area.spec.ts`
+- [x] `configurator/third-reef-option.spec.ts`
 
 **Día 3 — Dashboard + API**
-- [ ] `dashboard/quote-detail-margin.spec.ts`
-- [ ] `dashboard/products-list.spec.ts`
-- [ ] `api-public/quotes-create-server-pricing.spec.ts`
-- [ ] `api-internal/products-tenant-isolation.spec.ts`
-- [ ] `api-internal/trial-gate-blocks-mutations.spec.ts`
+- [x] `dashboard/quote-detail-margin.spec.ts`
+- [x] `dashboard/products-list.spec.ts`
+- [x] `api-public/quotes-create-server-pricing.spec.ts`
+- [x] `api-internal/products-tenant-isolation.spec.ts`
+- [x] `api-internal/trial-gate-blocks-mutations.spec.ts`
 
 **Día 4 — Auth + Widget + CI**
-- [ ] `auth/signup-clones-catalog.spec.ts`
-- [ ] `widget/postmessage-quote-created.spec.ts`
-- [ ] `.github/workflows/e2e.yml`
+- [x] `auth/signup-clones-catalog.spec.ts`
+- [x] `widget/postmessage-quote-created.spec.ts`
+- [x] `.github/workflows/e2e.yml`
 
-### Sprint 2 — Cobertura completa (5 días)
+**Extras:** `smoke/routes.spec.ts`, `unit/pricing.test.ts`.
 
-- [ ] CRUDs completos del dashboard (products, quotes, boats, theme, settings, api-keys)
-- [ ] Admin panel completo (tenants, impersonate, boats globales)
-- [ ] Webhooks LemonSqueezy
-- [ ] Seguridad negativa (SSRF, CORS, isolation)
-- [ ] Vitest unitarios (`pricing.test.ts`, `validations.test.ts`, `clone-catalog.test.ts`)
+### Sprint 2 — Cobertura completa ✅ Completado (2026-04-18)
+
+**Resultado:** 82 E2E + 72 unit pasan (81+71 passed, 1+1 skipped). 6 patches de seguridad aplicados (cross-tenant leak + hardenings) y 3 bugs de producción encontrados por los CRUDs (`trialEndsAt` en plan gate de `internal/products` + `internal/api-keys`, `.nullable()` en `updateTenantSettingsSchema`).
+
+- [x] **CRUDs dashboard** (14 tests): `products-crud`, `quotes-crud`, `boats-crud`, `theme-update`, `settings-update`, `api-keys-crud`.
+- [x] **Admin panel** (18 tests): `tenants-list`, `tenants-edit`, `impersonation`, `boats-globales-crud`, `admin-gate`. Fixture `admin-auth.ts` con provisión del super-admin en globalSetup (evita race Supabase).
+- [x] **Webhooks LemonSqueezy** (9 tests): firma HMAC (válida/ausente/incorrecta/payload tampered), subscription_created/updated/cancelled, idempotencia, event_name desconocido.
+- [x] **Seguridad negativa** (20 tests): `ssrf-webhook-internal-ip`, `cors-public-api`, `api-key-spoofing`, `cross-tenant-quotes-leak` (regresión del bug del review), `webhook-payload-no-cost`.
+- [x] **Vitest unitarios**: `validations.test.ts` (64 tests), `clone-catalog.test.ts` (5+1 skipped).
 
 ### Sprint 3 — Polish
 
 - [ ] Snapshots visuales del SailPreview
 - [ ] Marketing/landing
 - [ ] Analytics aggregations
-- [ ] Tests skipped marcados como pending hasta implementación
+- [ ] Levantar los 2 tests actualmente `skip`:
+  - `unit/clone-catalog.test.ts` "empty base catalog returns 0" — requiere DB de test aislada (vaciar el catálogo base en la DB compartida rompe el resto).
+  - `e2e/security/webhook-payload-no-cost.spec.ts` "webhook body has no cost" — requiere un mock HTTP server en puerto libre accesible desde el proceso Next.js.
 
 ---
 
