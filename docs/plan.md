@@ -26,12 +26,12 @@ Upstash Redis ya esta configurado en `.env` (`UPSTASH_REDIS_REST_URL`, `UPSTASH_
 
 ### Tareas
 
-- [ ] Instalar `@upstash/ratelimit` y `@upstash/redis`
-- [ ] Crear `apps/web/src/lib/rate-limit.ts` con sliding window por API key
-- [ ] Integrar en `validateApiKey()` — rechazar con 429 cuando se exceda el limite
-- [ ] Configurar limites por defecto (ej: 100 req/hora para pro)
-- [ ] Añadir header `X-RateLimit-Remaining` en las respuestas v1
-- [ ] Documentar en `docs/security.md` y `docs/api.md`
+- [x] Instalar `@upstash/ratelimit` y `@upstash/redis` — commit 7fb9ea4 (swap desde @vercel/kv)
+- [x] Crear `apps/web/src/lib/rate-limit.ts` con sliding window por API key — commit 467666b
+- [x] Integrar en `validateApiKey()` — rechazar con 429 cuando se exceda el limite — commit 467666b
+- [x] Limite por defecto 100 req/hora; configurable por API key (campo `rateLimit`)
+- [x] Headers `X-RateLimit-Limit/Remaining/Reset` en las respuestas v1 — commit 467666b
+- [x] Documentado en `docs/security.md` (sección Rate limiting) y `docs/deploy.md` (sección Upstash Redis)
 
 ---
 
@@ -49,7 +49,7 @@ Upstash Redis ya esta configurado en `.env` (`UPSTASH_REDIS_REST_URL`, `UPSTASH_
 - [x] Página pública `/pricing` con 2 tiers y CTA a /signup (commit 1a3ec18)
 - [x] Refresh visual de `/dashboard/subscription` (hero gradient, progress bar trial, features checks, iconos lucide)
 - [x] Tests E2E del flujo completo (15 tests): pricing, subscription-checkout, customer-portal, trial-expired-ui (commit 5380ecc)
-- [ ] Documentar flujo de billing en `docs/` (no crítico — el código + commits ya lo documentan)
+- [x] Flujo de billing documentado en `docs/deploy.md` (sección LemonSqueezy + checklist) y `docs/security.md` (webhook HMAC verification)
 
 ---
 
@@ -122,17 +122,19 @@ Security review por 2 subagentes independientes. Todos los hallazgos aplicados:
 ## Fase 6: Mejoras futuras (backlog)
 
 - [ ] ~~i18n~~ **Aparcado (2026-04-18)** — intento con `next-intl` + `localePrefix: 'as-needed'` falló porque require restructurar rutas bajo `app/[locale]/` (rompe todos los E2E marketing). Decisión: **no implementar hasta que haya un prospect real en otro idioma**. Cuando toque, la opción B (cookie-based sin cambio de URLs) es ~4-6h de trabajo; la opción A (rutas `[locale]`) es 1-2 días con riesgo alto. Ambas documentadas en el cierre de esta sesión.
-- [ ] Notificaciones email — enviar presupuestos por email al cliente
-- [ ] Dashboard analytics mejorado — graficos con Recharts, filtros por fecha
-- [ ] Exportar presupuestos a PDF
+- [x] Notificaciones email de presupuestos — commit 467666b (Resend: customer + tenant owner via /api/v1/quotes y draft→sent en /api/internal/quotes/[id])
+- [x] 2FA super admins — commit 467666b (TOTP, opt-in via `ENFORCE_SUPER_ADMIN_MFA=1`)
+- [x] Rate limiting real — commit 467666b (`validateApiKey` ya consulta el campo `rateLimit` de api_keys)
+- [x] Quote webhooks — commit bdaf6a6 (helper `dispatchQuoteWebhook` + 4 eventos: quote.created/updated/status_changed/deleted)
+- [x] Contact form destination — commit 467666b (POST /api/contact + Resend template + email a `CONTACT_EMAIL`)
+- [x] `SUPER_ADMIN_EMAILS` en `.env.example` (verificado, ya estaba; commit b88ace7 añadió las E2E_*)
+- [ ] Dashboard analytics mejorado — graficos con Recharts, filtros por fecha (libera el test skipped de date-range)
+- [ ] Exportar presupuestos a PDF (react-pdf o puppeteer)
 - [ ] Import masivo de productos desde CSV/Excel
 - [ ] Modo oscuro en dashboard
-- [ ] 2FA para super admins
-- [ ] Audit log para acciones de admin (impersonacion, cambios de plan)
-- [ ] Rate limiting real — `validateApiKey()` nunca comprueba el campo `rateLimit` (ver Fase 2)
-- [ ] Quote webhooks — `POST` a `webhookUrl` del tenant al crear presupuesto (documentado en plan, no implementado en codigo)
-- [ ] Contact form — destino de submission desconocido (no hay webhook, email ni CRM integrado)
-- [ ] `SUPER_ADMIN_EMAILS` — añadir al `.env.example` (actualmente es un requisito operacional no documentado)
+- [ ] Audit log para acciones de admin (impersonacion, cambios de plan, MFA enroll/unenroll) — tabla `audit_logs` + helper + página `/admin/audit-logs`
+- [ ] Logger estructurado (JSON con request ID + tenant/user context) — sustituir los ~20 `console.error` por un helper `logger`
+- [ ] Sentry o equivalente para captura de unhandled exceptions con alertas (cuando haya tráfico real)
 
 ---
 
