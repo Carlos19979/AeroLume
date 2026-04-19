@@ -48,11 +48,6 @@ export function Results() {
                             Lo que cambia <span className="italic font-light">cuando lo instalas.</span>
                         </h2>
                     </div>
-                    <div className="lg:col-span-3 lg:pt-3">
-                        <p className="text-[14px] leading-[1.6] text-[var(--color-ink-2)]">
-                            Cifras agregadas de velerias activas en la plataforma. Sin maquillar, sin extrapolaciones.
-                        </p>
-                    </div>
                 </div>
 
                 <div className="border-t-2 border-[var(--color-ink)]">

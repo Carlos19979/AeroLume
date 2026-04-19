@@ -18,22 +18,25 @@
     --color-sea: #1d4a6b;            /* muted ocean blue */
     --color-sea-dim: #133b58;
 
-    /* Legacy aliases (keep until configurator/dashboard updated) */
-    --color-deep: var(--color-paper);
-    --color-surface: var(--color-paper-2);
+    /* Legacy palette — usada por dashboard, admin, embed configurator.
+       NO realiar a las vars editoriales para no contaminar esos surfaces.
+       Las vars editoriales (--color-paper, --color-ink, --color-signal) viven
+       solo bajo .prose-body o se aplican explícitamente en componentes marketing. */
+    --color-deep: #ffffff;
+    --color-surface: #f4f8fc;
     --color-card: #ffffff;
-    --color-card-hover: var(--color-paper-2);
-    --color-border: var(--color-rule);
-    --color-border-strong: var(--color-rule-strong);
-    --color-accent: var(--color-sea);
-    --color-accent-dim: var(--color-sea-dim);
-    --color-accent-glow: rgba(29, 74, 107, 0.15);
-    --color-accent-light: #e8eef3;
-    --color-navy: var(--color-ink);
-    --color-navy-light: var(--color-ink-2);
-    --color-text: var(--color-ink);
-    --color-text-secondary: var(--color-ink-2);
-    --color-text-muted: var(--color-ink-3);
+    --color-card-hover: #eef4fa;
+    --color-border: rgba(10, 45, 90, 0.08);
+    --color-border-strong: rgba(10, 45, 90, 0.16);
+    --color-accent: #0b5faa;
+    --color-accent-dim: #1a7fd4;
+    --color-accent-glow: rgba(11, 95, 170, 0.15);
+    --color-accent-light: #e8f1fb;
+    --color-navy: #0a2540;
+    --color-navy-light: #0f3460;
+    --color-text: #0a1e3d;
+    --color-text-secondary: #4a6382;
+    --color-text-muted: #8899aa;
 
     /* Typography */
     --font-display: var(--font-fraunces);

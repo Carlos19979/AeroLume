@@ -16,8 +16,8 @@ const FAQ = [
         a: 'Buscas tu modelo de barco, el sistema precarga las dimensiones del aparejo y superficies de vela, y luego puedes comparar productos reales de diferentes fabricantes.',
     },
     {
-        q: 'Los precios son orientativos?',
-        a: 'Los precios provienen directamente de los catalogos de fabricantes. Son precios de referencia actualizados regularmente.',
+        q: 'Cuanto tardais en responder?',
+        a: 'Solemos contestar en menos de 24 horas laborables. Si tu consulta es urgente o tienes una demo agendada, marcalo en el mensaje y te damos prioridad.',
     },
     {
         q: 'Puedo ajustar las medidas manualmente?',

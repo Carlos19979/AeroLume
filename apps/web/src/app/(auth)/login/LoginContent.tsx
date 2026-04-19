@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Logo } from '@/components/ui/Logo';
 
 export default function LoginContent() {
     const [email, setEmail] = useState('');
@@ -34,88 +33,113 @@ export default function LoginContent() {
     }
 
     return (
-        <div className="w-full max-w-sm">
-            {/* Mobile logo */}
-            <div className="lg:hidden text-center mb-8">
-                <Link href="/" className="inline-flex items-center gap-2">
-                    <Logo variant="light" />
-                </Link>
+        <div className="w-full max-w-[420px]">
+            {/* Section marker */}
+            <div className="flex items-center gap-3 mb-8">
+                <span
+                    className="text-[10px] font-medium tracking-[0.14em] uppercase text-[var(--color-signal)]"
+                    style={{ fontFamily: 'var(--font-mono), ui-monospace, monospace' }}
+                >
+                    §01
+                </span>
+                <span className="h-px w-8 bg-[var(--color-signal)] opacity-40" />
+                <span
+                    className="text-[10px] font-medium tracking-[0.14em] uppercase text-[var(--color-ink-3)]"
+                    style={{ fontFamily: 'var(--font-mono), ui-monospace, monospace' }}
+                >
+                    Acceso
+                </span>
             </div>
 
-            <div className="bg-white/[0.06] backdrop-blur-xl rounded-3xl border border-white/[0.08] p-8 shadow-2xl shadow-black/20">
-                <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-white font-[family-name:var(--font-cormorant)]">
-                        Bienvenido
-                    </h1>
-                    <p className="text-sm text-white/40 mt-1">
-                        Accede a tu panel de control
-                    </p>
-                </div>
+            {/* Headline */}
+            <h1
+                className="text-[2.5rem] font-light leading-[1.0] tracking-[-0.02em] text-[var(--color-ink)] mb-8"
+                style={{ fontFamily: 'var(--font-fraunces), Georgia, serif', fontFeatureSettings: '"ss01"' }}
+            >
+                Iniciar{' '}
+                <em className="not-italic text-[var(--color-signal)]">sesion</em>
+            </h1>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label htmlFor="email" className="block text-xs font-medium text-white/50 uppercase tracking-wide mb-2">
-                            Email
-                        </label>
-                        <input
-                            id="email"
-                            type="email"
-                            required
-                            autoComplete="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-3 bg-white/[0.06] border border-white/[0.08] rounded-xl text-sm text-white placeholder:text-white/25 focus:ring-2 focus:ring-[#0b5faa]/50 focus:border-transparent outline-none transition-all"
-                            placeholder="tu@email.com"
-                        />
-                    </div>
-
-                    <div>
-                        <label htmlFor="password" className="block text-xs font-medium text-white/50 uppercase tracking-wide mb-2">
-                            Contraseña
-                        </label>
-                        <input
-                            id="password"
-                            type="password"
-                            required
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-3 bg-white/[0.06] border border-white/[0.08] rounded-xl text-sm text-white placeholder:text-white/25 focus:ring-2 focus:ring-[#0b5faa]/50 focus:border-transparent outline-none transition-all"
-                            placeholder="••••••••"
-                        />
-                    </div>
-
-                    {error && (
-                        <div className="text-red-300 text-sm bg-red-500/10 border border-red-500/20 px-4 py-2.5 rounded-xl">
-                            {error}
-                        </div>
-                    )}
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full py-3 bg-white text-[#0a2540] rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-white/10 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0"
+            <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                    <label
+                        htmlFor="email"
+                        className="label-mono block mb-2"
                     >
-                        {loading ? (
-                            <span className="flex items-center justify-center gap-2">
-                                <span className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-                                Entrando...
-                            </span>
-                        ) : 'Iniciar sesion'}
-                    </button>
-                </form>
-
-                <div className="mt-6 pt-5 border-t border-white/[0.06] text-center text-sm space-y-2">
-                    <Link href="/forgot-password" className="block text-white/30 hover:text-white/60 transition-colors">
-                        ¿Olvidaste tu contraseña?
-                    </Link>
-                    <p className="text-white/30">
-                        ¿No tienes cuenta?{' '}
-                        <Link href="/signup" className="text-white/60 hover:text-white font-medium transition-colors">
-                            Registrate
-                        </Link>
-                    </p>
+                        Email
+                    </label>
+                    <input
+                        id="email"
+                        type="email"
+                        required
+                        autoComplete="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-4 py-3 bg-white border border-[var(--color-rule-strong)] text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-4)] focus:border-[var(--color-ink)] focus:outline-none transition-colors duration-150"
+                        placeholder="tu@email.com"
+                    />
                 </div>
+
+                <div>
+                    <label
+                        htmlFor="password"
+                        className="label-mono block mb-2"
+                    >
+                        Contrasena
+                    </label>
+                    <input
+                        id="password"
+                        type="password"
+                        required
+                        autoComplete="current-password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-4 py-3 bg-white border border-[var(--color-rule-strong)] text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-4)] focus:border-[var(--color-ink)] focus:outline-none transition-colors duration-150"
+                        placeholder="••••••••"
+                    />
+                </div>
+
+                {error && (
+                    <div
+                        className="text-sm px-4 py-3 border-l-2 border-[var(--color-signal)] bg-[var(--color-paper-2)] text-[var(--color-ink-2)]"
+                    >
+                        {error}
+                    </div>
+                )}
+
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3.5 bg-[var(--color-ink)] text-[var(--color-paper)] text-sm font-medium tracking-wide hover:bg-[var(--color-ink-2)] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {loading ? (
+                        <span className="flex items-center justify-center gap-2">
+                            <span className="w-3.5 h-3.5 border border-[var(--color-paper)] border-t-transparent rounded-full animate-spin" />
+                            Entrando...
+                        </span>
+                    ) : 'Iniciar sesion'}
+                </button>
+            </form>
+
+            {/* Hairline divider */}
+            <div className="hairline my-7" />
+
+            <div className="space-y-2 text-sm text-[var(--color-ink-3)]">
+                <Link
+                    href="/forgot-password"
+                    className="block hover:text-[var(--color-ink)] transition-colors"
+                >
+                    &iquest;Olvidaste tu contrasena?
+                </Link>
+                <p>
+                    &iquest;No tienes cuenta?{' '}
+                    <Link
+                        href="/signup"
+                        className="text-[var(--color-ink)] underline underline-offset-2 hover:text-[var(--color-signal)] transition-colors"
+                    >
+                        Registrate
+                    </Link>
+                </p>
             </div>
         </div>
     );
