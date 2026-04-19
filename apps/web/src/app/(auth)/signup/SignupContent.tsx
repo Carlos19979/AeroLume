@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 
 export default function SignupContent() {
@@ -17,6 +18,7 @@ export default function SignupContent() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -130,8 +132,29 @@ export default function SignupContent() {
 
                     <div>
                         <label htmlFor="signup-password" className="block text-xs font-medium text-white/50 uppercase tracking-wide mb-1.5">Contraseña *</label>
-                        <input id="signup-password" type="password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)}
-                            className={inputClass} placeholder="Minimo 8 caracteres" />
+                        <div className="relative">
+                            <input
+                                id="signup-password"
+                                type={showPassword ? 'text' : 'password'}
+                                required
+                                minLength={8}
+                                autoComplete="new-password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className={`${inputClass} pr-11`}
+                                placeholder="Minimo 8 caracteres"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword((v) => !v)}
+                                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                aria-pressed={showPassword}
+                                tabIndex={-1}
+                                className="absolute inset-y-0 right-2 flex items-center px-2 text-white/40 hover:text-white/80 transition-colors"
+                            >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
