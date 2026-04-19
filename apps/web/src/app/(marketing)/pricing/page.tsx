@@ -2,197 +2,437 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Check, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowRight, Plus } from 'lucide-react';
+
+/**
+ * Editorial nautico pricing page.
+ *
+ * Locked invariants (E2E):
+ *  - h1 has data-testid="pricing-hero-heading"
+ *  - tier containers: data-testid="pricing-tier-trial" / "pricing-tier-pro"
+ *  - CTAs: data-testid="pricing-cta-trial" / "pricing-cta-pro" → /signup
+ *  - Pro tier contains text matching /recomendado/i
+ */
 
 const TRIAL_FEATURES = [
-    'Acceso completo durante 7 días',
-    'Configurador de velas embebible',
+    'Acceso completo durante 7 dias',
+    'Configurador embebible white-label',
     'Hasta 20 productos',
-    'Generación de presupuestos PDF',
+    'Generacion de presupuestos PDF',
     'Soporte por email',
 ];
 
 const PRO_FEATURES = [
     'Todo lo del periodo de prueba',
     'Productos ilimitados',
-    'Analytics de configuraciones',
+    'Analitica de configuraciones',
     'Webhooks personalizables',
-    'Acceso a API REST',
+    'Acceso a la API REST',
     'Soporte prioritario',
-    'Sin permanencia — cancela cuando quieras',
+    'Sin permanencia, cancelas cuando quieras',
 ];
 
 const FAQS = [
     {
-        q: '¿Qué pasa cuando termina el periodo de prueba?',
-        a: 'Puedes suscribirte al plan Pro para seguir usando Aerolume sin interrupciones. Si no te suscribes, tu cuenta queda pausada y tus datos se conservan durante 30 días.',
+        q: '¿Que pasa cuando termina el periodo de prueba?',
+        a: 'Puedes suscribirte al plan Pro para seguir sin interrupciones. Si no te suscribes, tu cuenta queda pausada y conservamos tus datos durante 30 dias.',
     },
     {
-        q: '¿Hay permanencia o penalización por cancelar?',
-        a: 'Ninguna. El plan Pro es mensual y puedes cancelarlo en cualquier momento desde el panel. Sin letra pequeña.',
+        q: '¿Hay permanencia o penalizacion por cancelar?',
+        a: 'Ninguna. El plan Pro es mensual y se cancela en cualquier momento desde el panel. Sin letra pequena.',
     },
     {
         q: '¿Los 300 EUR/mes incluyen IVA?',
-        a: 'No. El precio indicado es sin IVA. El IVA aplicable depende del país de facturación de tu empresa.',
+        a: 'No. El precio indicado es sin IVA. El IVA aplicable depende del pais de facturacion de tu empresa.',
     },
     {
-        q: '¿Puedo cambiar de plan más adelante?',
-        a: 'Sí. Empieza con la prueba gratuita y suscríbete cuando estés listo. No hay planes intermedios ni costes ocultos.',
+        q: '¿Puedo cambiar de plan mas adelante?',
+        a: 'Si. Empieza con la prueba gratuita y suscribete cuando estes listo. No hay planes intermedios ni costes ocultos.',
     },
 ];
 
+function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
+    const [open, setOpen] = useState(false);
+    return (
+        <div className="border-b border-[var(--color-rule)]">
+            <button
+                type="button"
+                onClick={() => setOpen(!open)}
+                aria-expanded={open}
+                aria-controls={`pricing-faq-answer-${index}`}
+                className="flex items-baseline justify-between w-full py-6 text-left gap-6 group"
+            >
+                <span className="font-mono text-[11px] tracking-[0.08em] uppercase text-[var(--color-ink-3)] shrink-0 w-12">
+                    {String(index + 1).padStart(2, '0')}
+                </span>
+                <span
+                    className="flex-1 text-[19px] lg:text-[22px] leading-[1.25] text-[var(--color-ink)] group-hover:text-[var(--color-signal)] transition-colors"
+                    style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                >
+                    {q}
+                </span>
+                <Plus
+                    size={18}
+                    className={`text-[var(--color-ink)] shrink-0 mt-1 transition-transform duration-300 ${open ? 'rotate-45' : ''}`}
+                />
+            </button>
+            <div
+                id={`pricing-faq-answer-${index}`}
+                role="region"
+                aria-hidden={!open}
+                className="overflow-hidden transition-all duration-300"
+                style={{ maxHeight: open ? '320px' : '0', opacity: open ? 1 : 0 }}
+            >
+                <div className="pb-6 pl-[72px] pr-8 max-w-[60ch]">
+                    <p className="text-[14.5px] leading-[1.6] text-[var(--color-ink-2)]">{a}</p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function PricingPage() {
     return (
-        <div className="bg-white">
-            {/* Hero */}
-            <section className="pt-32 pb-16 px-6">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="max-w-3xl mx-auto text-center"
-                >
-                    <h1
-                        data-testid="pricing-hero-heading"
-                        className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#0a2540] leading-[1.1] font-[family-name:var(--font-cormorant)]"
-                    >
-                        Planes simples,
-                        <br />
-                        <span className="italic text-[#0b5faa]">sin sorpresas</span>
-                    </h1>
-                    <p className="mt-6 text-lg text-gray-500 max-w-xl mx-auto leading-relaxed">
-                        Prueba gratis durante 7 días con acceso completo. Cuando estés listo, un único plan Pro sin letra pequeña.
-                    </p>
-                </motion.div>
-            </section>
+        <div className="bg-[var(--color-paper)]">
+            {/* ── §01 · Hero ─────────────────────────── */}
+            <section className="relative overflow-hidden pt-32 lg:pt-40 pb-20 lg:pb-24">
+                <div className="absolute inset-0 bg-chart-grid opacity-60 pointer-events-none" aria-hidden="true" />
+                <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                        background:
+                            'radial-gradient(ellipse 90% 70% at 50% 30%, transparent 30%, var(--color-paper) 100%)',
+                    }}
+                    aria-hidden="true"
+                />
 
-            {/* Pricing cards */}
-            <section className="pb-24 px-6">
-                <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                <div className="relative max-w-[1400px] mx-auto px-6 lg:px-10">
+                    {/* Top meta strip */}
+                    <div className="flex items-center justify-between border-t border-b border-[var(--color-rule)] py-2.5 mb-12 lg:mb-16">
+                        <span className="label-mono">Pricing 2026</span>
+                        <span className="label-mono hidden md:inline">Plan unico · Sin permanencia</span>
+                        <span className="label-mono">Edicion 04</span>
+                    </div>
 
-                    {/* Trial card */}
-                    <motion.div
-                        data-testid="pricing-tier-trial"
-                        initial={{ opacity: 0, y: 24 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.1 }}
-                        className="rounded-2xl border border-gray-200 p-8 bg-white"
-                    >
-                        <div className="mb-6">
-                            <p className="text-xs font-semibold tracking-[0.12em] text-gray-400 uppercase mb-3">Prueba gratuita</p>
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-5xl font-bold text-[#0a2540] font-[family-name:var(--font-cormorant)]">0 €</span>
-                                <span className="text-gray-400 text-sm">/ 7 días</span>
-                            </div>
-                            <p className="mt-3 text-sm text-gray-500">
-                                Acceso completo sin tarjeta de crédito.
-                            </p>
-                        </div>
-
-                        <ul className="space-y-3 mb-8">
-                            {TRIAL_FEATURES.map((feature) => (
-                                <li key={feature} className="flex items-start gap-3 text-sm text-gray-600">
-                                    <Check size={16} className="mt-0.5 shrink-0 text-[#0b5faa]" />
-                                    {feature}
-                                </li>
-                            ))}
-                        </ul>
-
-                        <Link
-                            data-testid="pricing-cta-trial"
-                            href="/signup"
-                            className="block w-full text-center px-6 py-3 rounded-xl border-2 border-[#0a2540] text-[#0a2540] text-sm font-semibold transition-all duration-300 hover:bg-[#0a2540] hover:text-white"
+                    <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+                        <motion.div
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                            className="lg:col-span-8"
                         >
-                            Empezar gratis
-                        </Link>
-                    </motion.div>
-
-                    {/* Pro card */}
-                    <motion.div
-                        data-testid="pricing-tier-pro"
-                        initial={{ opacity: 0, y: 24 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                        className="relative rounded-2xl border-2 border-[#0b5faa] p-8 bg-[#0a2540] shadow-[0_20px_60px_rgba(10,37,64,0.18)]"
-                    >
-                        {/* Badge */}
-                        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                            <span className="inline-flex px-4 py-1 rounded-full bg-[#0b5faa] text-white text-xs font-semibold tracking-wide">
-                                Recomendado
-                            </span>
-                        </div>
-
-                        <div className="mb-6">
-                            <p className="text-xs font-semibold tracking-[0.12em] text-white/40 uppercase mb-3">Pro</p>
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-5xl font-bold text-white font-[family-name:var(--font-cormorant)]">300 €</span>
-                                <span className="text-white/40 text-sm">/ mes</span>
+                            <div className="flex items-baseline gap-3 mb-7">
+                                <span className="font-mono text-[12px] tracking-[0.18em] text-[var(--color-signal)] font-medium">
+                                    §01
+                                </span>
+                                <span className="h-px flex-1 max-w-[80px] bg-[var(--color-rule-strong)]" />
+                                <span className="label-mono">Tarifas</span>
                             </div>
-                            <p className="mt-3 text-sm text-white/50">
-                                Sin permanencia. Cancela cuando quieras.
-                            </p>
-                        </div>
 
-                        <ul className="space-y-3 mb-8">
-                            {PRO_FEATURES.map((feature) => (
-                                <li key={feature} className="flex items-start gap-3 text-sm text-white/70">
-                                    <Check size={16} className="mt-0.5 shrink-0 text-[#7dd3fc]" />
-                                    {feature}
-                                </li>
-                            ))}
-                        </ul>
-
-                        <Link
-                            data-testid="pricing-cta-pro"
-                            href="/signup"
-                            className="group flex items-center justify-center gap-2 w-full text-center px-6 py-3 rounded-xl bg-white text-[#0a2540] text-sm font-semibold transition-all duration-300 hover:shadow-[0_8px_30px_rgba(255,255,255,0.15)] hover:-translate-y-0.5"
-                        >
-                            Suscribirse
-                            <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
-                        </Link>
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* FAQ */}
-            <section className="py-20 px-6 border-t border-gray-100 bg-gray-50/60">
-                <div className="max-w-3xl mx-auto">
-                    <motion.h2
-                        initial={{ opacity: 0, y: 16 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="text-2xl font-bold text-[#0a2540] mb-10 font-[family-name:var(--font-cormorant)]"
-                    >
-                        Preguntas frecuentes
-                    </motion.h2>
-                    <div className="space-y-6">
-                        {FAQS.map((faq, i) => (
-                            <motion.div
-                                key={faq.q}
-                                initial={{ opacity: 0, y: 12 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: i * 0.06 }}
-                                className="border-b border-gray-200 pb-6 last:border-0"
+                            <h1
+                                data-testid="pricing-hero-heading"
+                                className="text-[3rem] sm:text-[4.25rem] lg:text-[5.5rem] font-light leading-[0.95] tracking-[-0.025em] text-[var(--color-ink)]"
+                                style={{
+                                    fontFamily: 'var(--font-fraunces), Georgia, serif',
+                                    fontFeatureSettings: '"ss01"',
+                                }}
                             >
-                                <p className="text-sm font-semibold text-[#0a2540] mb-2">{faq.q}</p>
-                                <p className="text-sm text-gray-500 leading-relaxed">{faq.a}</p>
-                            </motion.div>
-                        ))}
+                                Planes simples,
+                                <br />
+                                <span
+                                    className="italic font-normal text-[var(--color-signal)]"
+                                    style={{ fontVariationSettings: '"opsz" 144' }}
+                                >
+                                    sin sorpresas.
+                                </span>
+                            </h1>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.7, delay: 0.1 }}
+                            className="lg:col-span-4 lg:pt-6"
+                        >
+                            <p className="text-[16px] leading-[1.6] text-[var(--color-ink-2)] max-w-[36ch]">
+                                Prueba gratis durante 7 dias con acceso completo. Cuando estes listo, un unico plan Pro
+                                sin letra pequena.
+                            </p>
+
+                            <div className="mt-8 grid grid-cols-3 gap-4 border-t border-[var(--color-rule)] pt-5">
+                                <div>
+                                    <span className="label-mono">Setup</span>
+                                    <p
+                                        className="mt-1 text-[20px] text-[var(--color-ink)]"
+                                        style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                                    >
+                                        48h
+                                    </p>
+                                </div>
+                                <div>
+                                    <span className="label-mono">Permanencia</span>
+                                    <p
+                                        className="mt-1 text-[20px] text-[var(--color-ink)]"
+                                        style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                                    >
+                                        Cero
+                                    </p>
+                                </div>
+                                <div>
+                                    <span className="label-mono">Tarjeta</span>
+                                    <p
+                                        className="mt-1 text-[20px] text-[var(--color-ink)]"
+                                        style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                                    >
+                                        No
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
                     </div>
                 </div>
             </section>
 
-            {/* Bottom reassurance strip */}
-            <section className="py-12 px-6">
-                <div className="max-w-3xl mx-auto flex flex-wrap justify-center gap-x-10 gap-y-3 text-xs text-gray-400 tracking-wide">
-                    <span>Sin tarjeta de crédito en la prueba</span>
-                    <span className="w-1 h-1 rounded-full bg-gray-300 self-center hidden sm:block" />
-                    <span>Setup en menos de 48h</span>
-                    <span className="w-1 h-1 rounded-full bg-gray-300 self-center hidden sm:block" />
-                    <span>Cancelación inmediata</span>
-                    <span className="w-1 h-1 rounded-full bg-gray-300 self-center hidden sm:block" />
-                    <span>Soporte por email incluido</span>
+            {/* ── §02 · Tiers ────────────────────────── */}
+            <section className="relative bg-[var(--color-paper)] pb-24 lg:pb-32">
+                <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
+                    <div className="grid lg:grid-cols-12 gap-10 mb-14 lg:mb-16 border-t border-[var(--color-ink)] pt-8">
+                        <div className="lg:col-span-3">
+                            <span className="font-mono text-[12px] tracking-[0.18em] text-[var(--color-signal)] font-medium">
+                                §02
+                            </span>
+                            <p className="label-mono mt-2">Los planes</p>
+                        </div>
+                        <div className="lg:col-span-6">
+                            <h2
+                                className="text-[2.25rem] sm:text-[2.75rem] lg:text-[3.25rem] leading-[1.02] tracking-[-0.02em] text-[var(--color-ink)]"
+                                style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                            >
+                                Dos puertas. Una <span className="italic font-light">misma plataforma.</span>
+                            </h2>
+                        </div>
+                        <div className="lg:col-span-3 lg:pt-3">
+                            <p className="text-[14px] leading-[1.6] text-[var(--color-ink-2)]">
+                                Empieza por la prueba. Pasa a Pro cuando el primer presupuesto entre por el widget.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 border-t-2 border-[var(--color-ink)]">
+                        {/* ── Tier 01 · Trial ────────── */}
+                        <motion.article
+                            data-testid="pricing-tier-trial"
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-80px' }}
+                            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                            className="relative border-b md:border-b-0 md:border-r border-[var(--color-rule-strong)] p-8 lg:p-12 group hover:bg-[var(--color-paper-2)]/40 transition-colors"
+                        >
+                            <div className="flex items-baseline justify-between mb-10">
+                                <span
+                                    className="text-[5rem] lg:text-[6rem] leading-[0.85] text-[var(--color-ink)] group-hover:text-[var(--color-signal)] transition-colors"
+                                    style={{
+                                        fontFamily: 'var(--font-fraunces), Georgia, serif',
+                                        fontFeatureSettings: '"tnum"',
+                                    }}
+                                >
+                                    01
+                                </span>
+                                <span className="label-mono">Prueba</span>
+                            </div>
+
+                            <h3
+                                className="text-[1.75rem] lg:text-[2.25rem] leading-[1.05] tracking-[-0.015em] text-[var(--color-ink)]"
+                                style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                            >
+                                Periodo de prueba
+                            </h3>
+                            <p className="mt-3 text-[14px] leading-[1.6] text-[var(--color-ink-2)] max-w-[40ch]">
+                                Acceso completo a la plataforma. Sin tarjeta de credito, sin compromiso.
+                            </p>
+
+                            <div className="mt-10 border-t border-[var(--color-rule)] pt-6 flex items-baseline gap-2">
+                                <span
+                                    className="text-[3.5rem] lg:text-[4.5rem] leading-[0.85] text-[var(--color-ink)]"
+                                    style={{
+                                        fontFamily: 'var(--font-fraunces), Georgia, serif',
+                                        fontFeatureSettings: '"tnum"',
+                                    }}
+                                >
+                                    0 €
+                                </span>
+                                <span className="font-mono text-[12px] tracking-[0.08em] uppercase text-[var(--color-ink-3)]">
+                                    / 7 dias
+                                </span>
+                            </div>
+
+                            <ul className="mt-10 space-y-3">
+                                {TRIAL_FEATURES.map((feature, i) => (
+                                    <li
+                                        key={feature}
+                                        className="flex items-baseline gap-4 text-[14px] leading-[1.55] text-[var(--color-ink-2)]"
+                                    >
+                                        <span className="font-mono text-[10.5px] tracking-[0.08em] text-[var(--color-ink-3)] shrink-0 pt-[1px]">
+                                            {String(i + 1).padStart(2, '0')}
+                                        </span>
+                                        <span>{feature}</span>
+                                    </li>
+                                ))}
+                            </ul>
+
+                            <div className="mt-12">
+                                <Link
+                                    data-testid="pricing-cta-trial"
+                                    href="/signup"
+                                    className="group/cta inline-flex items-center gap-3 border border-[var(--color-ink)] text-[var(--color-ink)] pl-5 pr-4 py-3.5 text-[13px] tracking-[0.02em] font-medium hover:bg-[var(--color-ink)] hover:text-[var(--color-paper)] transition-colors"
+                                >
+                                    Empezar gratis
+                                    <ArrowRight
+                                        size={15}
+                                        className="transition-transform group-hover/cta:translate-x-1"
+                                    />
+                                </Link>
+                            </div>
+                        </motion.article>
+
+                        {/* ── Tier 02 · Pro ──────────── */}
+                        <motion.article
+                            data-testid="pricing-tier-pro"
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-80px' }}
+                            transition={{ duration: 0.6, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+                            className="relative bg-[var(--color-ink)] text-[var(--color-paper)] p-8 lg:p-12 overflow-hidden"
+                        >
+                            <div
+                                className="absolute inset-0 pointer-events-none opacity-[0.06]"
+                                style={{
+                                    backgroundImage:
+                                        'linear-gradient(to right, var(--color-paper) 1px, transparent 1px), linear-gradient(to bottom, var(--color-paper) 1px, transparent 1px)',
+                                    backgroundSize: '60px 60px',
+                                }}
+                                aria-hidden="true"
+                            />
+
+                            <div className="relative">
+                                <div className="flex items-baseline justify-between mb-10">
+                                    <span
+                                        className="text-[5rem] lg:text-[6rem] leading-[0.85] text-[var(--color-paper)]"
+                                        style={{
+                                            fontFamily: 'var(--font-fraunces), Georgia, serif',
+                                            fontFeatureSettings: '"tnum"',
+                                        }}
+                                    >
+                                        02
+                                    </span>
+                                    <span className="font-mono text-[10.5px] tracking-[0.18em] uppercase text-[var(--color-signal)] font-medium">
+                                        Recomendado
+                                    </span>
+                                </div>
+
+                                <h3
+                                    className="text-[1.75rem] lg:text-[2.25rem] leading-[1.05] tracking-[-0.015em] text-[var(--color-paper)]"
+                                    style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                                >
+                                    Plan Pro
+                                </h3>
+                                <p className="mt-3 text-[14px] leading-[1.6] text-[var(--color-paper)]/65 max-w-[40ch]">
+                                    Todo Aerolume, sin limites. Soporte prioritario y API completa.
+                                </p>
+
+                                <div className="mt-10 border-t border-[var(--color-paper)]/20 pt-6 flex items-baseline gap-2">
+                                    <span
+                                        className="text-[3.5rem] lg:text-[4.5rem] leading-[0.85] text-[var(--color-signal)]"
+                                        style={{
+                                            fontFamily: 'var(--font-fraunces), Georgia, serif',
+                                            fontFeatureSettings: '"tnum"',
+                                        }}
+                                    >
+                                        300 €
+                                    </span>
+                                    <span className="font-mono text-[12px] tracking-[0.08em] uppercase text-[var(--color-paper)]/55">
+                                        / mes
+                                    </span>
+                                </div>
+
+                                <ul className="mt-10 space-y-3">
+                                    {PRO_FEATURES.map((feature, i) => (
+                                        <li
+                                            key={feature}
+                                            className="flex items-baseline gap-4 text-[14px] leading-[1.55] text-[var(--color-paper)]/80"
+                                        >
+                                            <span className="font-mono text-[10.5px] tracking-[0.08em] text-[var(--color-signal)] shrink-0 pt-[1px]">
+                                                {String(i + 1).padStart(2, '0')}
+                                            </span>
+                                            <span>{feature}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                <div className="mt-12">
+                                    <Link
+                                        data-testid="pricing-cta-pro"
+                                        href="/signup"
+                                        className="group/cta inline-flex items-center gap-3 bg-[var(--color-paper)] text-[var(--color-ink)] pl-5 pr-4 py-3.5 text-[13px] tracking-[0.02em] font-medium hover:bg-[var(--color-signal)] hover:text-[var(--color-paper)] transition-colors"
+                                    >
+                                        Suscribirse
+                                        <ArrowRight
+                                            size={15}
+                                            className="transition-transform group-hover/cta:translate-x-1"
+                                        />
+                                    </Link>
+                                </div>
+                            </div>
+                        </motion.article>
+                    </div>
+
+                    {/* Reassurance strip */}
+                    <div className="mt-12 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-[var(--color-rule)] pt-6">
+                        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-[10.5px] tracking-[0.08em] uppercase text-[var(--color-ink-3)]">
+                            <span>Sin tarjeta en la prueba</span>
+                            <span className="block h-px w-3 bg-[var(--color-rule-strong)]" />
+                            <span>Setup en 48h</span>
+                            <span className="block h-px w-3 bg-[var(--color-rule-strong)]" />
+                            <span>Cancelacion inmediata</span>
+                            <span className="block h-px w-3 bg-[var(--color-rule-strong)]" />
+                            <span>Soporte incluido</span>
+                        </div>
+                        <span className="font-mono text-[10.5px] tracking-[0.08em] uppercase text-[var(--color-ink-3)] hidden md:inline">
+                            §02 / Aerolume / MMXXVI
+                        </span>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── §03 · FAQ ──────────────────────────── */}
+            <section className="relative bg-[var(--color-paper)] py-24 lg:py-32">
+                <div className="max-w-[1100px] mx-auto px-6 lg:px-10">
+                    <div className="grid lg:grid-cols-12 gap-10 mb-12 border-t border-[var(--color-ink)] pt-8">
+                        <div className="lg:col-span-4">
+                            <span className="font-mono text-[12px] tracking-[0.18em] text-[var(--color-signal)] font-medium">
+                                §03
+                            </span>
+                            <p className="label-mono mt-2">Apendice</p>
+                            <h2
+                                className="mt-4 text-[2rem] lg:text-[2.75rem] leading-[1.05] tracking-[-0.02em] text-[var(--color-ink)]"
+                                style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                            >
+                                Preguntas <span className="italic font-light">frecuentes.</span>
+                            </h2>
+                        </div>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 16 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="lg:col-span-8 border-t border-[var(--color-ink)]"
+                        >
+                            {FAQS.map((item, index) => (
+                                <FAQItem key={item.q} q={item.q} a={item.a} index={index} />
+                            ))}
+                        </motion.div>
+                    </div>
                 </div>
             </section>
         </div>
