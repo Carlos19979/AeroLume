@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Cormorant, Manrope, Fraunces, Inter, JetBrains_Mono } from 'next/font/google';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 
 const cormorant = Cormorant({
@@ -69,6 +70,7 @@ export default function RootLayout({
         <html lang="es" className={`${cormorant.variable} ${manrope.variable} ${fraunces.variable} ${inter.variable} ${jetbrains.variable} h-full antialiased`}>
             <body className="min-h-full flex flex-col bg-[var(--color-paper)]">
                 {children}
+                <SpeedInsights />
             </body>
         </html>
     );
