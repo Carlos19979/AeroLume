@@ -19,7 +19,9 @@ test.describe('marketing: home page (/)', () => {
     // Use the section landmark to scope to the Hero's h1 (the widget mockup also has an h1)
     const heroH1 = page.locator('section').first().locator('h1');
     await expect(heroH1).toBeVisible();
-    await expect(heroH1).toContainText('configurador de velas');
+    // El nuevo Hero usa <br /> entre líneas, así que textContent las concatena sin espacios.
+    // Aceptamos la palabra "configurador" como invariante semántico.
+    await expect(heroH1).toContainText(/configurador/i);
   });
 
   test('primary CTA "Prueba el configurador" is visible and links to /#configurador', async ({ page }) => {

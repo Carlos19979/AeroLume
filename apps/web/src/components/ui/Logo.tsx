@@ -1,27 +1,39 @@
 interface LogoProps {
-  size?: number;
-  className?: string;
-  showText?: boolean;
-  variant?: 'light' | 'dark';
+    size?: number;
+    className?: string;
+    showText?: boolean;
+    variant?: 'light' | 'dark';
 }
 
-export function Logo({ size = 16, className = '', showText = true, variant = 'dark' }: LogoProps) {
-  const textColor = variant === 'light' ? 'text-white' : 'text-[#0a2540]';
-  const bgColor = variant === 'light' ? 'bg-white/10' : 'bg-[#0b5faa]';
+/**
+ * Editorial mark — wordmark with a signal mark and waterline rule.
+ * No icon-in-rounded-square. Reads like a publication masthead.
+ */
+export function Logo({ className = '', showText = true, variant = 'dark' }: LogoProps) {
+    const ink = variant === 'light' ? 'text-[var(--color-paper)]' : 'text-[var(--color-ink)]';
+    const accent = variant === 'light' ? 'bg-[var(--color-paper)]' : 'bg-[var(--color-signal)]';
+    const ruleColor = variant === 'light' ? 'bg-[var(--color-paper)]/35' : 'bg-[var(--color-rule-strong)]';
 
-  return (
-    <span className={`flex items-center gap-2 ${className}`}>
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${bgColor}`}>
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M12 2L4 20h16L12 2z" opacity="0.3" fill="white" />
-          <path d="M12 2v18" /><path d="M4 20c0 0 4-10 8-18c4 8 8 18 8 18" />
-        </svg>
-      </div>
-      {showText && (
-        <span className={`text-lg font-bold tracking-[0.15em] uppercase font-[family-name:var(--font-cormorant)] ${textColor}`}>
-          Aerolume
+    if (!showText) {
+        return (
+            <span className={`inline-flex items-center ${className}`}>
+                <span className={`block h-[10px] w-[10px] ${accent}`} aria-hidden="true" />
+            </span>
+        );
+    }
+
+    return (
+        <span className={`inline-flex flex-col leading-none ${className}`}>
+            <span className="inline-flex items-center gap-2.5">
+                <span className={`block h-[8px] w-[8px] ${accent}`} aria-hidden="true" />
+                <span
+                    className={`text-[19px] font-medium tracking-[0.04em] ${ink}`}
+                    style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                >
+                    Aerolume
+                </span>
+            </span>
+            <span className={`mt-[5px] ml-[18px] block h-px w-[80px] ${ruleColor}`} aria-hidden="true" />
         </span>
-      )}
-    </span>
-  );
+    );
 }

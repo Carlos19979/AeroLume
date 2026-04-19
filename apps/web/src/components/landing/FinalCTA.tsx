@@ -5,54 +5,75 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
 export function FinalCTA() {
-  return (
-    <section className="relative py-32 overflow-hidden bg-dark-gradient">
-      {/* Grain */}
-      <div className="absolute inset-0 opacity-[0.03] bg-grain" />
+    return (
+        <section className="relative bg-[var(--color-ink)] text-[var(--color-paper)] py-24 lg:py-32 overflow-hidden">
+            <div className="relative max-w-[1400px] mx-auto px-6 lg:px-10">
+                <div className="grid lg:grid-cols-12 gap-10 items-end border-t border-[var(--color-paper)]/30 pt-8">
+                    <div className="lg:col-span-3">
+                        <span className="font-mono text-[12px] tracking-[0.18em] text-[var(--color-signal)] font-medium">
+                            §07
+                        </span>
+                        <p className="font-mono text-[11px] tracking-[0.08em] uppercase text-[var(--color-paper)]/55 mt-2">
+                            Colofon
+                        </p>
+                    </div>
+                    <div className="lg:col-span-9">
+                        <motion.h2
+                            initial={{ opacity: 0, y: 16 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.7 }}
+                            className="text-[2.75rem] sm:text-[4rem] lg:text-[5.5rem] leading-[0.98] tracking-[-0.025em] text-[var(--color-paper)]"
+                            style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                        >
+                            Embebe el configurador
+                            <br />
+                            <span className="italic font-light text-[var(--color-paper)]/85">
+                                en tu web esta semana.
+                            </span>
+                        </motion.h2>
+                    </div>
+                </div>
 
-      {/* Orbs */}
-      <div className="absolute top-[-30%] left-[20%] w-[500px] h-[500px] rounded-full opacity-[0.06]" style={{ background: 'radial-gradient(circle, #4da3ff, transparent 65%)' }} />
-      <div className="absolute bottom-[-20%] right-[10%] w-[400px] h-[400px] rounded-full opacity-[0.04]" style={{ background: 'radial-gradient(circle, #0b5faa, transparent 65%)' }} />
+                <div className="mt-14 lg:mt-20 grid lg:grid-cols-12 gap-10 items-end">
+                    <div className="lg:col-span-7 lg:col-start-4">
+                        <p className="text-[16px] lg:text-[18px] leading-[1.55] text-[var(--color-paper)]/65 max-w-[44ch]">
+                            7 dias gratis. Sin tarjeta. Sin compromiso. Setup acompañado.
+                            Si no encaja con tu negocio, te devolvemos los datos y borramos la cuenta.
+                        </p>
 
-      {/* Grid */}
-      <div className="absolute inset-0 opacity-[0.02] bg-dot-grid" />
+                        <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
+                            <Link
+                                href="/signup"
+                                className="group inline-flex items-center gap-3 bg-[var(--color-paper)] text-[var(--color-ink)] pl-5 pr-4 py-3.5 text-[13px] tracking-[0.02em] font-medium hover:bg-[var(--color-signal)] hover:text-[var(--color-paper)] transition-colors"
+                            >
+                                Registrate gratis
+                                <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+                            </Link>
+                            <Link
+                                href="/contact"
+                                className="text-[13px] tracking-[0.02em] text-[var(--color-paper)] border-b border-[var(--color-paper)]/40 pb-1 hover:border-[var(--color-paper)] transition-colors"
+                            >
+                                Hablar con nosotros
+                            </Link>
+                        </div>
+                    </div>
+                </div>
 
-      {/* Horizontal line */}
-      <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
-
-      <div className="relative max-w-7xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center"
-        >
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.15] font-[family-name:var(--font-cormorant)]">
-            ¿Listo para vender
-            <br />
-            <span className="italic" style={{ color: '#7dd3fc' }}>mas velas?</span>
-          </h2>
-          <p className="mt-6 text-lg text-white/40 max-w-md mx-auto leading-relaxed">
-            Registrate gratis y prueba el configurador durante 7 dias.
-          </p>
-          <div className="mt-10">
-            <Link
-              href="/signup"
-              className="group inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl text-sm font-semibold bg-white text-[#0a2540] transition-all duration-300 hover:shadow-[0_8px_40px_rgba(255,255,255,0.15)] hover:-translate-y-0.5"
-            >
-              Registrate gratis
-              <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-          </div>
-          <div className="mt-8 flex items-center justify-center gap-8 text-xs text-white/20 tracking-wide">
-            <span>Sin compromiso</span>
-            <span className="w-1 h-1 rounded-full bg-white/15" />
-            <span>Setup en 48h</span>
-            <span className="w-1 h-1 rounded-full bg-white/15" />
-            <span>Soporte incluido</span>
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
+                {/* Bottom meta */}
+                <div className="mt-20 flex flex-col md:flex-row gap-3 md:items-center md:justify-between border-t border-[var(--color-paper)]/15 pt-6">
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-[10.5px] tracking-[0.08em] uppercase text-[var(--color-paper)]/45">
+                        <span>Sin compromiso</span>
+                        <span className="block h-px w-3 bg-[var(--color-paper)]/25" />
+                        <span>Setup en 48h</span>
+                        <span className="block h-px w-3 bg-[var(--color-paper)]/25" />
+                        <span>Soporte incluido</span>
+                    </div>
+                    <span className="font-mono text-[10.5px] tracking-[0.08em] uppercase text-[var(--color-paper)]/45">
+                        §07 · Aerolume / Edicion 04 · MMXXVI
+                    </span>
+                </div>
+            </div>
+        </section>
+    );
 }

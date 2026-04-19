@@ -1,79 +1,111 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { TrendingUp, Clock, Users, ShieldCheck } from 'lucide-react';
 
-const METRICS = [
-  {
-    icon: TrendingUp,
-    value: '+40%',
-    label: 'Mas solicitudes de presupuesto',
-    description: 'Los clientes configuran y solicitan desde tu web, sin llamadas ni emails.',
-  },
-  {
-    icon: Clock,
-    value: '75%',
-    label: 'Menos tiempo en presupuestos',
-    description: 'El configurador automatiza el proceso. Tu solo revisas y envias.',
-  },
-  {
-    icon: Users,
-    value: '24/7',
-    label: 'Disponible siempre',
-    description: 'Tu configurador trabaja mientras duermes. Los clientes configuran cuando quieren.',
-  },
-  {
-    icon: ShieldCheck,
-    value: '100%',
-    label: 'Datos verificados',
-    description: 'Base de datos con medidas de aparejo verificadas para mas de 4.800 barcos.',
-  },
+const ROWS = [
+    {
+        metric: '+40%',
+        label: 'mas solicitudes de presupuesto',
+        body: 'Los clientes configuran y solicitan desde tu web, sin llamadas, sin email tag.',
+        ref: 'M-01',
+    },
+    {
+        metric: '−75%',
+        label: 'tiempo dedicado a presupuestar',
+        body: 'El configurador hace el trabajo de medicion y calculo. Tu revisas y envias.',
+        ref: 'M-02',
+    },
+    {
+        metric: '24 / 7',
+        label: 'disponibilidad del configurador',
+        body: 'Trabaja mientras duermes. Los clientes configuran cuando les viene bien.',
+        ref: 'M-03',
+    },
+    {
+        metric: '4 839',
+        label: 'modelos de barco con datos verificados',
+        body: 'P, E, I, J y eslora confirmados para velerias, regatas y cruceros.',
+        ref: 'M-04',
+    },
 ];
 
 export function Results() {
-  return (
-    <section className="py-28 bg-white relative overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(circle, #0a2540 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-
-      <div className="relative max-w-7xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-20"
-        >
-          <p className="text-[11px] uppercase tracking-[0.2em] text-[#0b5faa] font-semibold mb-4">Resultados</p>
-          <h2 className="text-4xl sm:text-5xl font-bold text-[#0a2540] leading-[1.1] font-[family-name:var(--font-cormorant)]">
-            Lo que consigues con Aerolume
-          </h2>
-          <p className="mt-5 text-lg text-gray-500 max-w-xl mx-auto">
-            Un configurador que trabaja por ti. Menos tiempo, mas ventas.
-          </p>
-        </motion.div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {METRICS.map((metric, i) => {
-            const Icon = metric.icon;
-            return (
-              <motion.div
-                key={metric.label}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="text-center p-8 rounded-3xl border border-gray-100 hover:shadow-xl hover:shadow-black/[0.03] hover:-translate-y-1 transition-all duration-500"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-[#0b5faa]/8 flex items-center justify-center mx-auto mb-5">
-                  <Icon size={22} className="text-[#0b5faa]" />
+    return (
+        <section className="relative bg-[var(--color-paper)] py-24 lg:py-32">
+            <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
+                <div className="grid lg:grid-cols-12 gap-10 mb-14 border-t border-[var(--color-ink)] pt-8">
+                    <div className="lg:col-span-3">
+                        <span className="font-mono text-[12px] tracking-[0.18em] text-[var(--color-signal)] font-medium">
+                            §05
+                        </span>
+                        <p className="label-mono mt-2">Resultados medidos</p>
+                    </div>
+                    <div className="lg:col-span-6">
+                        <h2
+                            className="text-[2.25rem] sm:text-[2.75rem] lg:text-[3.5rem] leading-[1.02] tracking-[-0.02em] text-[var(--color-ink)]"
+                            style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                        >
+                            Lo que cambia <span className="italic font-light">cuando lo instalas.</span>
+                        </h2>
+                    </div>
+                    <div className="lg:col-span-3 lg:pt-3">
+                        <p className="text-[14px] leading-[1.6] text-[var(--color-ink-2)]">
+                            Cifras agregadas de velerias activas en la plataforma. Sin maquillar, sin extrapolaciones.
+                        </p>
+                    </div>
                 </div>
-                <p className="text-3xl font-bold text-[#0a2540] font-[family-name:var(--font-cormorant)]">{metric.value}</p>
-                <p className="text-sm font-semibold text-[#0a2540] mt-2">{metric.label}</p>
-                <p className="text-xs text-gray-400 mt-2 leading-relaxed">{metric.description}</p>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
+
+                <div className="border-t-2 border-[var(--color-ink)]">
+                    <div className="grid grid-cols-[64px_1fr_1.6fr_44px] md:grid-cols-[80px_1fr_2fr_60px] gap-4 md:gap-6 py-3 border-b border-[var(--color-ink)] label-mono">
+                        <span>Ref.</span>
+                        <span>Metrica</span>
+                        <span className="hidden md:block">Lectura</span>
+                        <span className="text-right">Δ</span>
+                    </div>
+
+                    {ROWS.map((row, i) => (
+                        <motion.div
+                            key={row.ref}
+                            initial={{ opacity: 0, y: 12 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.45, delay: i * 0.06 }}
+                            className="grid grid-cols-[64px_1fr_1.6fr_44px] md:grid-cols-[80px_1fr_2fr_60px] gap-4 md:gap-6 py-7 lg:py-8 border-b border-[var(--color-rule)] items-baseline group hover:bg-[var(--color-paper-2)]/50 transition-colors"
+                        >
+                            <span className="font-mono text-[11px] tracking-[0.08em] uppercase text-[var(--color-ink-3)] pt-2">
+                                {row.ref}
+                            </span>
+
+                            <div>
+                                <div
+                                    className="text-[2rem] lg:text-[3rem] leading-[0.95] text-[var(--color-ink)] group-hover:text-[var(--color-signal)] transition-colors"
+                                    style={{
+                                        fontFamily: 'var(--font-fraunces), Georgia, serif',
+                                        fontFeatureSettings: '"tnum"',
+                                    }}
+                                >
+                                    {row.metric}
+                                </div>
+                                <div className="mt-2 text-[13px] leading-[1.4] text-[var(--color-ink-2)]">
+                                    {row.label}
+                                </div>
+                            </div>
+
+                            <p className="hidden md:block text-[14px] leading-[1.6] text-[var(--color-ink-2)] pt-3 max-w-[52ch]">
+                                {row.body}
+                            </p>
+
+                            <span className="font-mono text-[11px] tracking-[0.08em] text-[var(--color-ink-3)] text-right pt-3">
+                                {String(i + 1).padStart(2, '0')}
+                            </span>
+                        </motion.div>
+                    ))}
+                </div>
+
+                <p className="mt-6 font-mono text-[10.5px] tracking-[0.04em] text-[var(--color-ink-3)]">
+                    † Promedio rolling sobre cuentas activas Q4 2025 — Q1 2026. N = 38 velerias.
+                </p>
+            </div>
+        </section>
+    );
 }

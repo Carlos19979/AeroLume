@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Cormorant, Manrope } from 'next/font/google';
+import { Cormorant, Manrope, Fraunces, Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 
 const cormorant = Cormorant({
@@ -13,6 +13,27 @@ const manrope = Manrope({
     variable: '--font-manrope',
     subsets: ['latin'],
     display: 'swap',
+});
+
+const fraunces = Fraunces({
+    variable: '--font-fraunces',
+    subsets: ['latin'],
+    display: 'swap',
+    weight: ['300', '400', '500', '600', '700'],
+    style: ['normal', 'italic'],
+});
+
+const inter = Inter({
+    variable: '--font-inter',
+    subsets: ['latin'],
+    display: 'swap',
+});
+
+const jetbrains = JetBrains_Mono({
+    variable: '--font-mono',
+    subsets: ['latin'],
+    display: 'swap',
+    weight: ['400', '500', '600'],
 });
 
 export const metadata: Metadata = {
@@ -45,8 +66,8 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="es" className={`${cormorant.variable} ${manrope.variable} h-full antialiased`}>
-            <body className="min-h-full flex flex-col bg-white">
+        <html lang="es" className={`${cormorant.variable} ${manrope.variable} ${fraunces.variable} ${inter.variable} ${jetbrains.variable} h-full antialiased`}>
+            <body className="min-h-full flex flex-col bg-[var(--color-paper)]">
                 {children}
             </body>
         </html>

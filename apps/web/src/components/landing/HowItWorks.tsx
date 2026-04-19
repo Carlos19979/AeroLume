@@ -1,92 +1,128 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Code2, Palette, Rocket } from 'lucide-react';
 
 const STEPS = [
-  {
-    num: '01',
-    icon: Palette,
-    title: 'Configuramos tu cuenta',
-    description: 'Creamos tu espacio con tus productos, precios y marca. Personalizamos colores, fuentes y logo para que el widget sea 100% tuyo.',
-    detail: 'Setup en 48 horas',
-    color: '#3b82f6',
-  },
-  {
-    num: '02',
-    icon: Code2,
-    title: 'Integras el widget',
-    description: 'Copias 3 lineas de codigo en tu web. El configurador aparece donde tu quieras, adaptado al ancho de tu pagina.',
-    detail: '3 lineas de codigo',
-    color: '#10b981',
-  },
-  {
-    num: '03',
-    icon: Rocket,
-    title: 'Empiezas a vender',
-    description: 'Tus clientes buscan su barco, configuran la vela y solicitan presupuesto. Tu recibes cada solicitud en el dashboard y por webhook.',
-    detail: 'Presupuestos automaticos',
-    color: '#f59e0b',
-  },
+    {
+        num: '01',
+        title: 'Configuramos tu cuenta',
+        body: 'Subimos tus productos, precios y marca. Personalizamos colores y tipografia. El widget queda 100% tuyo.',
+        meta: 'T+0 → T+48h',
+    },
+    {
+        num: '02',
+        title: 'Integras el widget',
+        body: 'Pegas tres lineas de codigo en tu web. El configurador se adapta al ancho del contenedor donde lo embebes.',
+        meta: '3 lineas · 3.4 KB',
+    },
+    {
+        num: '03',
+        title: 'Empiezas a recibir leads',
+        body: 'Cada cliente que configura se convierte en un presupuesto en tu dashboard, con margen calculado y datos completos.',
+        meta: 'Webhook + email',
+    },
 ];
 
 export function HowItWorks() {
-  return (
-    <section id="como-funciona" className="py-28 relative overflow-hidden" style={{ background: 'linear-gradient(160deg, #040e1a, #0a2540, #0d3158)' }}>
-      {/* Grain */}
-      <div className="absolute inset-0 opacity-[0.03] bg-grain" />
-      <div className="absolute inset-0 opacity-[0.02] bg-dot-grid" />
-
-      <div className="relative max-w-7xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="max-w-2xl mb-20"
+    return (
+        <section
+            id="como-funciona"
+            className="relative bg-[var(--color-ink)] text-[var(--color-paper)] py-24 lg:py-32 overflow-hidden"
         >
-          <p className="text-[11px] uppercase tracking-[0.2em] text-blue-400 font-semibold mb-4">Como funciona</p>
-          <h2 className="text-4xl sm:text-5xl font-bold text-white leading-[1.1] font-[family-name:var(--font-cormorant)]">
-            Tres pasos para empezar a vender
-          </h2>
-          <p className="mt-5 text-lg text-white/40 leading-relaxed">
-            De la idea a tener tu configurador funcionando en menos de 48 horas.
-          </p>
-        </motion.div>
+            {/* Faint chart grid in deep ink */}
+            <div
+                className="absolute inset-0 pointer-events-none opacity-[0.06]"
+                style={{
+                    backgroundImage:
+                        'linear-gradient(to right, var(--color-paper) 1px, transparent 1px), linear-gradient(to bottom, var(--color-paper) 1px, transparent 1px)',
+                    backgroundSize: '80px 80px',
+                }}
+                aria-hidden="true"
+            />
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {STEPS.map((step, i) => {
-            const Icon = step.icon;
-            return (
-              <motion.div
-                key={step.title}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.12 }}
-                className="group relative rounded-3xl border border-white/[0.06] p-8 pb-10 bg-white/[0.02] backdrop-blur-sm hover:bg-white/[0.04] transition-all duration-500"
-              >
-                {/* Number */}
-                <span className="text-[11px] font-bold tracking-[0.15em] uppercase mb-6 block" style={{ color: step.color }}>{step.num}</span>
-
-                {/* Icon */}
-                <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6"
-                  style={{ backgroundColor: `${step.color}15`, border: `1px solid ${step.color}20` }}
-                >
-                  <Icon size={24} style={{ color: step.color }} />
+            <div className="relative max-w-[1400px] mx-auto px-6 lg:px-10">
+                {/* Section header */}
+                <div className="grid lg:grid-cols-12 gap-10 mb-16 lg:mb-20 border-t border-[var(--color-paper)]/30 pt-8">
+                    <div className="lg:col-span-3">
+                        <span className="font-mono text-[12px] tracking-[0.18em] text-[var(--color-signal)] font-medium">
+                            §04
+                        </span>
+                        <p className="font-mono text-[11px] tracking-[0.08em] uppercase text-[var(--color-paper)]/55 mt-2">
+                            Como funciona
+                        </p>
+                    </div>
+                    <div className="lg:col-span-6">
+                        <h2
+                            className="text-[2.25rem] sm:text-[2.75rem] lg:text-[3.5rem] leading-[1.02] tracking-[-0.02em] text-[var(--color-paper)]"
+                            style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                        >
+                            De nada a configurador <span className="italic font-light text-[var(--color-paper)]/80">en menos de 48 horas.</span>
+                        </h2>
+                    </div>
+                    <div className="lg:col-span-3 lg:pt-3">
+                        <p className="text-[14px] leading-[1.6] text-[var(--color-paper)]/55">
+                            Sin desarrollos a medida. Sin agencia. Sin esperar tres meses.
+                        </p>
+                    </div>
                 </div>
 
-                <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
-                <p className="text-sm text-white/40 leading-relaxed mb-4">{step.description}</p>
+                {/* Steps as horizontal manual columns */}
+                <ol className="grid md:grid-cols-3 gap-px bg-[var(--color-paper)]/25 border border-[var(--color-paper)]/25">
+                    {STEPS.map((step, i) => (
+                        <motion.li
+                            key={step.num}
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: i * 0.1 }}
+                            className="relative bg-[var(--color-ink)] p-8 lg:p-10"
+                        >
+                            <div className="flex items-baseline justify-between mb-8">
+                                <span
+                                    className="text-[5rem] leading-[0.8] text-[var(--color-paper)]"
+                                    style={{
+                                        fontFamily: 'var(--font-fraunces), Georgia, serif',
+                                        fontFeatureSettings: '"tnum"',
+                                    }}
+                                >
+                                    {step.num}
+                                </span>
+                                <span className="font-mono text-[10.5px] tracking-[0.08em] uppercase text-[var(--color-signal)]">
+                                    {step.meta}
+                                </span>
+                            </div>
 
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-medium" style={{ backgroundColor: `${step.color}15`, color: step.color }}>
-                  {step.detail}
-                </span>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
+                            <h3
+                                className="text-[1.5rem] lg:text-[1.75rem] leading-[1.1] tracking-[-0.01em] text-[var(--color-paper)] mb-4"
+                                style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                            >
+                                {step.title}
+                            </h3>
+                            <p className="text-[14px] leading-[1.65] text-[var(--color-paper)]/65 max-w-[34ch]">
+                                {step.body}
+                            </p>
+
+                            {/* Vertical step thread on mobile */}
+                            {i < STEPS.length - 1 && (
+                                <div
+                                    className="md:hidden absolute left-0 right-0 bottom-0 h-px bg-[var(--color-paper)]/15"
+                                    aria-hidden="true"
+                                />
+                            )}
+                        </motion.li>
+                    ))}
+                </ol>
+
+                {/* Footer note */}
+                <div className="mt-14 flex items-center justify-between border-t border-[var(--color-paper)]/15 pt-6">
+                    <p className="font-mono text-[11px] tracking-[0.08em] uppercase text-[var(--color-paper)]/45">
+                        Acompanamiento 1-a-1 · No tienes que hacerlo solo
+                    </p>
+                    <span className="font-mono text-[11px] tracking-[0.08em] uppercase text-[var(--color-paper)]/45 hidden md:inline">
+                        §04 / Aerolume / Edicion 04
+                    </span>
+                </div>
+            </div>
+        </section>
+    );
 }

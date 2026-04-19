@@ -20,121 +20,134 @@ export function Navigation() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const pathname = usePathname();
 
-    // Only the home page has a dark hero — all other pages are white
-    const hasDarkHero = pathname === '/';
-    const isDark = hasDarkHero && !scrolled;
+    // Home page hero is paper-coloured with a chart grid — nav can sit on top transparent
+    // until scroll. All other pages get the bordered nav from the start.
+    const onHome = pathname === '/';
 
     useEffect(() => {
-        const handleScroll = () => setScrolled(window.scrollY > 40);
+        const handleScroll = () => setScrolled(window.scrollY > 30);
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    const showBorder = scrolled || !onHome;
+
     return (
         <>
             <header
-                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-                    scrolled || !hasDarkHero
-                        ? 'bg-white/95 backdrop-blur-xl border-b border-gray-200/50 shadow-[0_1px_20px_rgba(0,0,0,0.04)]'
+                className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
+                    showBorder
+                        ? 'bg-[var(--color-paper)]/92 backdrop-blur-md border-b border-[var(--color-rule)]'
                         : 'bg-transparent'
                 }`}
             >
-                <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-8">
-                    <Link href="/" className="group flex items-center gap-2">
-                        <Logo variant={isDark ? 'light' : 'dark'} />
+                {/* Top meta bar — feels like a publication masthead */}
+                <div className="hidden lg:block border-b border-[var(--color-rule)]">
+                    <div className="mx-auto max-w-[1400px] px-8 flex items-center justify-between text-[10.5px] tracking-[0.18em] uppercase font-mono text-[var(--color-ink-3)] py-1.5">
+                        <span>Edicion 04 / Vol. I</span>
+                        <span>Configurador embebible · Velerias · Espana</span>
+                        <span>Valencia · 39° 28&apos; N</span>
+                    </div>
+                </div>
+
+                <nav className="mx-auto max-w-[1400px] flex items-center justify-between px-6 lg:px-8 py-4 lg:py-5">
+                    <Link href="/" aria-label="Aerolume — inicio" className="shrink-0">
+                        <Logo variant="dark" />
                     </Link>
 
-                    <div className="hidden lg:flex items-center gap-1">
+                    <div className="hidden lg:flex items-center gap-8">
                         {NAV_LINKS.map((link) => (
                             <Link
                                 key={link.href}
                                 href={link.href}
                                 {...(link.testId ? { 'data-testid': link.testId } : {})}
-                                className={`px-4 py-2 text-[13px] tracking-[0.05em] transition-all duration-300 rounded-lg ${
-                                    isDark
-                                        ? 'text-white/60 hover:text-white hover:bg-white/8'
-                                        : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
-                                }`}
+                                className="text-[13px] tracking-[0.02em] text-[var(--color-ink-2)] hover:text-[var(--color-signal)] transition-colors"
                             >
                                 {link.label}
                             </Link>
                         ))}
                     </div>
 
-                    <div className="hidden lg:flex items-center gap-3">
+                    <div className="hidden lg:flex items-center gap-5">
                         <Link
                             href="/login"
-                            className={`px-4 py-2 text-[13px] tracking-[0.05em] transition-all duration-300 rounded-lg ${
-                                isDark
-                                    ? 'text-white/60 hover:text-white'
-                                    : 'text-gray-500 hover:text-gray-900'
-                            }`}
+                            className="text-[13px] tracking-[0.02em] text-[var(--color-ink-2)] hover:text-[var(--color-ink)] transition-colors"
                         >
                             Acceder
                         </Link>
                         <Link
                             href="/signup"
-                            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-300 hover:-translate-y-0.5 ${
-                                isDark
-                                    ? 'bg-white text-[#0a2540] hover:shadow-lg hover:shadow-white/15'
-                                    : 'bg-[#0a2540] text-white hover:shadow-lg hover:shadow-black/10'
-                            }`}
+                            className="group inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium tracking-[0.02em] text-[var(--color-paper)] bg-[var(--color-ink)] hover:bg-[var(--color-signal)] transition-colors"
                         >
                             Registrate
+                            <span className="block h-px w-3 bg-[var(--color-paper)] transition-all group-hover:w-5" aria-hidden="true" />
                         </Link>
                     </div>
 
                     <button
                         type="button"
                         onClick={() => setMobileOpen(!mobileOpen)}
-                        aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
+                        aria-label={mobileOpen ? 'Cerrar menu' : 'Abrir menu'}
                         aria-expanded={mobileOpen}
-                        className={`lg:hidden p-2 transition-colors ${isDark ? 'text-white/70' : 'text-gray-600'}`}
+                        className="lg:hidden p-2 text-[var(--color-ink)]"
                     >
-                        {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                        {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                     </button>
                 </nav>
             </header>
 
+            {/* Mobile drawer */}
             <AnimatePresence>
                 {mobileOpen && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-40 lg:hidden"
-                        style={{ background: 'linear-gradient(180deg, #0a2540, #0f3460)' }}
+                        transition={{ duration: 0.2 }}
+                        className="fixed inset-0 z-40 lg:hidden bg-[var(--color-paper)]"
                     >
-                        <div className="flex flex-col items-center justify-center h-full gap-8">
-                            {NAV_LINKS.map((link, i) => (
-                                <motion.div
-                                    key={link.href}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.08 }}
+                        <div className="flex h-full flex-col px-6 pt-24 pb-10">
+                            <ul className="flex flex-col gap-1 border-t border-[var(--color-rule)]">
+                                {NAV_LINKS.map((link, i) => (
+                                    <li key={link.href} className="border-b border-[var(--color-rule)]">
+                                        <Link
+                                            href={link.href}
+                                            onClick={() => setMobileOpen(false)}
+                                            {...(link.testId ? { 'data-testid': link.testId } : {})}
+                                            className="flex items-baseline justify-between py-5"
+                                        >
+                                            <span
+                                                className="text-[2rem] tracking-[-0.01em] text-[var(--color-ink)]"
+                                                style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                                            >
+                                                {link.label}
+                                            </span>
+                                            <span className="font-mono text-[11px] tracking-[0.15em] text-[var(--color-ink-3)]">
+                                                {String(i + 1).padStart(2, '0')}
+                                            </span>
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+
+                            <div className="mt-10 flex flex-col gap-3">
+                                <Link
+                                    href="/login"
+                                    onClick={() => setMobileOpen(false)}
+                                    className="border border-[var(--color-ink)] px-5 py-4 text-center text-[13px] tracking-[0.02em] text-[var(--color-ink)]"
                                 >
-                                    <Link
-                                        href={link.href}
-                                        onClick={() => setMobileOpen(false)}
-                                        className="text-3xl font-light tracking-[0.12em] text-white/70 hover:text-white transition-colors font-[family-name:var(--font-cormorant)]"
-                                    >
-                                        {link.label}
-                                    </Link>
-                                </motion.div>
-                            ))}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.4 }}
-                            >
+                                    Acceder
+                                </Link>
                                 <Link
                                     href="/signup"
                                     onClick={() => setMobileOpen(false)}
-                                    className="mt-4 inline-flex px-8 py-3 rounded-xl bg-white text-[#0a2540] text-sm font-semibold"
+                                    className="bg-[var(--color-ink)] px-5 py-4 text-center text-[13px] tracking-[0.02em] text-[var(--color-paper)]"
                                 >
                                     Registrate
                                 </Link>
-                            </motion.div>
+                            </div>
+
+                            <p className="mt-auto label-mono">Aerolume / Edicion 04 / Vol. I</p>
                         </div>
                     </motion.div>
                 )}

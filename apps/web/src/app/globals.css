@@ -1,35 +1,61 @@
 @import "tailwindcss";
 
 :root {
-    /* Marine palette — whites & blues */
-    --color-deep: #ffffff;
-    --color-surface: #f4f8fc;
+    /* Editorial náutico — paper, ink, signal */
+    --color-paper: #f5f1e8;          /* warm cream — main bg */
+    --color-paper-2: #efe9db;        /* slightly darker for sections */
+    --color-paper-3: #e6dfce;        /* divider stripe */
+    --color-ink: #0d1f2d;            /* deep navy-near-black */
+    --color-ink-2: #1c2f40;          /* secondary text */
+    --color-ink-3: #56616d;          /* muted text */
+    --color-ink-4: #8a8e90;          /* faint label */
+    --color-rule: rgba(13, 31, 45, 0.14);
+    --color-rule-strong: rgba(13, 31, 45, 0.32);
+
+    /* Signal — used sparingly */
+    --color-signal: #c4452d;         /* signal flag red */
+    --color-signal-dim: #a83a26;
+    --color-sea: #1d4a6b;            /* muted ocean blue */
+    --color-sea-dim: #133b58;
+
+    /* Legacy aliases (keep until configurator/dashboard updated) */
+    --color-deep: var(--color-paper);
+    --color-surface: var(--color-paper-2);
     --color-card: #ffffff;
-    --color-card-hover: #eef4fa;
-    --color-border: rgba(10, 45, 90, 0.08);
-    --color-border-strong: rgba(10, 45, 90, 0.16);
-
-    /* Accent — ocean blue */
-    --color-accent: #0b5faa;
-    --color-accent-dim: #1a7fd4;
-    --color-accent-glow: rgba(11, 95, 170, 0.15);
-    --color-accent-light: #e8f1fb;
-
-    /* Navy — deep sections */
-    --color-navy: #0a2540;
-    --color-navy-light: #0f3460;
-
-    /* Text hierarchy */
-    --color-text: #0a1e3d;
-    --color-text-secondary: #4a6382;
-    --color-text-muted: #8899aa;
+    --color-card-hover: var(--color-paper-2);
+    --color-border: var(--color-rule);
+    --color-border-strong: var(--color-rule-strong);
+    --color-accent: var(--color-sea);
+    --color-accent-dim: var(--color-sea-dim);
+    --color-accent-glow: rgba(29, 74, 107, 0.15);
+    --color-accent-light: #e8eef3;
+    --color-navy: var(--color-ink);
+    --color-navy-light: var(--color-ink-2);
+    --color-text: var(--color-ink);
+    --color-text-secondary: var(--color-ink-2);
+    --color-text-muted: var(--color-ink-3);
 
     /* Typography */
-    --font-display: var(--font-cormorant);
-    --font-body: var(--font-manrope);
+    --font-display: var(--font-fraunces);
+    --font-body: var(--font-inter);
+    --font-serif: var(--font-fraunces);
 }
 
 @theme inline {
+    --color-paper: var(--color-paper);
+    --color-paper-2: var(--color-paper-2);
+    --color-paper-3: var(--color-paper-3);
+    --color-ink: var(--color-ink);
+    --color-ink-2: var(--color-ink-2);
+    --color-ink-3: var(--color-ink-3);
+    --color-ink-4: var(--color-ink-4);
+    --color-rule: var(--color-rule);
+    --color-rule-strong: var(--color-rule-strong);
+    --color-signal: var(--color-signal);
+    --color-signal-dim: var(--color-signal-dim);
+    --color-sea: var(--color-sea);
+    --color-sea-dim: var(--color-sea-dim);
+
     --color-deep: var(--color-deep);
     --color-surface: var(--color-surface);
     --color-card: var(--color-card);
@@ -45,8 +71,10 @@
     --color-text: var(--color-text);
     --color-text-secondary: var(--color-text-secondary);
     --color-text-muted: var(--color-text-muted);
+
     --font-display: var(--font-display);
     --font-body: var(--font-body);
+    --font-serif: var(--font-serif);
 }
 
 /* ── Base ────────────────────────────────── */
@@ -56,39 +84,89 @@ html {
 }
 
 body {
-    background: var(--color-deep);
-    color: var(--color-text);
+    background: var(--color-paper);
+    color: var(--color-ink);
     font-family: var(--font-body), system-ui, sans-serif;
+    font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
 ::selection {
-    background: var(--color-accent);
-    color: #ffffff;
+    background: var(--color-ink);
+    color: var(--color-paper);
 }
 
-/* ── Glow effects ────────────────────────── */
+/* ── Editorial type helpers ──────────────── */
 
-.glow-line {
-    background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+.font-serif-display {
+    font-family: var(--font-fraunces), Georgia, serif;
+    font-optical-sizing: auto;
+    font-feature-settings: "ss01";
+    letter-spacing: -0.02em;
+}
+
+.font-mono {
+    font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+.label-mono {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-3);
+}
+
+/* ── Hairline rule ───────────────────────── */
+
+.hairline {
+    background: var(--color-rule);
     height: 1px;
 }
 
-/* ── Dark sections ──────────────────────── */
+.hairline-strong {
+    background: var(--color-rule-strong);
+    height: 1px;
+}
+
+/* ── Paper noise — subtle texture for hero ─ */
+
+.bg-paper-noise {
+    background-color: var(--color-paper);
+    background-image:
+        radial-gradient(rgba(13, 31, 45, 0.025) 1px, transparent 1px);
+    background-size: 3px 3px;
+}
+
+/* Print-style faint grid (hero background) */
+.bg-chart-grid {
+    background-image:
+        linear-gradient(to right, rgba(13, 31, 45, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(13, 31, 45, 0.05) 1px, transparent 1px);
+    background-size: 80px 80px;
+}
+
+/* ── Legacy classes still referenced ─────── */
+
+.glow-line {
+    background: linear-gradient(90deg, transparent, var(--color-rule-strong), transparent);
+    height: 1px;
+}
 
 .bg-dark-gradient {
-    background: linear-gradient(160deg, #040e1a 0%, #0a2540 40%, #0d3158 70%, #0a2540 100%);
+    background: var(--color-ink);
 }
 
 .bg-grain {
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
     background-repeat: repeat;
     pointer-events: none;
 }
 
 .bg-dot-grid {
-    background-image: radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px);
+    background-image: radial-gradient(circle, rgba(245, 241, 232, 0.4) 1px, transparent 1px);
     background-size: 32px 32px;
     pointer-events: none;
 }
@@ -96,19 +174,29 @@ body {
 /* ── Scrollbar ───────────────────────────── */
 
 ::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--color-surface);
+    background: var(--color-paper);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--color-text-muted);
-    border-radius: 3px;
+    background: var(--color-rule-strong);
+    border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-text-secondary);
+    background: var(--color-ink-3);
 }
 
+/* ── Marquee for ticker ──────────────────── */
+
+@keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+    animation: marquee 40s linear infinite;
+}
