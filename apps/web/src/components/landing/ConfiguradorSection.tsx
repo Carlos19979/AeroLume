@@ -45,11 +45,6 @@ export function ConfiguradorSection() {
                             Configura una vela. <span className="italic font-light">Como lo haria tu cliente.</span>
                         </h2>
                     </div>
-                    <div className="lg:col-span-3 lg:pt-3">
-                        <p className="text-[14px] leading-[1.6] text-[var(--color-ink-2)]">
-                            Datos reales, productos reales. Esto es exactamente lo que veria alguien en la web de tu veleria.
-                        </p>
-                    </div>
                 </div>
 
                 <motion.div

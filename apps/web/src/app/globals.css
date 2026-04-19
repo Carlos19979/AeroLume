@@ -200,3 +200,21 @@ body {
 .animate-marquee {
     animation: marquee 40s linear infinite;
 }
+
+/* ── Justified body text in marketing pages ─────────────────────
+   Aplica text-align: justify + hyphens auto a párrafos de marketing.
+   Excluye labels técnicos (.label-mono) y texto pequeño (≤12px) donde
+   justify suele crear "rivers" feos. Si algún <p> queda mal, añadirle
+   className="text-left" para opt-out localmente. */
+.prose-body p {
+    text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    text-justify: inter-word;
+}
+
+.prose-body p.label-mono,
+.prose-body .label-mono {
+    text-align: left;
+    hyphens: manual;
+}

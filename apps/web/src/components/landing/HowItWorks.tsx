@@ -59,11 +59,6 @@ export function HowItWorks() {
                             De nada a configurador <span className="italic font-light text-[var(--color-paper)]/80">en menos de 48 horas.</span>
                         </h2>
                     </div>
-                    <div className="lg:col-span-3 lg:pt-3">
-                        <p className="text-[14px] leading-[1.6] text-[var(--color-paper)]/55">
-                            Sin desarrollos a medida. Sin agencia. Sin esperar tres meses.
-                        </p>
-                    </div>
                 </div>
 
                 {/* Steps as horizontal manual columns */}

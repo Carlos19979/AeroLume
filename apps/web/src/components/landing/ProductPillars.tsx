@@ -46,11 +46,6 @@ export function ProductPillars() {
                             Tres piezas. Una <span className="italic font-light">caja de herramientas</span> para vender velas online.
                         </h2>
                     </div>
-                    <div className="lg:col-span-3 lg:pt-3">
-                        <p className="text-[14px] leading-[1.6] text-[var(--color-ink-2)]">
-                            Pensado para velerias, no para developers. Lo instalas en horas, no en sprints.
-                        </p>
-                    </div>
                 </div>
 
                 {/* Pillars as a list, not as cards. Heavy hairline rules separate them. */}
