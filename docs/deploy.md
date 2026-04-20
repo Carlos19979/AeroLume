@@ -97,6 +97,10 @@ Hay 2 workflows en `.github/workflows/`:
 
 Ambos corren en cada push a `master`/`main` y en cada PR. Vercel hace su deploy independientemente; si quieres que el deploy espere a CI verde, configura "Ignored Build Step" en Vercel con un comando que consulte el estado del commit.
 
+## Observabilidad (Vercel Speed Insights)
+
+La app integra [`@vercel/speed-insights`](https://vercel.com/docs/speed-insights) en el root layout de `apps/web` para medir Core Web Vitals en produccion. No requiere configuracion adicional — se activa automaticamente cuando el deploy corre en Vercel. Los datos aparecen en el dashboard de Vercel → Speed Insights.
+
 ## Domains
 
 Configurar en Vercel → Domains. Supabase y LemonSqueezy no requieren nada adicional salvo actualizar el webhook URL en LS cuando cambies de dominio.

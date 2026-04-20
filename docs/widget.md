@@ -194,9 +194,26 @@ El widget detecta automaticamente si esta en desarrollo o produccion:
 
 ## Requisitos del tenant
 
-Para que el widget funcione, el tenant debe:
+Para que el widget funcione, el tenant debe estar en uno de estos estados (ver `validateApiKey` en `apps/web/src/lib/api-auth.ts`):
 
-1. Tener plan `pro` con estado `active`
-2. Tener al menos una API key valida (no expirada)
-3. Tener productos activos configurados
-4. (Recomendado) Configurar `allowedOrigins` en settings para mayor seguridad
+1. Plan `pro` con `subscription_status = 'active'`, **o**
+2. Plan `prueba` con `trial_ends_at > now` (trial activo), **o**
+3. `subscription_status = 'canceled'` con `cancelation_grace_ends_at > now` (gracia de 7 dias post-cancelacion)
+
+Ademas:
+- Al menos una API key valida (no expirada).
+- Productos activos configurados.
+- Recomendado: `allowedOrigins` configurado en settings para bloquear embebidos en dominios ajenos.
+
+Cuando el tenant queda fuera de esos estados, tanto el SSR de `/embed/page.tsx` como la API v1 responden con `403 Account inactive` — el iframe muestra un mensaje breve de mantenimiento en lugar del configurador.
+
+## Eventos de analytics persistidos
+
+Independientemente de los callbacks de postMessage, el widget emite eventos de analytics a `POST /api/v1/analytics` con el siguiente enum fijo de 4 valores:
+
+- `configurator_opened` — al montar el widget.
+- `boat_search` — al buscar o seleccionar un barco (antes se emitia `boat_selected`, que no estaba en el enum y se rechazaba con `400` — corregido).
+- `product_view` — al ver o seleccionar un producto (antes `product_selected`, mismo bug corregido).
+- `quote_created` — tras crear presupuesto.
+
+No existen eventos de "quote enviado/aceptado/rechazado" — el ciclo de vida del presupuesto se trackea via `quotes.status`, no via analytics.

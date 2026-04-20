@@ -48,6 +48,20 @@ Al recibir un request con `x-api-key`:
 - No existe funcionalidad de "ver key" despues de la creacion
 - Se puede revocar eliminando el registro de la tabla
 
+## RLS (Row-Level Security)
+
+Las tablas sensibles tienen RLS habilitada en Supabase. `product_pricing_tiers` sigue el mismo patron que `product_config_fields` (policies espejo aplicadas via la migracion Supabase `enable_rls_product_pricing_tiers`) — el acceso esta restringido al tenant dueño del producto via join con `products`.
+
+Las rutas internas (`/api/internal/*`) usan la connection string directa de Drizzle (no el cliente Supabase con sesion RLS), por lo que el aislamiento de tenant se garantiza **en codigo** aplicando `eq(table.tenantId, tenant.id)` en cada query. La RLS actua como defensa en profundidad para evitar que una query mal filtrada filtre datos entre tenants.
+
+## Datos internos nunca expuestos por la API publica
+
+La respuesta de `GET /api/v1/products` **strippea** los siguientes campos antes de devolverlos al widget:
+- `tenantId` — detalle interno de multi-tenancy.
+- `costPerSqm` — tanto del producto como de cada fila de `pricingTiers`. El coste es informacion confidencial del retailer.
+
+El precio final de una linea de presupuesto se calcula server-side en `POST /api/v1/quotes` via `priceItem()` (`apps/web/src/lib/pricing.ts`); nunca se confia en `unitPrice` / `cost` recibidos del cliente.
+
 ## Validacion de Origen
 
 ### Configuracion

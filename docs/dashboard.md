@@ -12,14 +12,14 @@ Todas las rutas estan bajo el route group `(dashboard)` de Next.js, que comparte
 |---|---|---|
 | `/dashboard` | Home | Vista general: stats rapidas, ultimos presupuestos, estado del plan |
 | `/dashboard/boats` | Barcos | Lista de barcos del tenant (custom). Buscar y ver barcos globales |
-| `/dashboard/products` | Productos | CRUD de productos de velas con campos de configuracion |
-| `/dashboard/products/[id]` | Detalle producto | Editar producto, gestionar config fields y price modifiers |
+| `/dashboard/products` | Productos | Lista de productos. Columnas: **Nombre · Tipo de vela · Estado** (la columna "Precio/m²" se eliminó) |
+| `/dashboard/products/[id]` | Detalle producto | Editar producto con **Coste base (EUR/m²)** + **PVP base (EUR/m²)** independientes, seccion **Tiers de precio por m²** (tabla editable min/max/cost/msrp, bulk save), config fields con toggle **EUR \| %** por opcion (mutuamente excluyentes). Bloque colapsable "¿Cómo se calculan los precios?" con formula y ejemplo |
 | `/dashboard/quotes` | Presupuestos | Lista de presupuestos recibidos con filtros por estado |
 | `/dashboard/quotes/[id]` | Detalle presupuesto | Ver detalle, cambiar estado (draft -> sent -> accepted/rejected) |
 | `/dashboard/api-keys` | API Keys | Generar, ver y revocar claves API para el widget |
-| `/dashboard/analytics` | Analiticas | Metricas de uso del widget: aperturas, busquedas, presupuestos |
-| `/dashboard/theme` | Tema | Personalizar colores, fuentes y logo del configurador |
-| `/dashboard/settings` | Configuracion | Datos de empresa, webhook URL, origenes permitidos, locale, moneda |
+| `/dashboard/analytics` | Analiticas | KPI cards, barras por dia, tops con barras de progreso, **embudo de conversion** de 3 etapas (Aperturas → Solicitudes → Cerrados, con % entre etapas y conversion total), InsightPills (Ingresos cerrados €, Dias con actividad). La card "Presupuestos" cuenta filas reales de `quotes`, no eventos |
+| `/dashboard/theme` | Personalizar | Editor de 5 pasos (Paso 1 · Paso 2 · Opciones · Vista previa · Contacto). Campos extra: `themeCtaLabel`, `themeContactTitle`, `themeContactSubtitle`. La vista previa reutiliza `EmbedConfigurator` en modo preview con mock data — se ve como el widget real |
+| `/dashboard/settings` | Configuracion | Datos de empresa, webhook URL, origenes permitidos, locale, moneda, detalles tecnicos y **gestion de subscripcion** (card propia). La ruta `/dashboard/subscription` ya no existe — se fusionó aqui |
 
 ### Autenticacion en Server Pages
 
@@ -120,17 +120,19 @@ La cookie de impersonacion:
 
 ### Permisos por plan
 
-| Accion | prueba (trial activo) | prueba (trial expirado) | pro + active | pro + past_due | canceled |
-|---|---|---|---|---|---|
-| Ver dashboard | Si | Si (read-only) | Si | Si (con banner) | No (bloqueado) |
-| Crear/editar productos | Si | No | Si | No | No |
-| Generar API keys | Si | No | Si | No | No |
-| Recibir presupuestos | Si | No | Si | No | No |
-| Editar tema | Si | No | Si | Si | No |
-| Editar configuracion | Si | No | Si | Si | No |
-| Widget funcional | Si | No | Si | No | No |
+| Accion | prueba (trial activo) | prueba (trial expirado) | pro + active | pro + past_due | canceled + grace | canceled (expirada) |
+|---|---|---|---|---|---|---|
+| Ver dashboard | Si | Si (read-only) | Si | Si (con banner) | Si | No (pantalla "acceso expirado") |
+| Crear/editar productos | Si | No | Si | No | Si | No |
+| Generar API keys | Si | No | Si | No | Si | No |
+| Recibir presupuestos | Si | No | Si | No | Si | No |
+| Editar tema | Si | No | Si | Si | Si | No |
+| Editar configuracion | Si | No | Si | Si | Si | No |
+| Widget funcional | Si | No | Si | No | Si | No |
 
-El trial dura 7 dias desde el registro. Durante el trial activo el usuario tiene acceso completo (igual que pro). Al expirar, el dashboard pasa a read-only y las API keys dejan de funcionar. El desbloqueo se hace manualmente desde `/admin` cambiando el plan a `pro`.
+El trial dura 7 dias desde el registro. Durante el trial activo el usuario tiene acceso completo (igual que pro). Al expirar, el dashboard pasa a read-only y las API keys dejan de funcionar.
+
+**Cancelacion con gracia de 7 dias:** cuando el retailer cancela su suscripcion (via `POST /api/internal/cancel-subscription`), `subscription_status` pasa a `canceled` y se fija `cancelation_grace_ends_at = now + 7 dias`. Mientras dura la gracia (`isCanceledInGrace`) conserva acceso completo; al expirar (`isCanceledExpired`), el layout del dashboard bloquea todo y `withTenantAuth` rechaza mutaciones con `403`. Los webhooks LS limpian `cancelation_grace_ends_at` al reactivar.
 
 ### Banners en dashboard
 
@@ -139,7 +141,8 @@ El trial dura 7 dias desde el registro. Durante el trial activo el usuario tiene
 | `prueba` (trial activo) | "Periodo de prueba — X dias restantes." (azul) |
 | `prueba` (trial expirado) | "Tu periodo de prueba ha expirado. Contacta con nosotros para activar tu cuenta." (ambar) |
 | `pro + past_due` | "Tu pago esta pendiente. Tienes 7 dias para regularizar o tu cuenta sera suspendida." (rojo) |
-| `canceled` | Pantalla completa de bloqueo (no solo banner) |
+| `canceled + gracia activa` | "Tu suscripcion se cancelara el <fecha>. Mantendras acceso hasta entonces." (banner `canceled_grace`) |
+| `canceled + gracia expirada` / `expired` | Pantalla "acceso expirado" con CTA de suscripcion (banner `access_expired`) |
 | `pro + active` | Sin banner |
 
 ## Componentes Compartidos

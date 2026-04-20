@@ -144,6 +144,21 @@ Archivo: `lib/plan-gates.ts`
 
 **Trial:** Los usuarios se registran con plan `prueba` y 7 dias de trial. Durante el trial activo tienen acceso completo (mismo que pro). Al expirar, `withTenantAuth` bloquea mutaciones (POST/PUT/DELETE) y `validateApiKey` rechaza las API keys. El dashboard queda en read-only con banner de aviso.
 
+**Grace period post-cancelacion (7 dias):** Cuando el retailer cancela su suscripcion (`POST /api/internal/cancel-subscription`):
+- `subscription_status` pasa a `canceled` y se fija `cancelation_grace_ends_at = now + 7 dias`.
+- Durante la gracia, `canCreateProducts`, el widget (`validateApiKey`) y las mutaciones en `/api/internal/*` siguen funcionando (ver `isCanceledInGrace` en `plan-gates.ts`).
+- Al expirar la gracia (`isCanceledExpired`), el dashboard muestra pantalla de "acceso expirado", `withTenantAuth` rechaza mutaciones con `403 Trial expired` y el widget responde `403 Account inactive`.
+- Los webhooks LS limpian `cancelation_grace_ends_at` al reactivar (eventos `subscription_updated` con status `active`, `subscription_payment_success`, `subscription_expired`).
+
+**Pricing engine:** El calculo de precios vive exclusivamente en `apps/web/src/lib/pricing.ts` (`priceItem()`) y se invoca desde `POST /api/v1/quotes` — nunca se confia en `unitPrice` / `cost` enviados por el cliente. Reglas:
+1. Si existe un `product_pricing_tiers` cuyo `[minSqm, maxSqm]` contiene el area de vela, se usan `costPerSqm` / `msrpPerSqm` del tier.
+2. Si no hay tier que aplique, se cae al `product.costPerSqm` / `product.basePrice`.
+3. Los modificadores de `product_config_fields` se suman al resultado:
+   - `priceModifiers` (EUR planos) → `flatAdd` (sumado a coste y PVP por igual, preserva margen).
+   - `percentModifiers` (fraccion decimal, p.ej. `0.10` = +10%) → multiplica coste y PVP.
+   - Ambos son mutuamente excluyentes por opcion en la UI.
+4. Formula final: `(sailArea × perSqm + Σ EUR) × (1 + Σ %)` → devuelve `{ cost, msrp }`.
+
 ### Super Admin
 
 - Se configura via la variable de entorno `SUPER_ADMIN_EMAILS` (lista separada por comas)
@@ -215,6 +230,8 @@ Via `window.postMessage` con verificacion de origen:
 | `aerolume:boat-selected` | iframe -> host | Datos del barco |
 | `aerolume:product-selected` | iframe -> host | Datos del producto |
 | `aerolume:quote-created` | iframe -> host | Datos del presupuesto |
+
+> **Nota:** los eventos de **postMessage** (`aerolume:*`) son para integracion con la web del retailer. Los eventos de **analytics** persistidos en DB son otros (enum de 4 valores: `configurator_opened`, `boat_search`, `product_view`, `quote_created`) — ver `docs/api.md → POST /api/v1/analytics`.
 
 ## Sistema de Webhooks
 

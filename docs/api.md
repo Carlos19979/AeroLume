@@ -27,8 +27,9 @@ El proceso de validacion de la API key (`validateApiKey`) es:
 La API v1 funciona cuando el tenant cumple una de estas condiciones:
 - `plan = 'pro'` y `subscription_status = 'active'`
 - `plan = 'prueba'` y `trial_ends_at > now` (trial activo de 7 dias)
+- `subscription_status = 'canceled'` y `cancelation_grace_ends_at > now` (7 dias de gracia post-cancelacion)
 
-Si no se cumplen, la API devuelve `403 Account inactive`.
+Si no se cumplen, la API devuelve `403 Account inactive`. El widget (SSR de `/embed`) aplica la misma regla y muestra un mensaje de mantenimiento cuando la gracia expira.
 
 ## Rate Limiting
 
@@ -159,6 +160,8 @@ curl -H "x-api-key: ak_xxx" \
 
 **Respuesta:**
 
+> **Nota de seguridad:** la respuesta publica **nunca** incluye `tenantId` ni `costPerSqm` (ni del producto ni de los tiers) — son datos internos. El calculo final de precio lo hace el servidor en `POST /api/v1/quotes` via `priceItem()`.
+
 ```json
 {
   "data": [
@@ -167,12 +170,32 @@ curl -H "x-api-key: ak_xxx" \
       "name": "Mayor Crucero Dacron",
       "slug": "mayor-crucero-dacron",
       "sailType": "gvstd",
+      "variant": "cruising",
       "basePrice": "1200.00",
       "currency": "EUR",
       "descriptionShort": "Vela mayor standard para crucero",
       "images": ["https://..."],
+      "features": ["Tejido Dacron premium", "2 rizos incluidos"],
       "active": true,
       "sortOrder": 0,
+      "pricingTiers": [
+        {
+          "id": "uuid",
+          "productId": "uuid",
+          "minSqm": "0.00",
+          "maxSqm": "30.00",
+          "msrpPerSqm": "85.00",
+          "sortOrder": 0
+        },
+        {
+          "id": "uuid",
+          "productId": "uuid",
+          "minSqm": "30.01",
+          "maxSqm": "50.00",
+          "msrpPerSqm": "75.00",
+          "sortOrder": 1
+        }
+      ],
       "configFields": [
         {
           "id": "uuid",
@@ -293,9 +316,7 @@ Registra un evento de analitica desde el widget.
   "eventType": "configurator_opened",
   "boatModel": "Beneteau Oceanis 38",
   "productId": "uuid (opcional)",
-  "sailType": "gvstd (opcional)",
-  "metadata": {},
-  "sessionId": "session-uuid (opcional)"
+  "sailType": "gvstd (opcional)"
 }
 ```
 
@@ -305,14 +326,14 @@ Registra un evento de analitica desde el widget.
 | `boatModel` | string | No | Modelo de barco |
 | `productId` | string | No | UUID del producto |
 | `sailType` | string | No | Tipo de vela |
-| `metadata` | object | No | Datos adicionales arbitrarios |
-| `sessionId` | string | No | ID de sesion del widget |
 
-**Tipos de evento:**
-- `configurator_opened` - Widget abierto
-- `boat_search` - Busqueda realizada
-- `product_view` - Producto visualizado
-- `quote_created` - Presupuesto creado
+**Tipos de evento (los unicos aceptados por el schema Zod):**
+- `configurator_opened` — Widget abierto
+- `boat_search` — Busqueda o seleccion de barco en el widget
+- `product_view` — Producto visualizado / seleccionado
+- `quote_created` — Presupuesto creado
+
+> El ciclo de vida del presupuesto (aceptado / rechazado / enviado) **no** se emite como evento: se trackea leyendo la columna `quotes.status`. Eventos desconocidos se rechazan con `400`.
 
 **Headers automaticos capturados:**
 - `x-forwarded-for` -> `ip_address`
@@ -343,7 +364,10 @@ Estos endpoints NO son parte de la API publica. Usan autenticacion via sesion Su
 | GET | `/api/internal/products/[id]` | Detalle producto |
 | PUT | `/api/internal/products/[id]` | Actualiza producto |
 | DELETE | `/api/internal/products/[id]` | Elimina producto |
-| GET/POST | `/api/internal/products/[id]/fields` | Gestiona config fields |
+| GET/POST | `/api/internal/products/[id]/fields` | Gestiona config fields (incluye `priceModifiers` EUR y `percentModifiers` %) |
+| GET | `/api/internal/products/[id]/tiers` | Lista tiers de precio por m² |
+| PUT | `/api/internal/products/[id]/tiers` | Bulk replace (delete + insert). Valida `max > min`, precios ≥ 0 y ausencia de overlap |
+| POST | `/api/internal/cancel-subscription` | Cancela suscripcion LS (si hay `lsSubscriptionId`) y fija gracia local de 7 dias. Tenants promocionados a mano saltan la llamada a LS |
 | GET | `/api/internal/quotes` | Lista presupuestos |
 | GET | `/api/internal/quotes/[id]` | Detalle presupuesto |
 | PATCH | `/api/internal/quotes/[id]` | Actualiza estado |

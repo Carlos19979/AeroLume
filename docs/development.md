@@ -91,6 +91,19 @@ const data = validation.data; // Tipado automaticamente
 
 - **TODOS** los campos escritos a la DB deben pasar por validacion Zod. Nunca leer directamente de `body.field` — siempre usar `validation.data` del schema validado.
 - Al anadir nuevos campos a un endpoint PUT/POST, siempre expandir el schema Zod correspondiente en `@/lib/validations.ts`.
+- Los schemas que recibe el embed o el dashboard deben aceptar `null` en campos opcionales que el cliente envia como `null` (y no `undefined`). Patron: `z.string().optional().nullable()`. Ver `createQuoteSchema` y `updateTenantSettingsSchema` como referencia.
+
+### Precios server-side (pricing.ts)
+
+- Nunca confiar en `unitPrice` / `cost` enviados por el cliente. El calculo vive en la funcion pura `priceItem()` de `apps/web/src/lib/pricing.ts` y se invoca desde `POST /api/v1/quotes`.
+- Orden de resolucion: 1) tier de `product_pricing_tiers` que matchea el area → 2) fallback a `product.basePrice` / `product.costPerSqm`.
+- Modificadores de `product_config_fields`: `priceModifiers` (EUR planos, `flatAdd`) y `percentModifiers` (fracciones, `percentAdd`). Se aplican tanto al coste como al PVP para preservar margen. Formula: `(sailArea × perSqm + Σ EUR) × (1 + Σ %)`.
+- En la UI del product editor son mutuamente excluyentes por opcion (toggle EUR | %).
+
+### Trial gate y grace period
+
+- Los checks de plan en rutas internas que mutan deben leer `trialEndsAt` y `cancelationGraceEndsAt` del tenant, no solo `plan` (ver `isAccessExpired` en `@/lib/auth-helpers`).
+- Usar los helpers de `@/lib/plan-gates`: `isCanceledInGrace`, `isCanceledExpired`, `canCreateProducts`, `canCreateApiKeys`, etc. Aceptan el par `{ plan, trialEndsAt, cancelationGraceEndsAt, subscriptionStatus }`.
 
 ### Formato de Fechas y Numeros
 
@@ -313,6 +326,20 @@ api/internal/recurso/
 - Utilidades de formato (`formatPrice`, `formatDimension`, `toNumber`)
 - Funciones de normalizacion
 - Importar: `import { toNumber, formatPrice } from '@aerolume/shared';`
+
+## Scripts ad-hoc en `apps/web/scripts/`
+
+Scripts puntuales de mantenimiento y debugging. Se ejecutan con `pnpm tsx apps/web/scripts/<nombre>.ts` desde la raiz del repo. Leen `DATABASE_URL` de `apps/web/.env.local`.
+
+| Script | Proposito |
+|---|---|
+| `backfill-quote-totals.ts` | One-shot: rellena `quotes.total_price` donde es NULL sumando `unit_price` de sus `quote_items`. Opcionalmente `TENANT_ID=<uuid>` para restringir |
+| `check-demo-key-owner.ts` | Imprime el tenant dueño de `NEXT_PUBLIC_DEMO_API_KEY` — util para verificar que el seed apunto a la cuenta esperada |
+| `clean-test-data.ts` | Limpieza destructiva en la DB: borra tenants / auth users / quotes cuyo email/slug matchea `e2e-*` o `%@aerolume.test`. Respeta el tenant real `aerolume` (solo borra sus quotes de test) |
+| `debug-analytics.ts` | Inspecciona eventos de analytics del tenant `aerolume`: conteo por tipo, por dia, ultimas filas. Util para depurar el embudo |
+| `inspect-tenants.ts` | Lista tenants + owners (email desde Supabase auth) para auditar quien existe en produccion |
+
+Scripts preexistentes (documentados por contexto): `check-admin.ts`, `delete-admin.ts`, `clean-e2e-tenants.ts`, `count-e2e.ts`.
 
 ## Testing
 

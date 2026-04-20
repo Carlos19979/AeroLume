@@ -37,16 +37,21 @@
                                   │             │
                                   │ 1:N         │ 1:N
                                   ▼             ▼
-                            ┌──────────┐  ┌──────────┐  ┌──────────────┐
-                            │product_  │  │quote_    │  │analytics_    │
-                            │config_   │  │items     │  │events        │
-                            │fields    │  │──────────│  │──────────────│
-                            │──────────│  │quoteId   │  │tenantId      │
-                            │productId │  │productId?│  │eventType     │
-                            │key       │  │sailType  │  │boatModel     │
-                            │label     │  │unitPrice │  │metadata      │
-                            │options   │  │config    │  │sessionId     │
-                            └──────────┘  └──────────┘  └──────────────┘
+                ┌─────────────┴──┐
+                │                │
+                ▼                ▼
+      ┌──────────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐
+      │product_      │  │product_  │  │quote_    │  │analytics_    │
+      │pricing_tiers │  │config_   │  │items     │  │events        │
+      │──────────────│  │fields    │  │──────────│  │──────────────│
+      │productId     │  │──────────│  │quoteId   │  │tenantId      │
+      │minSqm        │  │productId │  │productId?│  │eventType     │
+      │maxSqm        │  │key       │  │sailType  │  │boatModel     │
+      │costPerSqm    │  │label     │  │unitPrice │  │productId     │
+      │msrpPerSqm    │  │options   │  │config    │  │sailType      │
+      └──────────────┘  │priceMods │  └──────────┘  └──────────────┘
+                        │percentMo │
+                        └──────────┘
 ```
 
 ## Enums
@@ -66,7 +71,8 @@
 | `trialing` | En periodo de prueba |
 | `active` | Suscripcion activa |
 | `past_due` | Pago pendiente (7 dias para regularizar) |
-| `canceled` | Cancelada (cuenta bloqueada) |
+| `canceled` | Cancelada — conserva acceso mientras `cancelation_grace_ends_at > now()` (7 dias). Al expirar la gracia queda bloqueada |
+| `expired` | Sin suscripcion activa (gracia agotada o `subscription_expired` de LemonSqueezy). Sin acceso |
 
 ### `member_role`
 
@@ -85,6 +91,14 @@
 | `accepted` | Aceptado por el cliente |
 | `rejected` | Rechazado |
 | `expired` | Expirado |
+
+### `product_variant`
+
+| Valor | Descripcion |
+|---|---|
+| `cruising` | Crucero (gama entrada) |
+| `cruising_plus` | Crucero plus |
+| `cruising_racing` | Crucero-regata |
 
 ### `sail_type`
 
@@ -131,12 +145,17 @@ Tabla principal de clientes (retailers).
 | `theme_color_main` | text | default '#3b82f6' | Color grupo vela mayor |
 | `theme_color_head` | text | default '#10b981' | Color grupo vela proa |
 | `theme_color_spi` | text | default '#a855f7' | Color grupo spinnaker |
+| `theme_cta_label` | text | default 'Solicitar presupuesto' | Label del boton CTA del configurador |
+| `theme_contact_title` | text | default 'Datos de contacto' | Titulo del paso de contacto |
+| `theme_contact_subtitle` | text | default 'Para enviarte el presupuesto detallado.' | Subtitulo del paso de contacto |
 | `locale` | text | default 'es' | Idioma |
 | `currency` | text | default 'EUR' | Moneda |
 | `plan` | tenant_plan | default 'prueba' | Plan actual |
-| `stripe_customer_id` | text | | ID de cliente Stripe |
+| `ls_customer_id` | text | | ID de cliente LemonSqueezy |
+| `ls_subscription_id` | text | | ID de suscripcion LemonSqueezy |
 | `subscription_status` | subscription_status | default 'trialing' | Estado de suscripcion |
 | `trial_ends_at` | timestamptz | | Fin del periodo de prueba |
+| `cancelation_grace_ends_at` | timestamptz | | Fin del periodo de gracia post-cancelacion (7 dias) |
 | `allowed_origins` | text[] | default [] | Origenes permitidos para API |
 | `webhook_url` | text | | URL para webhooks |
 | `sailonet_import` | boolean | default false | Importacion Sailonet habilitada |
@@ -214,23 +233,47 @@ Productos de velas configurables por tenant.
 | Campo | Tipo | Restricciones | Descripcion |
 |---|---|---|---|
 | `id` | uuid | PK, default random | Identificador unico |
-| `tenant_id` | uuid | FK -> tenants.id (CASCADE), NOT NULL | Tenant propietario |
+| `tenant_id` | uuid | FK -> tenants.id (CASCADE), nullable | NULL = producto del catalogo base compartido (se clona al crear tenant) |
 | `external_id` | text | | ID externo (importacion Sailonet) |
 | `name` | text | NOT NULL | Nombre del producto |
 | `slug` | text | NOT NULL | Slug unico por tenant |
 | `sail_type` | sail_type | NOT NULL | Tipo de vela |
-| `base_price` | numeric | | Precio base por m² |
+| `variant` | product_variant | | Variante (`cruising`, `cruising_plus`, `cruising_racing`) |
+| `base_price` | numeric | | PVP base por m² — fallback cuando no hay tier que aplique |
+| `cost_per_sqm` | numeric | | Coste base por m² (interno, nunca se expone en API v1) |
 | `currency` | text | default 'EUR' | Moneda |
 | `description_short` | text | | Descripcion corta |
 | `images` | text[] | default [] | URLs de imagenes |
+| `features` | text[] | default [] | Features / bullets descriptivos |
 | `active` | boolean | default true | Producto activo |
 | `sort_order` | integer | default 0 | Orden de visualizacion |
 | `created_at` | timestamptz | default now() | Fecha creacion |
 | `updated_at` | timestamptz | default now(), auto-update | Fecha actualizacion |
 
 **Indices:**
-- `idx_products_tenant_slug` UNIQUE en `(tenant_id, slug)`
+- `uq_products_tenant_slug` UNIQUE en `(tenant_id, slug)` con `NULLS NOT DISTINCT`
 - `idx_products_sail_type` en `(tenant_id, sail_type)`
+
+### `product_pricing_tiers`
+
+Tramos de precio por m² para un producto. Cuando el area de vela cae dentro de un tramo, se usa ese `costPerSqm` / `msrpPerSqm` en lugar del `basePrice` / `costPerSqm` del producto (ver `apps/web/src/lib/pricing.ts`).
+
+| Campo | Tipo | Restricciones | Descripcion |
+|---|---|---|---|
+| `id` | uuid | PK, default random | Identificador unico |
+| `product_id` | uuid | FK -> products.id (CASCADE), NOT NULL | Producto padre |
+| `min_sqm` | numeric | NOT NULL | Limite inferior del tramo (m², inclusivo) |
+| `max_sqm` | numeric | NOT NULL | Limite superior del tramo (m², inclusivo) |
+| `cost_per_sqm` | numeric | NOT NULL | Coste interno por m² en este tramo |
+| `msrp_per_sqm` | numeric | NOT NULL | PVP por m² en este tramo |
+| `sort_order` | integer | default 0 | Orden |
+
+**Indices:**
+- `idx_pricing_tiers_product` en `product_id`
+
+**RLS:** habilitada (migracion `enable_rls_product_pricing_tiers`). Policies espejo de `product_config_fields` — acceso solo via el tenant dueño del producto.
+
+**Validacion en bulk replace (`PUT /api/internal/products/[id]/tiers`):** `max_sqm > min_sqm`, precios ≥ 0, sin overlap entre tramos.
 
 ### `product_config_fields`
 
@@ -246,17 +289,29 @@ Campos de configuracion para cada producto (opciones como tejido, superficie, ri
 | `options` | jsonb | default [] | Opciones disponibles |
 | `sort_order` | integer | default 0 | Orden |
 | `required` | boolean | default true | Campo obligatorio |
-| `price_modifiers` | jsonb | default {} | Modificadores de precio por opcion |
+| `price_modifiers` | jsonb | default {} | Modificadores **en EUR** por opcion (se suman al total) |
+| `percent_modifiers` | jsonb | default {} | Modificadores **en %** por opcion (fraccion decimal, p.ej. `0.10` = +10%) |
 
 **Indices:**
 - `idx_config_product_key` UNIQUE en `(product_id, key)`
 
-Ejemplo de `price_modifiers`:
+**Nota:** `price_modifiers` y `percent_modifiers` son **mutuamente excluyentes por opcion** — la UI del product editor usa un toggle EUR | % por opcion. A nivel de schema ambas columnas existen; el `pricing.ts` suma lo que encuentre en cada una.
+
+Ejemplo de `price_modifiers` (EUR planos):
 ```json
 {
   "Dacron": 0,
   "Hydranet": 150,
   "Pentex": 300
+}
+```
+
+Ejemplo de `percent_modifiers` (fracciones):
+```json
+{
+  "1 rizo": 0,
+  "2 rizos": 0.05,
+  "3 rizos": 0.10
 }
 ```
 
@@ -349,8 +404,6 @@ Eventos de analitica del widget.
 | `boat_model` | text | | Modelo de barco |
 | `product_id` | uuid | | ID del producto |
 | `sail_type` | text | | Tipo de vela |
-| `metadata` | jsonb | default {} | Datos adicionales |
-| `session_id` | text | | ID de sesion del widget |
 | `ip_address` | inet | | Direccion IP |
 | `user_agent` | text | | User agent del navegador |
 | `referrer` | text | | Pagina de referencia |
@@ -359,11 +412,13 @@ Eventos de analitica del widget.
 **Indices:**
 - `idx_analytics_tenant_date` en `(tenant_id, created_at)`
 
-**Tipos de evento comunes:**
-- `configurator_opened` - El widget se abrio
-- `boat_search` - Busqueda de barco
-- `product_view` - Vista de producto
-- `quote_created` - Presupuesto creado
+**Tipos de evento (enum Zod validado en `POST /api/v1/analytics`):**
+- `configurator_opened` — El widget se abrio
+- `boat_search` — Busqueda de barco (el widget emite este evento tambien cuando el usuario selecciona un barco de la lista)
+- `product_view` — Vista de producto
+- `quote_created` — Presupuesto creado
+
+**Importante:** No existen eventos `quote_sent` / `quote_accepted` / `quote_rejected`. El ciclo de vida del presupuesto (draft → sent → accepted/rejected/expired) se trackea via la columna `quotes.status`, **no** via analytics. Las columnas legacy `metadata` y `session_id` fueron eliminadas (migracion `drop_analytics_events_unused_columns`).
 
 ## Migraciones
 
