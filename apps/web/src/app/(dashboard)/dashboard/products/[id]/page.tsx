@@ -1,5 +1,5 @@
 import { getAuthenticatedTenant } from '@/lib/auth-page';
-import { db, products, productConfigFields, eq, and } from '@aerolume/db';
+import { db, products, productConfigFields, productPricingTiers, eq, and, asc } from '@aerolume/db';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ProductEditClient } from './client';
@@ -26,6 +26,12 @@ export default async function ProductEditPage({ params }: PageProps) {
     .from(productConfigFields)
     .where(eq(productConfigFields.productId, id));
 
+  const tiers = await db
+    .select()
+    .from(productPricingTiers)
+    .where(eq(productPricingTiers.productId, id))
+    .orderBy(asc(productPricingTiers.sortOrder), asc(productPricingTiers.minSqm));
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -34,7 +40,7 @@ export default async function ProductEditPage({ params }: PageProps) {
         </Link>
         <h2 className="text-2xl font-semibold text-gray-900">{product.name}</h2>
       </div>
-      <ProductEditClient product={product} initialFields={fields} />
+      <ProductEditClient product={product} initialFields={fields} initialTiers={tiers} />
     </div>
   );
 }

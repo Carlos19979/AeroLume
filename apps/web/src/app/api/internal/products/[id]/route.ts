@@ -37,6 +37,7 @@ export const PUT = withTenantAuth(async (request, { tenant }, params) => {
       name: data.name,
       sailType: data.sailType,
       basePrice: data.basePrice,
+      costPerSqm: data.costPerSqm,
       currency: data.currency,
       descriptionShort: data.descriptionShort,
       active: data.active,

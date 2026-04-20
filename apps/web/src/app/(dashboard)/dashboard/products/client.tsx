@@ -155,7 +155,6 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">Nombre</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">Tipo de vela</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Precio/m²</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">Estado</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-500"></th>
               </tr>
@@ -175,11 +174,6 @@ export function ProductsClient({ initialProducts }: { initialProducts: ProductRo
                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-50 text-blue-700">
                       {SAIL_TYPE_LABELS[product.sailType] || product.sailType}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {product.basePrice
-                      ? `${Number(product.basePrice).toFixed(0)} ${product.currency || 'EUR'}/m²`
-                      : '—'}
                   </td>
                   <td className="px-4 py-3">
                     <button

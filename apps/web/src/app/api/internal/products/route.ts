@@ -47,6 +47,7 @@ export const POST = withTenantAuth(async (request, { tenant }) => {
       slug: slugify(data.name),
       sailType: data.sailType,
       basePrice: data.basePrice || null,
+      costPerSqm: data.costPerSqm || null,
       descriptionShort: null,
       active: true,
     })
