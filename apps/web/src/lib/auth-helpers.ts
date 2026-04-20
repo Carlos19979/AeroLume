@@ -22,8 +22,25 @@ type TenantHandler = (req: NextRequest, ctx: TenantContext, params: any) => Prom
 type AdminHandler = (req: NextRequest, ctx: AdminContext, params: any) => Promise<NextResponse>;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-function isTrialExpired(tenant: { plan: string | null; trialEndsAt: Date | null }): boolean {
-  return tenant.plan === 'prueba' && (!tenant.trialEndsAt || new Date(tenant.trialEndsAt) <= new Date());
+function isAccessExpired(tenant: {
+  plan: string | null;
+  trialEndsAt: Date | null;
+  subscriptionStatus?: string | null;
+  cancelationGraceEndsAt?: Date | null;
+}): boolean {
+  // Trial expired
+  if (tenant.plan === 'prueba' && (!tenant.trialEndsAt || new Date(tenant.trialEndsAt) <= new Date())) {
+    return true;
+  }
+  // Cancellation grace period has elapsed
+  if (
+    tenant.subscriptionStatus === 'canceled' &&
+    tenant.cancelationGraceEndsAt &&
+    new Date(tenant.cancelationGraceEndsAt) <= new Date()
+  ) {
+    return true;
+  }
+  return false;
 }
 
 export function withTenantAuth(handler: TenantHandler) {
@@ -40,9 +57,9 @@ export function withTenantAuth(handler: TenantHandler) {
         return NextResponse.json({ error: 'No tenant found' }, { status: 403 });
       }
 
-      // Block mutations on expired trial (GET is always allowed)
+      // Block mutations when trial or grace period has expired (GET is always allowed)
       const method = req.method.toUpperCase();
-      if (method !== 'GET' && isTrialExpired(tenant)) {
+      if (method !== 'GET' && isAccessExpired(tenant)) {
         return NextResponse.json({ error: 'Trial expired' }, { status: 403 });
       }
 

@@ -375,7 +375,7 @@ describe('createAnalyticsEventSchema', () => {
   });
 
   it('accepts all known eventType values', () => {
-    const types = ['configurator_opened', 'boat_search', 'product_view', 'quote_created', 'quote_sent', 'quote_accepted', 'quote_rejected'];
+    const types = ['configurator_opened', 'boat_search', 'product_view', 'quote_created'];
     for (const eventType of types) {
       expect(createAnalyticsEventSchema.safeParse({ eventType }).success).toBe(true);
     }

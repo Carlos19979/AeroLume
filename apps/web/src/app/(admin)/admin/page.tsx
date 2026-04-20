@@ -122,8 +122,8 @@ export default async function AdminOverviewPage() {
               <div className="flex items-center gap-3">
                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
                   e.eventType === 'quote_created' ? 'bg-green-50 text-green-600' :
-                  e.eventType === 'boat_selected' ? 'bg-blue-50 text-blue-600' :
-                  e.eventType === 'product_selected' ? 'bg-violet-50 text-violet-600' :
+                  e.eventType === 'boat_search' ? 'bg-blue-50 text-blue-600' :
+                  e.eventType === 'product_view' ? 'bg-violet-50 text-violet-600' :
                   'bg-gray-100 text-gray-500'
                 }`}>
                   {EVENT_TYPE_LABELS[e.eventType] || e.eventType}

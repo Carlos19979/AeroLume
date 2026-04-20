@@ -35,13 +35,13 @@ export default async function DashboardLayout({
     }
 
     // Get tenant plan/status for gating (skip for impersonation and admin)
-    let planStatus = { plan: 'pro' as string | null, subscriptionStatus: 'active' as string | null, trialEndsAt: null as Date | null };
+    let planStatus = { plan: 'pro' as string | null, subscriptionStatus: 'active' as string | null, trialEndsAt: null as Date | null, cancelationGraceEndsAt: null as Date | null };
 
     if (!isAdmin && !impersonating) {
         const tenant = await getTenantForUser(user.id, user.email);
         if (tenant) {
             const [full] = await db
-                .select({ plan: tenants.plan, subscriptionStatus: tenants.subscriptionStatus, trialEndsAt: tenants.trialEndsAt })
+                .select({ plan: tenants.plan, subscriptionStatus: tenants.subscriptionStatus, trialEndsAt: tenants.trialEndsAt, cancelationGraceEndsAt: tenants.cancelationGraceEndsAt })
                 .from(tenants)
                 .where(eq(tenants.id, tenant.id))
                 .limit(1);
@@ -66,7 +66,7 @@ export default async function DashboardLayout({
                         Tu cuenta ha sido suspendida por falta de pago. Contacta con nosotros para reactivarla.
                     </p>
                     <div className="mt-6 flex items-center justify-center gap-3">
-                        <a href="/dashboard/subscription" className="px-6 py-2.5 bg-[var(--color-accent)] text-white text-sm font-semibold rounded-xl hover:opacity-90">
+                        <a href="/dashboard/settings" className="px-6 py-2.5 bg-[var(--color-accent)] text-white text-sm font-semibold rounded-xl hover:opacity-90">
                             Contactar
                         </a>
                         <a href="/auth/signout" className="px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700">
@@ -93,19 +93,31 @@ export default async function DashboardLayout({
                 {banner.type === 'trial' && (
                     <div className="bg-blue-50 text-blue-700 text-xs font-medium px-4 py-2.5 flex items-center justify-between border-b border-blue-100">
                         <span>{banner.message}</span>
-                        <a href="/dashboard/subscription" className="underline hover:no-underline font-semibold">Activar ahora</a>
+                        <a href="/dashboard/settings" className="underline hover:no-underline font-semibold">Activar ahora</a>
                     </div>
                 )}
                 {banner.type === 'trial_expired' && (
-                    <div data-testid="dashboard-trial-expired-banner" className="bg-amber-50 text-amber-800 text-sm font-medium px-4 py-3 flex items-center justify-between border-b border-amber-200">
+                    <div data-testid="dashboard-access-expired-banner" className="bg-amber-50 text-amber-800 text-sm font-medium px-4 py-3 flex items-center justify-between border-b border-amber-200">
                         <span>{banner.message}</span>
-                        <a href="/dashboard/subscription" className="px-4 py-1.5 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition-colors">Contactar</a>
+                        <a href="/dashboard/settings" className="px-4 py-1.5 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition-colors">Contactar</a>
+                    </div>
+                )}
+                {banner.type === 'canceled_grace' && (
+                    <div data-testid="dashboard-canceled-grace-banner" className="bg-orange-50 text-orange-800 text-sm font-medium px-4 py-3 flex items-center justify-between border-b border-orange-200">
+                        <span>{banner.message}</span>
+                        <a href="/dashboard/settings" className="px-4 py-1.5 bg-orange-600 text-white text-xs font-semibold rounded-lg hover:bg-orange-700 transition-colors">Ver suscripcion</a>
+                    </div>
+                )}
+                {banner.type === 'access_expired' && (
+                    <div data-testid="dashboard-access-expired-banner" className="bg-amber-50 text-amber-800 text-sm font-medium px-4 py-3 flex items-center justify-between border-b border-amber-200">
+                        <span>{banner.message}</span>
+                        <a href="/dashboard/settings" className="px-4 py-1.5 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition-colors">Suscribirse</a>
                     </div>
                 )}
                 {banner.type === 'past_due' && (
                     <div className="bg-red-50 text-red-700 text-xs font-medium px-4 py-2.5 flex items-center justify-between border-b border-red-100">
                         <span>{banner.message}</span>
-                        <a href="/dashboard/subscription" className="underline hover:no-underline font-semibold">Pagar ahora</a>
+                        <a href="/dashboard/settings" className="underline hover:no-underline font-semibold">Pagar ahora</a>
                     </div>
                 )}
                 <DashboardHeader userName={userName} userEmail={userEmail} />

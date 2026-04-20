@@ -55,10 +55,10 @@ export async function validateApiKey(request: Request): Promise<ValidationResult
     return { ok: false, error: 'API key expired', status: 401 };
   }
 
-  // Check tenant status — widget works for pro/active or active trial
+  // Check tenant status — widget works for pro/active, active trial, or canceled-in-grace
   const origin = request.headers.get('origin') || request.headers.get('referer');
   const [tenant] = await db
-    .select({ allowedOrigins: tenants.allowedOrigins, webhookUrl: tenants.webhookUrl, plan: tenants.plan, subscriptionStatus: tenants.subscriptionStatus, trialEndsAt: tenants.trialEndsAt })
+    .select({ allowedOrigins: tenants.allowedOrigins, webhookUrl: tenants.webhookUrl, plan: tenants.plan, subscriptionStatus: tenants.subscriptionStatus, trialEndsAt: tenants.trialEndsAt, cancelationGraceEndsAt: tenants.cancelationGraceEndsAt })
     .from(tenants)
     .where(eq(tenants.id, found.tenantId))
     .limit(1);
@@ -66,7 +66,11 @@ export async function validateApiKey(request: Request): Promise<ValidationResult
   if (tenant) {
     const isPro = tenant.plan === 'pro' && tenant.subscriptionStatus === 'active';
     const isActiveTrial = tenant.plan === 'prueba' && tenant.trialEndsAt && new Date(tenant.trialEndsAt) > new Date();
-    if (!isPro && !isActiveTrial) {
+    const isCanceledInGrace =
+      tenant.subscriptionStatus === 'canceled' &&
+      tenant.cancelationGraceEndsAt &&
+      new Date(tenant.cancelationGraceEndsAt) > new Date();
+    if (!isPro && !isActiveTrial && !isCanceledInGrace) {
       return { ok: false, error: 'Account inactive', status: 403 };
     }
   }
