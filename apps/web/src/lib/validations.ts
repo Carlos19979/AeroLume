@@ -11,13 +11,15 @@ const intNumber = z.coerce.number().int();
 export const createProductSchema = z.object({
   name: z.string().min(1).max(200),
   sailType: z.enum(['gvstd', 'gvfull', 'gve', 'gse', 'gn', 'spiasy', 'spisym', 'furling', 'gen']),
-  basePrice: numericString.optional(),
+  basePrice: numericString.optional().nullable(),
+  costPerSqm: numericString.optional().nullable(),
 });
 
 export const updateProductSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   sailType: z.enum(['gvstd', 'gvfull', 'gve', 'gse', 'gn', 'spiasy', 'spisym', 'furling', 'gen']).optional(),
-  basePrice: numericString.optional(),
+  basePrice: numericString.optional().nullable(),
+  costPerSqm: numericString.optional().nullable(),
   currency: z.string().max(3).optional(),
   descriptionShort: z.string().max(500).optional(),
   active: z.boolean().optional(),
@@ -97,6 +99,9 @@ export const updateThemeSchema = z.object({
   logoUrl: z.string().url().optional().nullable().or(z.literal('')),
   fontHeading: z.string().max(100).optional(),
   fontBody: z.string().max(100).optional(),
+  themeCtaLabel: z.string().max(100).optional().nullable(),
+  themeContactTitle: z.string().max(150).optional().nullable(),
+  themeContactSubtitle: z.string().max(300).optional().nullable(),
 });
 
 export const createConfigFieldSchema = z.object({
@@ -106,11 +111,31 @@ export const createConfigFieldSchema = z.object({
   options: z.array(z.string()).optional(),
   sortOrder: z.coerce.number().int().optional(),
   required: z.boolean().default(false),
-  priceModifiers: z.record(z.string(), z.number()).optional(),
+  costModifiers: z.record(z.string(), z.number()).optional(),
+  msrpModifiers: z.record(z.string(), z.number()).optional(),
+  percentModifiers: z.record(z.string(), z.number()).optional(),
 });
 
 export const updateConfigFieldSchema = createConfigFieldSchema.partial().extend({
   id: z.string().uuid(),
+});
+
+export const pricingTierSchema = z.object({
+  minSqm: numericString,
+  maxSqm: numericString,
+  costPerSqm: numericString,
+  msrpPerSqm: numericString,
+  sortOrder: intNumber.optional(),
+}).refine((v) => Number(v.maxSqm) > Number(v.minSqm), {
+  message: 'maxSqm must be greater than minSqm',
+  path: ['maxSqm'],
+}).refine((v) => Number(v.costPerSqm) >= 0 && Number(v.msrpPerSqm) >= 0, {
+  message: 'Prices must be non-negative',
+  path: ['costPerSqm'],
+});
+
+export const replacePricingTiersSchema = z.object({
+  tiers: z.array(pricingTierSchema).max(50),
 });
 
 export const createTenantSchema = z.object({
@@ -123,12 +148,10 @@ export const createTenantSchema = z.object({
 });
 
 export const createAnalyticsEventSchema = z.object({
-  eventType: z.enum(['configurator_opened', 'boat_search', 'product_view', 'quote_created', 'quote_sent', 'quote_accepted', 'quote_rejected']),
+  eventType: z.enum(['configurator_opened', 'boat_search', 'product_view', 'quote_created']),
   boatModel: z.string().max(200).optional(),
   productId: z.string().uuid().optional(),
   sailType: z.string().max(20).optional(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-  sessionId: z.string().max(100).optional(),
 });
 
 export function validateBody<T>(schema: z.ZodSchema<T>, body: unknown): { data: T } | { error: string } {

@@ -54,7 +54,7 @@ export async function GET(request: Request) {
         options: productConfigFields.options,
         sortOrder: productConfigFields.sortOrder,
         required: productConfigFields.required,
-        priceModifiers: productConfigFields.priceModifiers,
+        msrpModifiers: productConfigFields.msrpModifiers,
         percentModifiers: productConfigFields.percentModifiers,
       })
       .from(productConfigFields)

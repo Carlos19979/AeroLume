@@ -6,8 +6,9 @@
  * both the customer-facing MSRP and the internal cost.
  *
  * Design notes:
- *  - Flat modifiers add to both cost and MSRP by the same amount (preserves margin).
- *  - Percent modifiers (e.g. "3 rizos": 0.10) multiply both cost and MSRP equally.
+ *  - Flat modifiers are split: costModifiers affect the cost subtotal, msrpModifiers affect MSRP.
+ *    Set them equal to pass through the extra at zero margin; set msrp > cost to book margin on the option.
+ *  - Percent modifiers (e.g. "3 rizos": 0.10) multiply both cost and MSRP equally — margin ratio preserved.
  *  - If no tier matches, falls back to product-level basePrice / costPerSqm.
  */
 
@@ -28,7 +29,8 @@ type Tier = {
 type ConfigField = {
   productId: string;
   key: string;
-  priceModifiers: unknown;
+  costModifiers: unknown;
+  msrpModifiers: unknown;
   percentModifiers: unknown;
 };
 
@@ -64,19 +66,22 @@ export function priceItem(input: {
   const msrpPerSqm = tier ? num(tier.msrpPerSqm) : num(product.basePrice);
   if (!costPerSqm && !msrpPerSqm) return null;
 
-  let flatAdd = 0;
+  let costFlatAdd = 0;
+  let msrpFlatAdd = 0;
   let percentAdd = 0;
   for (const field of fields) {
     const selected = configuration[field.key];
     if (!selected) continue;
-    const flat = field.priceModifiers as Record<string, number> | null;
+    const costMods = field.costModifiers as Record<string, number> | null;
+    const msrpMods = field.msrpModifiers as Record<string, number> | null;
     const pct = field.percentModifiers as Record<string, number> | null;
-    if (flat && typeof flat[selected] === 'number') flatAdd += flat[selected];
+    if (costMods && typeof costMods[selected] === 'number') costFlatAdd += costMods[selected];
+    if (msrpMods && typeof msrpMods[selected] === 'number') msrpFlatAdd += msrpMods[selected];
     if (pct && typeof pct[selected] === 'number') percentAdd += pct[selected];
   }
 
-  const baseCost = sailArea * costPerSqm + flatAdd;
-  const baseMsrp = sailArea * msrpPerSqm + flatAdd;
+  const baseCost = sailArea * costPerSqm + costFlatAdd;
+  const baseMsrp = sailArea * msrpPerSqm + msrpFlatAdd;
   const multiplier = 1 + percentAdd;
 
   return {

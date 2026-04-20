@@ -625,7 +625,8 @@ async function seedProducts() {
         options: ['2 rizos', '3 rizos'],
         sortOrder: 0,
         required: true,
-        priceModifiers: {},
+        costModifiers: {},
+        msrpModifiers: {},
         percentModifiers: { '3 rizos': 0.10 },
       });
     }

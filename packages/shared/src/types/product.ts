@@ -65,7 +65,7 @@ export type ConfigField = {
   label: string;
   fieldType?: 'select' | 'radio' | 'text' | 'number';
   options: string[];
-  priceModifiers?: Record<string, number>;
+  msrpModifiers?: Record<string, number>;
 };
 
 export type ProductConfig = {

@@ -1,9 +1,19 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { Package, FileText, Ship, BarChart3, Plus, ArrowRight } from 'lucide-react';
+import { Package, FileText, Ship, BarChart3, Plus, ArrowRight, Copy, Check } from 'lucide-react';
 import { MetricCard } from '../components/metric-card';
 import { FadeInUp } from '../components/animations';
+
+const EMBED_SNIPPET = `<div id="aerolume-configurator"></div>
+<script src="https://aerolume.app/widget.js"></script>
+<script>
+  Aerolume.init({
+    apiKey: 'TU_API_KEY',
+    container: '#aerolume-configurator',
+  });
+</script>`;
 
 export function DashboardClient({
     userName,
@@ -116,23 +126,54 @@ export function DashboardClient({
 
             {/* Embed snippet */}
             <FadeInUp delay={0.3}>
-                <div className="rounded-2xl bg-white border border-gray-100 p-6">
-                    <h3 className="font-medium text-gray-900 mb-2">Codigo de embebido</h3>
-                    <p className="text-sm text-gray-500 mb-4">
-                        Copia este snippet y pegalo en tu web para mostrar el configurador.
-                    </p>
-                    <pre className="bg-gray-900 text-green-400 rounded-xl p-5 text-xs overflow-x-auto leading-relaxed">
-{`<div id="aerolume-configurator"></div>
-<script src="https://cdn.aerolume.com/widget/v1/aerolume.js"></script>
-<script>
-  Aerolume.init({
-    apiKey: 'TU_API_KEY',
-    container: '#aerolume-configurator',
-  });
-</script>`}
-                    </pre>
-                </div>
+                <EmbedSnippet />
             </FadeInUp>
+        </div>
+    );
+}
+
+function EmbedSnippet() {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(EMBED_SNIPPET);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // Clipboard unavailable; silently ignore.
+        }
+    };
+
+    return (
+        <div className="rounded-2xl bg-white border border-gray-100 p-6">
+            <div className="flex items-start justify-between gap-4 mb-2">
+                <h3 className="font-medium text-gray-900">Codigo de embebido</h3>
+                <button
+                    type="button"
+                    onClick={handleCopy}
+                    aria-label="Copiar snippet"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg px-2.5 py-1.5 transition-colors hover:bg-gray-50"
+                >
+                    {copied ? (
+                        <>
+                            <Check size={14} className="text-emerald-600" />
+                            Copiado
+                        </>
+                    ) : (
+                        <>
+                            <Copy size={14} />
+                            Copiar
+                        </>
+                    )}
+                </button>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+                Copia este snippet y pegalo en tu web para mostrar el configurador.
+            </p>
+            <pre className="bg-gray-900 text-green-400 rounded-xl p-5 text-xs overflow-x-auto leading-relaxed">
+                {EMBED_SNIPPET}
+            </pre>
         </div>
     );
 }

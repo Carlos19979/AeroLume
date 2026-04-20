@@ -98,7 +98,8 @@ export async function cloneBaseCatalogToTenant(tenantId: string, db: DbLike = de
           options: f.options,
           sortOrder: f.sortOrder,
           required: f.required,
-          priceModifiers: f.priceModifiers,
+          costModifiers: f.costModifiers,
+          msrpModifiers: f.msrpModifiers,
           percentModifiers: f.percentModifiers,
         };
       })

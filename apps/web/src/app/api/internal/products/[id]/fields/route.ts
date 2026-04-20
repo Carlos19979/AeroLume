@@ -43,7 +43,9 @@ export const POST = withTenantAuth(async (request, { tenant }, params) => {
       options: data.options || [],
       sortOrder: data.sortOrder || 0,
       required: data.required,
-      priceModifiers: data.priceModifiers || {},
+      costModifiers: data.costModifiers || {},
+      msrpModifiers: data.msrpModifiers || {},
+      percentModifiers: data.percentModifiers || {},
     })
     .returning();
 
@@ -79,7 +81,9 @@ export const PUT = withTenantAuth(async (request, { tenant }, params) => {
       options: data.options,
       sortOrder: data.sortOrder,
       required: data.required,
-      priceModifiers: data.priceModifiers,
+      costModifiers: data.costModifiers ?? {},
+      msrpModifiers: data.msrpModifiers ?? {},
+      percentModifiers: data.percentModifiers ?? {},
     })
     .where(and(
       eq(productConfigFields.id, data.id),

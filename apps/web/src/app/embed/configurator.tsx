@@ -21,6 +21,9 @@ type Tenant = {
   logoUrl: string | null;
   locale: string | null;
   currency: string | null;
+  themeCtaLabel: string | null;
+  themeContactTitle: string | null;
+  themeContactSubtitle: string | null;
 };
 
 type Boat = {
@@ -53,7 +56,7 @@ type ConfigField = {
   options: string[];
   sortOrder: number | null;
   required: boolean | null;
-  priceModifiers: Record<string, number> | null;
+  msrpModifiers: Record<string, number> | null;
   percentModifiers: Record<string, number> | null;
 };
 
@@ -107,12 +110,94 @@ function SailIcon({ size = 20, color = 'currentColor' }: { size?: number; color?
   );
 }
 
-export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: Tenant }) {
+const PREVIEW_MOCK_BOAT: Boat = {
+  id: 'preview-boat',
+  model: 'Bavaria 40',
+  boatModel: 'Bavaria 40',
+  length: '12.2',
+  gvstd: '46.5',
+  gse: '31.8',
+  spiasy: '69.1',
+};
+
+const PREVIEW_MOCK_PRODUCTS: Product[] = [
+  {
+    id: 'preview-prod-1',
+    name: 'Mayor Clásica',
+    slug: 'mayor-clasica',
+    sailType: 'gvstd',
+    variant: 'cruising',
+    basePrice: '28',
+    currency: 'EUR',
+    descriptionShort: 'Vela mayor de crucero en laminado dacron',
+    features: ['Grátil reforzado', 'Bolsillo de palo'],
+    configFields: [
+      {
+        id: 'cf-1',
+        key: 'tela',
+        label: 'Tela',
+        fieldType: 'select',
+        options: ['Dacron 170g', 'Dacron 200g', 'Laminado'],
+        sortOrder: 0,
+        required: true,
+        msrpModifiers: { 'Dacron 200g': 80, 'Laminado': 320 },
+        percentModifiers: null,
+      },
+      {
+        id: 'cf-2',
+        key: 'rizos',
+        label: 'Rizos',
+        fieldType: 'select',
+        options: ['1 rizo', '2 rizos', '3 rizos'],
+        sortOrder: 1,
+        required: false,
+        msrpModifiers: { '2 rizos': 45, '3 rizos': 90 },
+        percentModifiers: null,
+      },
+    ],
+    pricingTiers: [
+      { id: 'pt-1', minSqm: '0', maxSqm: '60', msrpPerSqm: '28', sortOrder: 0 },
+      { id: 'pt-2', minSqm: '60', maxSqm: '999', msrpPerSqm: '26', sortOrder: 1 },
+    ],
+  },
+  {
+    id: 'preview-prod-2',
+    name: 'Génova Enrollable',
+    slug: 'genova-enrollable',
+    sailType: 'gse',
+    variant: 'cruising',
+    basePrice: '32',
+    currency: 'EUR',
+    descriptionShort: 'Génova para enrollador de proa',
+    features: ['Baluma reforzada', 'Parche de escota'],
+    configFields: [
+      {
+        id: 'cf-3',
+        key: 'tela',
+        label: 'Tela',
+        fieldType: 'select',
+        options: ['Dacron 150g', 'Dacron 180g'],
+        sortOrder: 0,
+        required: true,
+        msrpModifiers: { 'Dacron 180g': 60 },
+        percentModifiers: null,
+      },
+    ],
+    pricingTiers: [
+      { id: 'pt-3', minSqm: '0', maxSqm: '999', msrpPerSqm: '32', sortOrder: 0 },
+    ],
+  },
+];
+
+export function EmbedConfigurator({ apiKey, tenant, previewMode }: { apiKey: string; tenant: Tenant; previewMode?: { step: Step } }) {
+  const isPreview = !!previewMode;
+
   // parentOrigin stays null until we trust a referrer origin. We never fall back to '*'
   // because postMessage payloads can include PII (email, phone, quoteId).
   const [parentOrigin, setParentOrigin] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isPreview) return;
     if (document.referrer) {
       try {
         // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time parent origin detection on mount
@@ -123,14 +208,14 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
 
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
-  const [boatResults, setBoatResults] = useState<Boat[]>([]);
-  const [selectedBoat, setSelectedBoat] = useState<Boat | null>(null);
+  const [boatResults, setBoatResults] = useState<Boat[]>(isPreview ? [PREVIEW_MOCK_BOAT] : []);
+  const [selectedBoat, setSelectedBoat] = useState<Boat | null>(isPreview ? PREVIEW_MOCK_BOAT : null);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>(isPreview ? PREVIEW_MOCK_PRODUCTS : []);
   const [productsLoading, setProductsLoading] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [config, setConfig] = useState<Record<string, string>>({});
-  const [step, setStep] = useState<Step>('boat');
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(isPreview ? PREVIEW_MOCK_PRODUCTS[0] : null);
+  const [config, setConfig] = useState<Record<string, string>>(isPreview ? { tela: 'Dacron 170g', rizos: '2 rizos' } : {});
+  const [step, setStep] = useState<Step>(isPreview ? previewMode.step : 'boat');
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -192,7 +277,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
     for (const field of selectedProduct.configFields) {
       const selected = config[field.key];
       if (!selected) continue;
-      const flat = field.priceModifiers?.[selected];
+      const flat = field.msrpModifiers?.[selected];
       const pct = field.percentModifiers?.[selected];
       if (typeof flat === 'number' && flat !== 0) {
         flatSum += flat;
@@ -218,6 +303,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
   const currency = selectedProduct?.currency || tenant.currency || 'EUR';
 
   function track(eventType: string, extra?: Record<string, unknown>) {
+    if (isPreview) return;
     fetch('/api/v1/analytics', { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ eventType, ...extra }) }).catch(() => {});
   }
 
@@ -230,6 +316,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
   useEffect(() => { track('configurator_opened'); }, []);
 
   useEffect(() => {
+    if (isPreview) return;
     const value = deferredQuery.trim();
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset search results when query is too short
     if (value.length < 2) { setBoatResults([]); return; }
@@ -243,6 +330,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
   }, [deferredQuery]);
 
   useEffect(() => {
+    if (isPreview) return;
     if (!selectedBoat) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- set loading flag before async fetch
     setProductsLoading(true);
@@ -253,12 +341,12 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
 
   function selectBoat(boat: Boat) {
     setSelectedBoat(boat); setQuery(boat.model); setBoatResults([]); setStep('products');
-    track('boat_selected', { boatModel: boat.model });
+    track('boat_search', { boatModel: boat.model });
   }
 
   function selectProduct(product: Product) {
     setSelectedProduct(product); setConfig({}); setStep('configure');
-    track('product_selected', { sailType: product.sailType, productId: product.id });
+    track('product_view', { sailType: product.sailType, productId: product.id });
     postMsg('aerolume:product-selected', product);
   }
 
@@ -316,8 +404,8 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
                 <button
                   key={s.key}
                   data-testid={`embed-step-${s.key}`}
-                  onClick={() => { if (done) setStep(s.key); }}
-                  disabled={!done && !active}
+                  onClick={() => { if (!isPreview && done) setStep(s.key); }}
+                  disabled={isPreview || (!done && !active)}
                   className="relative px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300"
                   style={
                     active
@@ -601,7 +689,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
               {selectedProduct.configFields
                 .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
                 .map((field) => {
-                  const mods = field.priceModifiers as Record<string, number> | null;
+                  const mods = field.msrpModifiers as Record<string, number> | null;
                   return (
                     <div key={field.id}>
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
@@ -796,8 +884,8 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
         <div className="space-y-5">
           <div className="rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
             <div className="px-6 py-4 border-b border-gray-50" style={{ background: `linear-gradient(135deg, ${accent}08, transparent)` }}>
-              <h3 className="font-bold" style={{ color: textColor }}>Datos de contacto</h3>
-              <p className="text-xs text-gray-400 mt-0.5">Para enviarte el presupuesto detallado.</p>
+              <h3 className="font-bold" style={{ color: textColor }}>{tenant.themeContactTitle || 'Datos de contacto'}</h3>
+              <p className="text-xs text-gray-400 mt-0.5">{tenant.themeContactSubtitle || 'Para enviarte el presupuesto detallado.'}</p>
             </div>
 
             <div className="p-6 space-y-4">
@@ -899,7 +987,7 @@ export function EmbedConfigurator({ apiKey, tenant }: { apiKey: string; tenant: 
                   </span>
                 ) : (
                   <>
-                    Solicitar presupuesto
+                    {tenant.themeCtaLabel || 'Solicitar presupuesto'}
                     <svg className="inline ml-2 -mt-0.5" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 8h10M9 4l4 4-4 4" /></svg>
                   </>
                 )}

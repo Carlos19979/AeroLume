@@ -73,8 +73,11 @@ export const productConfigFields = pgTable(
     sortOrder: integer('sort_order').default(0),
     required: boolean('required').default(true),
 
-    priceModifiers: jsonb('price_modifiers').default({}),
-    // Fractional surcharge per option applied to base price (e.g. {"3 rizos": 0.10} = +10%).
+    // Flat EUR surcharge per option applied to the cost subtotal (e.g. {"Dacron 200g": 80} = +80 € cost).
+    costModifiers: jsonb('cost_modifiers').default({}),
+    // Flat EUR surcharge per option applied to the MSRP subtotal — independent from cost so retailers can book margin on extras.
+    msrpModifiers: jsonb('msrp_modifiers').default({}),
+    // Fractional surcharge per option applied to both subtotals (e.g. {"3 rizos": 0.10} = +10%).
     percentModifiers: jsonb('percent_modifiers').default({}),
   },
   (table) => [
