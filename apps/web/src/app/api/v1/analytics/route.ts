@@ -32,8 +32,6 @@ export async function POST(request: Request) {
     boatModel: data.boatModel || null,
     productId: data.productId || null,
     sailType: data.sailType || null,
-    metadata: data.metadata || {},
-    sessionId: data.sessionId || null,
     ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || null,
     userAgent: request.headers.get('user-agent') || null,
     referrer: request.headers.get('referer') || null,

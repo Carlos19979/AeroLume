@@ -30,7 +30,6 @@ test.describe('POST /api/v1/analytics — ingest events', () => {
       body: JSON.stringify({
         eventType: 'boat_search',
         boatModel: 'Bavaria 40',
-        sessionId: 'sess-1',
       }),
     });
 
@@ -43,15 +42,13 @@ test.describe('POST /api/v1/analytics — ingest events', () => {
       tenant_id: string;
       event_type: string;
       boat_model: string;
-      session_id: string;
       created_at: string;
     }>(
-      `SELECT tenant_id, event_type, boat_model, session_id, created_at
+      `SELECT tenant_id, event_type, boat_model, created_at
          FROM analytics_events
         WHERE tenant_id = $1
           AND event_type = 'boat_search'
           AND boat_model = 'Bavaria 40'
-          AND session_id = 'sess-1'
         ORDER BY created_at DESC
         LIMIT 1`,
       [tenant.tenantId],
@@ -61,7 +58,6 @@ test.describe('POST /api/v1/analytics — ingest events', () => {
     expect(rows[0].tenant_id).toBe(tenant.tenantId);
     expect(rows[0].event_type).toBe('boat_search');
     expect(rows[0].boat_model).toBe('Bavaria 40');
-    expect(rows[0].session_id).toBe('sess-1');
     expect(rows[0].created_at).toBeTruthy();
   });
 
@@ -76,8 +72,6 @@ test.describe('POST /api/v1/analytics — ingest events', () => {
         eventType: 'product_view',
         boatModel: 'Beneteau Oceanis 45',
         sailType: 'gvstd',
-        sessionId: 'sess-full',
-        metadata: { source: 'embed' },
       }),
     });
 

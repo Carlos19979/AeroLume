@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, jsonb, inet, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, inet, index } from 'drizzle-orm/pg-core';
 import { tenants } from './tenants';
 
 export const analyticsEvents = pgTable(
@@ -13,9 +13,7 @@ export const analyticsEvents = pgTable(
     boatModel: text('boat_model'),
     productId: uuid('product_id'),
     sailType: text('sail_type'),
-    metadata: jsonb('metadata').default({}),
 
-    sessionId: text('session_id'),
     ipAddress: inet('ip_address'),
     userAgent: text('user_agent'),
     referrer: text('referrer'),

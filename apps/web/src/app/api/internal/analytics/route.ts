@@ -20,7 +20,8 @@ export const GET = withTenantAuth(async (_request, { tenant }) => {
     .groupBy(analyticsEvents.eventType)
     .orderBy(desc(sql`count(*)`));
 
-  // Top boats searched
+  // Top boats searched — solo eventos `boat_search` para cuadrar con el card "Barcos buscados".
+  // Antes: todos los eventos con boatModel (también product_view), inflaba el conteo.
   const topBoats = await db
     .select({
       boatModel: analyticsEvents.boatModel,
@@ -29,13 +30,14 @@ export const GET = withTenantAuth(async (_request, { tenant }) => {
     .from(analyticsEvents)
     .where(
       sql`${analyticsEvents.tenantId} = ${tenant.id}
-          AND ${analyticsEvents.boatModel} IS NOT NULL`
+          AND ${analyticsEvents.boatModel} IS NOT NULL
+          AND ${analyticsEvents.eventType} = 'boat_search'`
     )
     .groupBy(analyticsEvents.boatModel)
     .orderBy(desc(sql`count(*)`))
     .limit(10);
 
-  // Top sail types
+  // Top sail types — solo eventos `product_view` para cuadrar con el card "Productos vistos".
   const topSailTypes = await db
     .select({
       sailType: analyticsEvents.sailType,
@@ -44,7 +46,8 @@ export const GET = withTenantAuth(async (_request, { tenant }) => {
     .from(analyticsEvents)
     .where(
       sql`${analyticsEvents.tenantId} = ${tenant.id}
-          AND ${analyticsEvents.sailType} IS NOT NULL`
+          AND ${analyticsEvents.sailType} IS NOT NULL
+          AND ${analyticsEvents.eventType} = 'product_view'`
     )
     .groupBy(analyticsEvents.sailType)
     .orderBy(desc(sql`count(*)`))

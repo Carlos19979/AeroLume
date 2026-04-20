@@ -22,12 +22,14 @@ const ICON_BG: Record<string, string> = {
 export function MetricCard({
   title,
   value,
+  hint,
   icon: Icon,
   color = 'blue',
   href,
 }: {
   title: string;
   value: number;
+  hint?: string;
   icon: LucideIcon;
   color?: string;
   href?: string;
@@ -40,6 +42,9 @@ export function MetricCard({
             <AnimatedNumber value={value} />
           </div>
           <p className="text-sm text-gray-500 mt-1">{title}</p>
+          {hint && (
+            <p className="text-xs text-gray-400 mt-1 tabular-nums">{hint}</p>
+          )}
         </div>
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${ICON_BG[color] || ICON_BG.blue}`}>
           <Icon size={24} />
