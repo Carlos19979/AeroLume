@@ -11,6 +11,12 @@ config({ path: resolve(__dirname, '../../../.env') });
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { sql } from 'drizzle-orm';
+import * as tenantsSchema from './schema/tenants';
+import * as boatsSchema from './schema/boats';
+import * as productsSchema from './schema/products';
+import * as quotesSchema from './schema/quotes';
+import * as apiKeysSchema from './schema/api-keys';
+import * as analyticsSchema from './schema/analytics';
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { createHash, randomBytes } from 'crypto';
@@ -45,7 +51,16 @@ if (!DATABASE_URL || !SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 }
 
 const client = postgres(DATABASE_URL);
-const db = drizzle(client);
+const db = drizzle(client, {
+  schema: {
+    ...tenantsSchema,
+    ...boatsSchema,
+    ...productsSchema,
+    ...quotesSchema,
+    ...apiKeysSchema,
+    ...analyticsSchema,
+  },
+});
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
