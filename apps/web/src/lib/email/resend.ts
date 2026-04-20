@@ -37,7 +37,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
 
   const from =
     opts.from ??
-    (process.env.QUOTES_FROM_EMAIL ?? 'presupuestos@aerolume.com');
+    (process.env.QUOTES_FROM_EMAIL ?? 'Aerolume <presupuestos@aerolume.app>');
 
   try {
     // Resend's type union requires at least one of text/html/react. Our callers
@@ -51,10 +51,19 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
     } as Parameters<typeof resend.emails.send>[0];
     const { data, error } = await resend.emails.send(payload);
 
-    if (error) return { sent: false, error: error.message };
+    if (error) {
+      console.error('[email] Resend rejected send', {
+        from,
+        to: payload.to,
+        subject: opts.subject,
+        error: error.message,
+      });
+      return { sent: false, error: error.message };
+    }
     return { sent: true, id: data?.id };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    console.error('[email] Resend threw', { from, to: opts.to, subject: opts.subject, error: message });
     return { sent: false, error: message };
   }
 }
