@@ -47,9 +47,16 @@ export default async function EmbedPage({ searchParams }: Props) {
       themeColorMain: tenants.themeColorMain,
       themeColorHead: tenants.themeColorHead,
       themeColorSpi: tenants.themeColorSpi,
+      themeCtaLabel: tenants.themeCtaLabel,
+      themeContactTitle: tenants.themeContactTitle,
+      themeContactSubtitle: tenants.themeContactSubtitle,
       logoUrl: tenants.logoUrl,
       locale: tenants.locale,
       currency: tenants.currency,
+      plan: tenants.plan,
+      subscriptionStatus: tenants.subscriptionStatus,
+      trialEndsAt: tenants.trialEndsAt,
+      cancelationGraceEndsAt: tenants.cancelationGraceEndsAt,
     })
     .from(tenants)
     .where(eq(tenants.id, found.tenantId))
@@ -59,6 +66,22 @@ export default async function EmbedPage({ searchParams }: Props) {
     return (
       <div className="flex items-center justify-center min-h-screen text-gray-400 text-sm">
         Tenant no encontrado.
+      </div>
+    );
+  }
+
+  const isPro = tenant.plan === 'pro' && tenant.subscriptionStatus === 'active';
+  const isActiveTrial =
+    tenant.plan === 'prueba' && tenant.trialEndsAt && new Date(tenant.trialEndsAt) > new Date();
+  const isCanceledInGrace =
+    tenant.subscriptionStatus === 'canceled' &&
+    tenant.cancelationGraceEndsAt &&
+    new Date(tenant.cancelationGraceEndsAt) > new Date();
+
+  if (!isPro && !isActiveTrial && !isCanceledInGrace) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-gray-400 text-sm">
+        Este configurador no está disponible en este momento.
       </div>
     );
   }

@@ -1,8 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { SaveButton, useSaveState } from '@/components/ui/SaveButton';
+import { EmbedConfigurator } from '@/app/embed/configurator';
+
+type EmbedStep = 'boat' | 'products' | 'configure' | 'preview' | 'contact';
+
+const STEP_MAP: Record<1 | 2 | 3 | 4 | 5, EmbedStep> = {
+  1: 'boat',
+  2: 'products',
+  3: 'configure',
+  4: 'preview',
+  5: 'contact',
+};
 
 type ThemeData = {
   themeAccent: string | null;
@@ -14,6 +25,9 @@ type ThemeData = {
   themeColorMain: string | null;
   themeColorHead: string | null;
   themeColorSpi: string | null;
+  themeCtaLabel: string | null;
+  themeContactTitle: string | null;
+  themeContactSubtitle: string | null;
   logoUrl: string | null;
 };
 
@@ -27,24 +41,19 @@ const DEFAULTS: ThemeData = {
   themeColorMain: '#3b82f6',
   themeColorHead: '#10b981',
   themeColorSpi: '#a855f7',
+  themeCtaLabel: 'Solicitar presupuesto',
+  themeContactTitle: 'Datos de contacto',
+  themeContactSubtitle: 'Para enviarte el presupuesto detallado.',
   logoUrl: null,
 };
 
 const FONT_OPTIONS = ['Cormorant', 'Playfair Display', 'Libre Baskerville', 'Lora', 'Merriweather', 'Georgia'];
 const BODY_FONT_OPTIONS = ['Manrope', 'Inter', 'Open Sans', 'Roboto', 'Lato', 'Source Sans 3'];
 
-function hexToRgb(hex: string): string {
-  const h = hex.replace('#', '');
-  const r = parseInt(h.substring(0, 2), 16);
-  const g = parseInt(h.substring(2, 4), 16);
-  const b = parseInt(h.substring(4, 6), 16);
-  return `${r}, ${g}, ${b}`;
-}
-
 export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
   const [theme, setTheme] = useState<ThemeData>(initialTheme);
   const { saving, saved, save } = useSaveState();
-  const [previewStep, setPreviewStep] = useState<1 | 2>(1);
+  const [previewStep, setPreviewStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [error, setError] = useState<string | null>(null);
 
   function updateField(key: keyof ThemeData, value: string) {
@@ -67,6 +76,15 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
       themeColorMain: DEFAULTS.themeColorMain,
       themeColorHead: DEFAULTS.themeColorHead,
       themeColorSpi: DEFAULTS.themeColorSpi,
+    }));
+  }
+
+  function resetCopy() {
+    setTheme((prev) => ({
+      ...prev,
+      themeCtaLabel: DEFAULTS.themeCtaLabel,
+      themeContactTitle: DEFAULTS.themeContactTitle,
+      themeContactSubtitle: DEFAULTS.themeContactSubtitle,
     }));
   }
 
@@ -97,6 +115,49 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
   const colorSpi = theme.themeColorSpi || DEFAULTS.themeColorSpi!;
   const fontDisplay = theme.themeFontDisplay || DEFAULTS.themeFontDisplay!;
   const fontBody = theme.themeFontBody || DEFAULTS.themeFontBody!;
+  const ctaLabel = theme.themeCtaLabel || DEFAULTS.themeCtaLabel!;
+  const contactTitle = theme.themeContactTitle || DEFAULTS.themeContactTitle!;
+  const contactSubtitle = theme.themeContactSubtitle || DEFAULTS.themeContactSubtitle!;
+
+  // Tenant snapshot for the embedded configurator preview — reflects live edits
+  // on every render so the user sees color/font/copy changes instantly.
+  const previewTenant = useMemo(
+    () => ({
+      id: 'preview',
+      name: 'Tu Veleria',
+      slug: 'preview',
+      themeAccent: accent,
+      themeAccentDim: theme.themeAccentDim || DEFAULTS.themeAccentDim!,
+      themeNavy: navy,
+      themeText: text,
+      themeFontDisplay: fontDisplay,
+      themeFontBody: fontBody,
+      themeColorMain: colorMain,
+      themeColorHead: colorHead,
+      themeColorSpi: colorSpi,
+      themeCtaLabel: ctaLabel,
+      themeContactTitle: contactTitle,
+      themeContactSubtitle: contactSubtitle,
+      logoUrl: theme.logoUrl,
+      locale: 'es',
+      currency: 'EUR',
+    }),
+    [
+      accent,
+      theme.themeAccentDim,
+      navy,
+      text,
+      fontDisplay,
+      fontBody,
+      colorMain,
+      colorHead,
+      colorSpi,
+      ctaLabel,
+      contactTitle,
+      contactSubtitle,
+      theme.logoUrl,
+    ],
+  );
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -178,6 +239,57 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
           )}
         </div>
 
+        {/* Textos del configurador */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-gray-900">Textos del configurador</h3>
+              <p className="text-xs text-gray-500 mt-0.5">Etiqueta del boton y titulos de la pantalla de contacto.</p>
+            </div>
+            <button onClick={resetCopy} className="text-xs text-gray-500 hover:text-gray-600 transition-colors">
+              Resetear
+            </button>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1.5">Texto del boton final (CTA)</label>
+              <input
+                type="text"
+                data-testid="theme-cta-label"
+                value={theme.themeCtaLabel ?? ''}
+                onChange={(e) => updateField('themeCtaLabel', e.target.value)}
+                maxLength={100}
+                className="w-full border rounded-xl px-3 py-2 text-sm"
+                placeholder="Solicitar presupuesto"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1.5">Titulo de la pantalla de contacto</label>
+              <input
+                type="text"
+                data-testid="theme-contact-title"
+                value={theme.themeContactTitle ?? ''}
+                onChange={(e) => updateField('themeContactTitle', e.target.value)}
+                maxLength={150}
+                className="w-full border rounded-xl px-3 py-2 text-sm"
+                placeholder="Datos de contacto"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1.5">Subtitulo de la pantalla de contacto</label>
+              <textarea
+                data-testid="theme-contact-subtitle"
+                value={theme.themeContactSubtitle ?? ''}
+                onChange={(e) => updateField('themeContactSubtitle', e.target.value)}
+                maxLength={300}
+                rows={2}
+                className="w-full border rounded-xl px-3 py-2 text-sm resize-none"
+                placeholder="Para enviarte el presupuesto detallado."
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Save */}
         <div data-testid="theme-save">
           <SaveButton
@@ -193,23 +305,31 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-gray-900">Vista previa</h3>
-          <div className="flex bg-gray-100 rounded-lg p-0.5">
-            <button
-              onClick={() => setPreviewStep(1)}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${previewStep === 1 ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
-            >
-              Paso 1
-            </button>
-            <button
-              onClick={() => setPreviewStep(2)}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${previewStep === 2 ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
-            >
-              Paso 2
-            </button>
+          <div className="flex bg-gray-100 rounded-lg p-0.5 flex-wrap">
+            {([
+              { n: 1 as const, label: 'Paso 1' },
+              { n: 2 as const, label: 'Paso 2' },
+              { n: 3 as const, label: 'Opciones' },
+              { n: 4 as const, label: 'Vista previa' },
+              { n: 5 as const, label: 'Contacto' },
+            ]).map(({ n, label }) => (
+              <button
+                key={n}
+                data-testid={`theme-preview-step-${n}`}
+                onClick={() => setPreviewStep(n)}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${previewStep === n ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Browser chrome */}
+        <p className="text-xs text-gray-500">
+          Vista previa del widget real. Los cambios se aplican al instante.
+        </p>
+
+        {/* Browser chrome wrapping the real EmbedConfigurator in preview mode */}
         <div className="rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
           <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border-b border-gray-100">
             <div className="flex gap-1.5">
@@ -222,152 +342,15 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
             </div>
           </div>
 
-          {/* Widget content */}
-          <div className="bg-white p-5" style={{ fontFamily: fontBody }}>
-            {/* Header */}
-            <div className="text-center mb-4">
-              {theme.logoUrl && <Image src={theme.logoUrl} alt="Logo" width={96} height={24} unoptimized className="h-6 w-auto mx-auto mb-1.5 object-contain" />}
-              <p className="text-base font-bold" style={{ color: text, fontFamily: fontDisplay }}>Configurador de Velas</p>
-              <p className="text-[10px]" style={{ color: `${text}60` }}>por Tu Veleria</p>
-            </div>
-
-            {/* Stepper */}
-            <div className="flex justify-center gap-1 mb-4">
-              {['Barco', 'Vela', 'Opciones', 'Contacto'].map((label, i) => (
-                <span
-                  key={label}
-                  className="px-2.5 py-0.5 rounded-full text-[9px] font-medium"
-                  style={
-                    (previewStep === 1 && i === 0) || (previewStep === 2 && i <= 1)
-                      ? { backgroundColor: accent, color: '#fff' }
-                      : { backgroundColor: '#f3f4f6', color: '#9ca3af' }
-                  }
-                >
-                  {(previewStep === 2 && i === 0) ? '✓' : ''} {label}
-                </span>
-              ))}
-            </div>
-
-            {/* Step 1: Search */}
-            {previewStep === 1 && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 rounded-xl px-3 py-2.5" style={{ backgroundColor: `${navy}08` }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`${text}50`} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-                  <span className="text-xs" style={{ color: `${text}40` }}>Busca tu barco...</span>
-                </div>
-                <div className="text-center py-6">
-                  <div className="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center" style={{ background: `${accent}15` }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.5"><path d="M12 2L4 20h16L12 2z" opacity="0.2" fill={accent} /><path d="M12 2v18" /><path d="M4 20c0 0 4-10 8-18c4 8 8 18 8 18" /></svg>
-                  </div>
-                  <p className="text-xs" style={{ color: `${text}50` }}>Empieza buscando tu barco</p>
-                </div>
-                {/* Sample result */}
-                <div className="rounded-xl border border-gray-100 divide-y divide-gray-50">
-                  {['BAVARIA 38 CRUISER', 'BENETEAU FIRST 40'].map((name) => (
-                    <div key={name} className="flex items-center justify-between px-3 py-2.5">
-                      <span className="text-xs font-medium" style={{ color: text }}>{name}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-md" style={{ backgroundColor: `${navy}08`, color: `${text}60` }}>11.8m</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Step 2: Products */}
-            {previewStep === 2 && (
-              <div className="space-y-4">
-                {/* Boat pill */}
-                <div className="flex gap-1.5">
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-medium" style={{ backgroundColor: `${accent}12`, color: accent }}>BAVARIA 38 · 11.83m</span>
-                </div>
-
-                {/* Mayor group */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ backgroundColor: `${colorMain}18` }}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={colorMain} strokeWidth="2"><path d="M12 2L4 20h16L12 2z" opacity="0.2" fill={colorMain} /><path d="M12 2v18" /><path d="M4 20c0 0 4-10 8-18c4 8 8 18 8 18" /></svg>
-                    </div>
-                    <span className="text-[10px] font-bold text-gray-700" style={{ color: text }}>Vela mayor</span>
-                    <div className="flex-1 h-px bg-gray-100" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {['Mayor Clasica', 'Mayor Full Batten'].map((name, i) => (
-                      <div
-                        key={name}
-                        className="rounded-xl p-3 border"
-                        style={{
-                          background: `linear-gradient(135deg, rgba(${hexToRgb(colorMain)}, 0.04), transparent)`,
-                          borderColor: `rgba(${hexToRgb(colorMain)}, 0.12)`,
-                        }}
-                      >
-                        <p className="text-[10px] font-semibold text-gray-900" style={{ color: text }}>{name}</p>
-                        <p className="text-[9px] mt-0.5" style={{ color: `${text}e6` }}>25.9 m²</p>
-                        <p className="text-xs font-bold mt-1" style={{ color: accent }}>{[1165, 1188][i]} EUR</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Proa group */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ backgroundColor: `${colorHead}18` }}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={colorHead} strokeWidth="2"><path d="M12 2L4 20h16L12 2z" opacity="0.2" fill={colorHead} /><path d="M12 2v18" /><path d="M4 20c0 0 4-10 8-18c4 8 8 18 8 18" /></svg>
-                    </div>
-                    <span className="text-[10px] font-bold text-gray-700" style={{ color: text }}>Vela de proa</span>
-                    <div className="flex-1 h-px bg-gray-100" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {['Genova Enrollable', 'Genova Mosquetones'].map((name, i) => (
-                      <div
-                        key={name}
-                        className="rounded-xl p-3 border"
-                        style={{
-                          background: `linear-gradient(135deg, rgba(${hexToRgb(colorHead)}, 0.04), transparent)`,
-                          borderColor: `rgba(${hexToRgb(colorHead)}, 0.12)`,
-                        }}
-                      >
-                        <p className="text-[10px] font-semibold text-gray-900" style={{ color: text }}>{name}</p>
-                        <p className="text-[9px] mt-0.5" style={{ color: `${text}e6` }}>31.8 m²</p>
-                        <p className="text-xs font-bold mt-1" style={{ color: accent }}>{[1336, 1398][i]} EUR</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Portantes group */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ backgroundColor: `${colorSpi}18` }}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={colorSpi} strokeWidth="2"><path d="M12 2L4 20h16L12 2z" opacity="0.2" fill={colorSpi} /><path d="M12 2v18" /><path d="M4 20c0 0 4-10 8-18c4 8 8 18 8 18" /></svg>
-                    </div>
-                    <span className="text-[10px] font-bold text-gray-700" style={{ color: text }}>Portantes</span>
-                    <div className="flex-1 h-px bg-gray-100" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {['Spi Asimetrico', 'Code S'].map((name, i) => (
-                      <div
-                        key={name}
-                        className="rounded-xl p-3 border"
-                        style={{
-                          background: `linear-gradient(135deg, rgba(${hexToRgb(colorSpi)}, 0.04), transparent)`,
-                          borderColor: `rgba(${hexToRgb(colorSpi)}, 0.12)`,
-                        }}
-                      >
-                        <p className="text-[10px] font-semibold text-gray-900" style={{ color: text }}>{name}</p>
-                        <p className="text-[9px] mt-0.5" style={{ color: `${text}e6` }}>69.1 m²</p>
-                        <p className="text-xs font-bold mt-1" style={{ color: accent }}>{[2626, 3317][i]} EUR</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Footer */}
-            <div className="mt-4 pt-3 border-t border-gray-100 text-center">
-              <span className="text-[9px] text-gray-500">Powered by <span style={{ color: accent }}>Aerolume</span></span>
-            </div>
+          {/* Live EmbedConfigurator — remount on step change so the internal
+              step state picks up the new initial step from previewMode. */}
+          <div className="bg-white">
+            <EmbedConfigurator
+              key={previewStep}
+              apiKey=""
+              tenant={previewTenant}
+              previewMode={{ step: STEP_MAP[previewStep] }}
+            />
           </div>
         </div>
       </div>

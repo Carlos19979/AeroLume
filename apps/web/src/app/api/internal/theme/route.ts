@@ -16,6 +16,9 @@ export const GET = withTenantAuth(async (_request, { tenant }) => {
       themeColorHead: tenants.themeColorHead,
       themeColorSpi: tenants.themeColorSpi,
       logoUrl: tenants.logoUrl,
+      themeCtaLabel: tenants.themeCtaLabel,
+      themeContactTitle: tenants.themeContactTitle,
+      themeContactSubtitle: tenants.themeContactSubtitle,
     })
     .from(tenants)
     .where(eq(tenants.id, tenant.id))
@@ -45,6 +48,9 @@ export const PUT = withTenantAuth(async (request, { tenant }) => {
       themeColorHead: data.themeColorHead,
       themeColorSpi: data.themeColorSpi,
       logoUrl: data.logoUrl,
+      ...(data.themeCtaLabel !== undefined ? { themeCtaLabel: data.themeCtaLabel } : {}),
+      ...(data.themeContactTitle !== undefined ? { themeContactTitle: data.themeContactTitle } : {}),
+      ...(data.themeContactSubtitle !== undefined ? { themeContactSubtitle: data.themeContactSubtitle } : {}),
       updatedAt: new Date(),
     })
     .where(eq(tenants.id, tenant.id))
@@ -59,6 +65,9 @@ export const PUT = withTenantAuth(async (request, { tenant }) => {
       themeColorHead: tenants.themeColorHead,
       themeColorSpi: tenants.themeColorSpi,
       logoUrl: tenants.logoUrl,
+      themeCtaLabel: tenants.themeCtaLabel,
+      themeContactTitle: tenants.themeContactTitle,
+      themeContactSubtitle: tenants.themeContactSubtitle,
     });
 
   return NextResponse.json({ data: updated });

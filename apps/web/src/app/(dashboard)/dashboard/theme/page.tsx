@@ -18,6 +18,9 @@ export default async function ThemePage() {
       themeColorMain: tenants.themeColorMain,
       themeColorHead: tenants.themeColorHead,
       themeColorSpi: tenants.themeColorSpi,
+      themeCtaLabel: tenants.themeCtaLabel,
+      themeContactTitle: tenants.themeContactTitle,
+      themeContactSubtitle: tenants.themeContactSubtitle,
       logoUrl: tenants.logoUrl,
     })
     .from(tenants)
