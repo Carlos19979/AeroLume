@@ -27,7 +27,7 @@ test.describe('dashboard: subscription checkout', () => {
     tenant,
   }) => {
     await loginAs(page, tenant.email, tenant.password);
-    await page.goto('/dashboard/subscription');
+    await page.goto('/dashboard/settings');
 
     // Plan badge
     const badge = page.getByTestId(TID.dashboard.planBadge);
@@ -55,7 +55,7 @@ test.describe('dashboard: subscription checkout', () => {
     const FAKE_CHECKOUT_URL = 'https://example.com/fake-lemon-checkout';
 
     await loginAs(page, tenant.email, tenant.password);
-    await page.goto('/dashboard/subscription');
+    await page.goto('/dashboard/settings');
 
     // Intercept the checkout API call
     await page.route('**/api/internal/checkout', async (route) => {

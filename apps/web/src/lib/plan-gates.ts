@@ -16,6 +16,7 @@ export type PlanStatus = {
   plan: string | null;
   subscriptionStatus: string | null;
   trialEndsAt?: Date | null;
+  cancelationGraceEndsAt?: Date | null;
 };
 
 function isActiveTrial(ps: PlanStatus): boolean {
@@ -31,7 +32,7 @@ function isProActive(ps: PlanStatus): boolean {
 }
 
 function hasFullAccess(ps: PlanStatus): boolean {
-  return isProActive(ps) || isActiveTrial(ps);
+  return isProActive(ps) || isActiveTrial(ps) || isCanceledInGrace(ps);
 }
 
 function hasReadAccess(ps: PlanStatus): boolean {
@@ -48,8 +49,30 @@ export function isWidgetEnabled(ps: PlanStatus): boolean {
   return hasFullAccess(ps);
 }
 
-export function isSuspended(ps: PlanStatus): boolean {
+export function isCanceled(ps: PlanStatus): boolean {
   return ps.subscriptionStatus === 'canceled';
+}
+
+/** Grace period active: canceled but still within the 7-day window */
+export function isCanceledInGrace(ps: PlanStatus): boolean {
+  return (
+    ps.subscriptionStatus === 'canceled' &&
+    !!ps.cancelationGraceEndsAt &&
+    new Date(ps.cancelationGraceEndsAt) > new Date()
+  );
+}
+
+/** Grace period elapsed: canceled and 7-day window has passed */
+export function isCanceledExpired(ps: PlanStatus): boolean {
+  return (
+    ps.subscriptionStatus === 'canceled' &&
+    (!ps.cancelationGraceEndsAt || new Date(ps.cancelationGraceEndsAt) <= new Date())
+  );
+}
+
+/** Suspended = fully blocked (canceled with no active grace) */
+export function isSuspended(ps: PlanStatus): boolean {
+  return isCanceledExpired(ps);
 }
 
 export function isPastDue(ps: PlanStatus): boolean {
@@ -65,9 +88,18 @@ export function getTrialDaysLeft(ps: PlanStatus): number | null {
   return Math.max(0, Math.ceil((new Date(ps.trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
 }
 
-export function getDashboardBanner(ps: PlanStatus): { type: 'trial' | 'trial_expired' | 'past_due' | 'none'; message: string } {
-  if (isSuspended(ps)) {
-    return { type: 'none', message: '' };
+export function getDashboardBanner(ps: PlanStatus): { type: 'trial' | 'trial_expired' | 'past_due' | 'canceled_grace' | 'access_expired' | 'none'; message: string } {
+  if (isCanceledExpired(ps)) {
+    return { type: 'access_expired', message: 'Tu suscripcion ha terminado. Suscribete para recuperar acceso.' };
+  }
+  if (isCanceledInGrace(ps)) {
+    const graceDate = new Date(ps.cancelationGraceEndsAt!).toLocaleDateString('es-ES', {
+      day: 'numeric', month: 'long', year: 'numeric',
+    });
+    return {
+      type: 'canceled_grace',
+      message: `Tu suscripcion se cancelara el ${graceDate}. Mantendras acceso hasta entonces.`,
+    };
   }
   if (isPastDue(ps)) {
     return {

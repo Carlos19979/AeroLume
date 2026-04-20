@@ -2,7 +2,7 @@
  * Trial-expired UI tests.
  *
  * beforeEach sets trial_ends_at to yesterday via SQL, then navigates to
- * /dashboard/subscription to assert the expired state UI.
+ * /dashboard/settings to assert the expired state UI.
  */
 import { test, expect } from '../fixtures/auth';
 import { dbQuery, closeDbQuery } from '../fixtures/api';
@@ -33,7 +33,7 @@ test.describe('dashboard: trial expired UI', () => {
 
   test('subscription page shows trial-expired inline warning', async ({ page, tenant }) => {
     await loginAs(page, tenant.email, tenant.password);
-    await page.goto('/dashboard/subscription');
+    await page.goto('/dashboard/settings');
 
     // The inline warning inside the hero card
     await expect(
@@ -43,7 +43,7 @@ test.describe('dashboard: trial expired UI', () => {
 
   test('upgrade CTA is still present when trial is expired', async ({ page, tenant }) => {
     await loginAs(page, tenant.email, tenant.password);
-    await page.goto('/dashboard/subscription');
+    await page.goto('/dashboard/settings');
 
     await expect(page.getByTestId(TID.dashboard.upgradeCta)).toBeVisible();
   });

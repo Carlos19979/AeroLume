@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
           subscriptionStatus,
           lsCustomerId,
           lsSubscriptionId,
+          ...(subscriptionStatus === 'active' ? { cancelationGraceEndsAt: null } : {}),
         })
         .where(eq(tenants.id, tenantId));
       break;
@@ -58,14 +59,14 @@ export async function POST(req: NextRequest) {
     case 'subscription_expired': {
       // Grace period ended — revoke pro access entirely and downgrade plan.
       await db.update(tenants)
-        .set({ subscriptionStatus: 'expired', plan: 'prueba', trialEndsAt: null })
+        .set({ subscriptionStatus: 'expired', plan: 'prueba', trialEndsAt: null, cancelationGraceEndsAt: null })
         .where(eq(tenants.id, tenantId));
       break;
     }
 
     case 'subscription_payment_success': {
       await db.update(tenants)
-        .set({ plan: 'pro', subscriptionStatus: 'active' })
+        .set({ plan: 'pro', subscriptionStatus: 'active', cancelationGraceEndsAt: null })
         .where(eq(tenants.id, tenantId));
       break;
     }

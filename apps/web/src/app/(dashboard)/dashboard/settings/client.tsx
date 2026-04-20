@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { SUBSCRIPTION_STATUS_LABELS } from '@/lib/constants';
-import { formatDate } from '@/lib/format';
 import { SaveButton, useSaveState } from '@/components/ui/SaveButton';
+import { SubscriptionSection } from './subscription-section';
 
 type Settings = {
   id: string;
@@ -24,13 +23,22 @@ type Settings = {
   trialEndsAt: Date | null;
 };
 
-const PLAN_LABELS: Record<string, string> = {
-  prueba: 'Prueba',
-  pro: 'Pro',
+type SubscriptionProps = {
+  plan: string;
+  status: string;
+  trialEndsAt: string | null;
+  cancelationGraceEndsAt: string | null;
+  lsCustomerId: string | null;
 };
 
 
-export function SettingsClient({ initialSettings }: { initialSettings: Settings }) {
+export function SettingsClient({
+  initialSettings,
+  subscription,
+}: {
+  initialSettings: Settings;
+  subscription: SubscriptionProps;
+}) {
   const [settings, setSettings] = useState(initialSettings);
   const { saving, saved, save } = useSaveState();
   const [error, setError] = useState<string | null>(null);
@@ -84,8 +92,6 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
       setError(e instanceof Error ? e.message : 'Error inesperado');
     });
   }
-
-  const status = SUBSCRIPTION_STATUS_LABELS[settings.subscriptionStatus || ''] || SUBSCRIPTION_STATUS_LABELS.trialing;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -235,38 +241,11 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
             className="px-6 py-2 bg-[var(--color-accent)] text-white text-sm rounded-lg hover:opacity-90 disabled:opacity-50"
           />
         </div>
+
       </div>
 
       {/* Sidebar */}
       <div className="space-y-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="font-medium text-gray-900 mb-3">Suscripción</h3>
-          <dl className="space-y-3 text-sm">
-            <div>
-              <dt className="text-gray-500">Plan</dt>
-              <dd className="text-gray-900 font-medium">
-                {PLAN_LABELS[settings.plan || ''] || settings.plan}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-gray-500">Estado</dt>
-              <dd>
-                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${status.bg} ${status.color}`}>
-                  {status.label}
-                </span>
-              </dd>
-            </div>
-            {settings.trialEndsAt && (
-              <div>
-                <dt className="text-gray-500">Prueba termina</dt>
-                <dd className="text-gray-900">
-                  {formatDate(settings.trialEndsAt)}
-                </dd>
-              </div>
-            )}
-          </dl>
-        </div>
-
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h3 className="font-medium text-gray-900 mb-3">Detalles técnicos</h3>
           <dl className="space-y-3 text-sm">
@@ -279,6 +258,20 @@ export function SettingsClient({ initialSettings }: { initialSettings: Settings 
               <dd className="font-mono text-xs text-gray-500">{settings.id}</dd>
             </div>
           </dl>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="mb-4">
+            <h3 className="font-medium text-gray-900">Suscripción</h3>
+            <p className="text-xs text-gray-500 mt-0.5">Gestiona tu plan y facturación.</p>
+          </div>
+          <SubscriptionSection
+            plan={subscription.plan}
+            status={subscription.status}
+            trialEndsAt={subscription.trialEndsAt}
+            cancelationGraceEndsAt={subscription.cancelationGraceEndsAt}
+            lsCustomerId={subscription.lsCustomerId}
+          />
         </div>
       </div>
     </div>

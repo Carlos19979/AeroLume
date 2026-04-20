@@ -39,7 +39,7 @@ test.describe('dashboard: customer portal', () => {
     );
 
     await loginAs(page, tenant.email, tenant.password);
-    await page.goto('/dashboard/subscription');
+    await page.goto('/dashboard/settings');
 
     // Portal CTA must be visible
     await expect(page.getByTestId(TID.dashboard.portalCta)).toBeVisible();
@@ -63,7 +63,7 @@ test.describe('dashboard: customer portal', () => {
     );
 
     await loginAs(page, tenant.email, tenant.password);
-    await page.goto('/dashboard/subscription');
+    await page.goto('/dashboard/settings');
 
     // Intercept the customer portal API call
     await page.route('**/api/internal/customer-portal', async (route) => {
@@ -104,7 +104,7 @@ test.describe('dashboard: customer portal', () => {
     );
 
     await loginAs(page, tenant.email, tenant.password);
-    await page.goto('/dashboard/subscription');
+    await page.goto('/dashboard/settings');
 
     // Button must not be in the DOM (lsCustomerId is null → component doesn't render it)
     await expect(page.getByTestId(TID.dashboard.portalCta)).not.toBeVisible();

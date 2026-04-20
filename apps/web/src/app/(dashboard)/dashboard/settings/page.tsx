@@ -25,6 +25,8 @@ export default async function SettingsPage() {
       plan: tenants.plan,
       subscriptionStatus: tenants.subscriptionStatus,
       trialEndsAt: tenants.trialEndsAt,
+      cancelationGraceEndsAt: tenants.cancelationGraceEndsAt,
+      lsCustomerId: tenants.lsCustomerId,
     })
     .from(tenants)
     .where(eq(tenants.id, auth.tenant.id))
@@ -33,7 +35,16 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Configuración" description="Ajustes de tu workspace y configuración técnica." />
-      <SettingsClient initialSettings={settings} />
+      <SettingsClient
+        initialSettings={settings}
+        subscription={{
+          plan: settings?.plan ?? 'prueba',
+          status: settings?.subscriptionStatus ?? 'trialing',
+          trialEndsAt: settings?.trialEndsAt?.toISOString() ?? null,
+          cancelationGraceEndsAt: settings?.cancelationGraceEndsAt?.toISOString() ?? null,
+          lsCustomerId: settings?.lsCustomerId ?? null,
+        }}
+      />
     </div>
   );
 }

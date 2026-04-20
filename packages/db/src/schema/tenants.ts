@@ -24,6 +24,11 @@ export const tenants = pgTable('tenants', {
   themeColorHead: text('theme_color_head').default('#10b981'),
   themeColorSpi: text('theme_color_spi').default('#a855f7'),
 
+  // Configurator text
+  themeCtaLabel: text('theme_cta_label').default('Solicitar presupuesto'),
+  themeContactTitle: text('theme_contact_title').default('Datos de contacto'),
+  themeContactSubtitle: text('theme_contact_subtitle').default('Para enviarte el presupuesto detallado.'),
+
   // Localization
   locale: text('locale').default('es'),
   currency: text('currency').default('EUR'),
@@ -34,6 +39,7 @@ export const tenants = pgTable('tenants', {
   lsSubscriptionId: text('ls_subscription_id'),
   subscriptionStatus: subscriptionStatusEnum('subscription_status').default('trialing'),
   trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),
+  cancelationGraceEndsAt: timestamp('cancelation_grace_ends_at', { withTimezone: true }),
 
   // Settings
   allowedOrigins: text('allowed_origins').array().default([]),

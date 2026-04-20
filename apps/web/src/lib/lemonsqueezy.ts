@@ -29,7 +29,7 @@ export async function createCheckoutUrl(tenantId: string, tenantEmail: string): 
             custom: { tenant_id: tenantId },
           },
           product_options: {
-            redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/subscription?success=true`,
+            redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?success=true`,
           },
         },
         relationships: {
