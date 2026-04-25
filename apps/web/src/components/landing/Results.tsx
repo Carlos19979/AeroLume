@@ -51,7 +51,7 @@ export function Results() {
                 </div>
 
                 <div className="border-t-2 border-[var(--color-ink)]">
-                    <div className="grid grid-cols-[64px_1fr_1.6fr_44px] md:grid-cols-[80px_1fr_2fr_60px] gap-4 md:gap-6 py-3 border-b border-[var(--color-ink)] label-mono">
+                    <div className="grid grid-cols-[48px_1fr_0_32px] sm:grid-cols-[64px_1fr_1.6fr_44px] md:grid-cols-[80px_1fr_2fr_60px] gap-3 sm:gap-4 md:gap-6 py-3 border-b border-[var(--color-ink)] label-mono">
                         <span>Ref.</span>
                         <span>Metrica</span>
                         <span className="hidden md:block">Lectura</span>
@@ -65,7 +65,7 @@ export function Results() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.45, delay: i * 0.06 }}
-                            className="grid grid-cols-[64px_1fr_1.6fr_44px] md:grid-cols-[80px_1fr_2fr_60px] gap-4 md:gap-6 py-7 lg:py-8 border-b border-[var(--color-rule)] items-baseline group hover:bg-[var(--color-paper-2)]/50 transition-colors"
+                            className="grid grid-cols-[48px_1fr_0_32px] sm:grid-cols-[64px_1fr_1.6fr_44px] md:grid-cols-[80px_1fr_2fr_60px] gap-3 sm:gap-4 md:gap-6 py-7 lg:py-8 border-b border-[var(--color-rule)] items-baseline group hover:bg-[var(--color-paper-2)]/50 transition-colors"
                         >
                             <span className="font-mono text-[11px] tracking-[0.08em] uppercase text-[var(--color-ink-3)] pt-2">
                                 {row.ref}
@@ -73,7 +73,7 @@ export function Results() {
 
                             <div>
                                 <div
-                                    className="text-[2rem] lg:text-[3rem] leading-[0.95] text-[var(--color-ink)] group-hover:text-[var(--color-signal)] transition-colors"
+                                    className="text-[1.75rem] sm:text-[2rem] lg:text-[3rem] leading-[0.95] text-[var(--color-ink)] group-hover:text-[var(--color-signal)] transition-colors whitespace-nowrap"
                                     style={{
                                         fontFamily: 'var(--font-fraunces), Georgia, serif',
                                         fontFeatureSettings: '"tnum"',

@@ -71,7 +71,7 @@ test.describe('dashboard: boats (read-only catalog)', () => {
 
     // Badge showing it is a global boat — scoped to the modal panel
     const modal = page.locator('.fixed.inset-0.z-50');
-    await expect(modal.getByText('Global', { exact: true })).toBeVisible();
+    await expect(modal.getByText(/Cat.logo global/i)).toBeVisible();
   });
 
   test('no edit or delete buttons exist for any boat row', async ({ page, tenant }) => {

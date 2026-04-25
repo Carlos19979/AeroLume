@@ -108,6 +108,11 @@ export const CRUD = {
     contactTitle: 'theme-contact-title',
     contactSubtitle: 'theme-contact-subtitle',
     stepTab: (n: 1 | 2 | 3 | 4 | 5) => `theme-preview-step-${n}`,
+    template: (key: 'minimal' | 'editorial' | 'premium' | 'marine') => `theme-template-${key}`,
+    copyTitle: (step: 'boat' | 'products' | 'configure' | 'preview' | 'contact') =>
+      `theme-copy-${step}-title`,
+    copySubtitle: (step: 'boat' | 'products' | 'configure' | 'preview' | 'contact') =>
+      `theme-copy-${step}-subtitle`,
   },
   settings: {
     locale: 'settings-locale',

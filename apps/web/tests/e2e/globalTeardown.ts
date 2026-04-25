@@ -5,10 +5,56 @@ import { createClient } from '@supabase/supabase-js';
 
 const E2E_EMAIL_RE = /^e2e-.*@aerolume\.test$/;
 
-/**
- * Global teardown — best-effort cleanup of any E2E-created users + tenants.
- * Never throws; logs warnings if anything fails.
- */
+const CHILD_TABLES = [
+  'quote_items',
+  'quotes',
+  'product_pricing_tiers',
+  'product_config_fields',
+  'products',
+  'boats',
+  'api_keys',
+  'analytics_events',
+  'tenant_members',
+] as const;
+
+async function deleteTenantTrees(
+  sql: postgres.Sql,
+  tenantIds: string[],
+  label: string,
+): Promise<void> {
+  const productSubquery = `SELECT id FROM products WHERE tenant_id = ANY($1::uuid[])`;
+  const quoteSubquery = `SELECT id FROM quotes WHERE tenant_id = ANY($1::uuid[])`;
+
+  const deleteMap: Record<string, string> = {
+    quote_items: `DELETE FROM quote_items WHERE quote_id IN (${quoteSubquery})`,
+    product_pricing_tiers: `DELETE FROM product_pricing_tiers WHERE product_id IN (${productSubquery})`,
+    product_config_fields: `DELETE FROM product_config_fields WHERE product_id IN (${productSubquery})`,
+  };
+
+  for (const table of CHILD_TABLES) {
+    try {
+      const query = deleteMap[table] ?? `DELETE FROM "${table}" WHERE tenant_id = ANY($1::uuid[])`;
+      await sql.unsafe(query, [tenantIds]);
+    } catch (err) {
+      console.warn(`  ! [${label}] failed to delete from ${table}:`, (err as Error).message);
+    }
+  }
+  try {
+    const deleted = await sql<{ count: string }[]>`
+      WITH removed AS (
+        DELETE FROM tenants WHERE id = ANY(${tenantIds}::uuid[]) RETURNING id
+      )
+      SELECT COUNT(*)::text AS count FROM removed
+    `;
+    const count = parseInt(deleted[0]?.count ?? '0', 10);
+    if (count > 0) {
+      console.log(`[e2e:globalTeardown] [${label}] Deleted ${count} tenant(s) with children.`);
+    }
+  } catch (err) {
+    console.warn(`  ! [${label}] failed to delete tenants:`, (err as Error).message);
+  }
+}
+
 export default async function globalTeardown(): Promise<void> {
   dotenvConfig({ path: path.resolve(__dirname, '../../.env.local') });
 
@@ -54,46 +100,45 @@ export default async function globalTeardown(): Promise<void> {
     } else {
       console.log(`[e2e:globalTeardown] Found ${e2eUsers.length} e2e user(s) — cleaning up.`);
 
+      // Collect all tenant IDs for per-user cleanup
+      const userTenantIds: string[] = [];
       for (const user of e2eUsers) {
         try {
-          // Find tenants owned/joined by this user via tenant_members
           const tenantRows = await sql<{ tenant_id: string }[]>`
             SELECT tenant_id FROM tenant_members WHERE user_id = ${user.id}::uuid
           `;
           for (const row of tenantRows) {
-            try {
-              await sql`DELETE FROM tenants WHERE id = ${row.tenant_id}::uuid`;
-              console.log(`  - deleted tenant ${row.tenant_id} (user ${user.email})`);
-            } catch (err) {
-              console.warn(`  ! failed to delete tenant ${row.tenant_id}:`, (err as Error).message);
-            }
-          }
-
-          const { error: delErr } = await supabase.auth.admin.deleteUser(user.id);
-          if (delErr) {
-            console.warn(`  ! failed to delete user ${user.email}:`, delErr.message);
-          } else {
-            console.log(`  - deleted user ${user.email}`);
+            userTenantIds.push(row.tenant_id);
           }
         } catch (err) {
-          console.warn(`  ! cleanup error for ${user.email}:`, (err as Error).message);
+          console.warn(`  ! error finding tenants for ${user.email}:`, (err as Error).message);
+        }
+      }
+
+      // Delete tenant trees in FK-safe order
+      if (userTenantIds.length > 0) {
+        await deleteTenantTrees(sql, userTenantIds, 'per-user');
+      }
+
+      // Delete auth users
+      for (const user of e2eUsers) {
+        const { error: delErr } = await supabase.auth.admin.deleteUser(user.id);
+        if (delErr) {
+          console.warn(`  ! failed to delete user ${user.email}:`, delErr.message);
+        } else {
+          console.log(`  - deleted user ${user.email}`);
         }
       }
     }
 
     // Bulk-delete any remaining e2e-* tenants (catches orphans missed by per-user loop)
     try {
-      const deleted = await sql<{ count: string }[]>`
-        WITH removed AS (
-          DELETE FROM tenants
-          WHERE name ILIKE 'e2e-%' OR slug ILIKE 'e2e-%'
-          RETURNING id
-        )
-        SELECT COUNT(*)::text AS count FROM removed
+      const orphanRows = await sql<{ id: string }[]>`
+        SELECT id::text FROM tenants WHERE name ILIKE 'e2e-%' OR slug ILIKE 'e2e-%'
       `;
-      const count = parseInt(deleted[0]?.count ?? '0', 10);
-      if (count > 0) {
-        console.log(`[e2e:globalTeardown] Bulk-deleted ${count} orphaned e2e tenant(s).`);
+      const orphanIds = orphanRows.map((r) => r.id);
+      if (orphanIds.length > 0) {
+        await deleteTenantTrees(sql, orphanIds, 'bulk-orphan');
       } else {
         console.log('[e2e:globalTeardown] No orphaned e2e tenants found in bulk pass.');
       }
@@ -101,7 +146,7 @@ export default async function globalTeardown(): Promise<void> {
       console.warn('[e2e:globalTeardown] bulk tenant cleanup failed:', (err as Error).message);
     }
 
-    // Defensive: remove any leftover orphaned tenant_members (cascade should handle it, but just in case)
+    // Defensive: remove any leftover orphaned tenant_members
     try {
       const orphans = await sql<{ count: string }[]>`
         WITH removed AS (

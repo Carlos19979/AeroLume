@@ -9,6 +9,7 @@ export default async function ThemePage() {
 
   const [theme] = await db
     .select({
+      themeTemplate: tenants.themeTemplate,
       themeAccent: tenants.themeAccent,
       themeAccentDim: tenants.themeAccentDim,
       themeNavy: tenants.themeNavy,
@@ -21,6 +22,7 @@ export default async function ThemePage() {
       themeCtaLabel: tenants.themeCtaLabel,
       themeContactTitle: tenants.themeContactTitle,
       themeContactSubtitle: tenants.themeContactSubtitle,
+      themeCopy: tenants.themeCopy,
       logoUrl: tenants.logoUrl,
     })
     .from(tenants)

@@ -1,8 +1,9 @@
-import { pgTable, uuid, text, timestamp, boolean, pgEnum, unique } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, boolean, pgEnum, unique, jsonb } from 'drizzle-orm/pg-core';
 
 export const tenantPlanEnum = pgEnum('tenant_plan', ['prueba', 'pro', 'enterprise']);
 export const subscriptionStatusEnum = pgEnum('subscription_status', ['trialing', 'active', 'past_due', 'canceled', 'expired']);
 export const memberRoleEnum = pgEnum('member_role', ['owner', 'admin', 'viewer']);
+export const themeTemplateEnum = pgEnum('theme_template', ['minimal', 'editorial', 'premium', 'marine']);
 
 export const tenants = pgTable('tenants', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -12,6 +13,7 @@ export const tenants = pgTable('tenants', {
   logoUrl: text('logo_url'),
 
   // Theme
+  themeTemplate: themeTemplateEnum('theme_template').default('minimal').notNull(),
   themeAccent: text('theme_accent').default('#0b5faa'),
   themeAccentDim: text('theme_accent_dim').default('#1a7fd4'),
   themeNavy: text('theme_navy').default('#0a2540'),
@@ -28,6 +30,8 @@ export const tenants = pgTable('tenants', {
   themeCtaLabel: text('theme_cta_label').default('Solicitar presupuesto'),
   themeContactTitle: text('theme_contact_title').default('Datos de contacto'),
   themeContactSubtitle: text('theme_contact_subtitle').default('Para enviarte el presupuesto detallado.'),
+  // Per-step title/subtitle overrides, keyed by step name (boat, products, configure, preview, contact).
+  themeCopy: jsonb('theme_copy').$type<Record<string, { title?: string; subtitle?: string }>>().default({}).notNull(),
 
   // Localization
   locale: text('locale').default('es'),

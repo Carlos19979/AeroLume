@@ -4,27 +4,13 @@ import { useState, useEffect, useDeferredValue } from 'react';
 import Image from 'next/image';
 import { SAIL_TYPE_LABELS } from '@/lib/constants';
 import { SailPreview } from './sail-preview';
+import { EditorialConfigurator } from './templates/editorial/Configurator';
+import { PremiumConfigurator } from './templates/premium/Configurator';
+import { MarineConfigurator } from './templates/marine/Configurator';
+import { resolveCopy } from './templates/copy';
+import type { TemplateTenant } from './templates/types';
 
-type Tenant = {
-  id: string;
-  name: string;
-  slug: string;
-  themeAccent: string | null;
-  themeAccentDim: string | null;
-  themeNavy: string | null;
-  themeText: string | null;
-  themeFontDisplay: string | null;
-  themeFontBody: string | null;
-  themeColorMain: string | null;
-  themeColorHead: string | null;
-  themeColorSpi: string | null;
-  logoUrl: string | null;
-  locale: string | null;
-  currency: string | null;
-  themeCtaLabel: string | null;
-  themeContactTitle: string | null;
-  themeContactSubtitle: string | null;
-};
+type Tenant = TemplateTenant;
 
 type Boat = {
   id: string;
@@ -189,7 +175,20 @@ const PREVIEW_MOCK_PRODUCTS: Product[] = [
   },
 ];
 
-export function EmbedConfigurator({ apiKey, tenant, previewMode }: { apiKey: string; tenant: Tenant; previewMode?: { step: Step } }) {
+export function EmbedConfigurator(props: { apiKey: string; tenant: Tenant; previewMode?: { step: Step } }) {
+  switch (props.tenant.themeTemplate) {
+    case 'editorial':
+      return <EditorialConfigurator {...props} />;
+    case 'premium':
+      return <PremiumConfigurator {...props} />;
+    case 'marine':
+      return <MarineConfigurator {...props} />;
+    default:
+      return <MinimalEmbedConfigurator {...props} />;
+  }
+}
+
+function MinimalEmbedConfigurator({ apiKey, tenant, previewMode }: { apiKey: string; tenant: Tenant; previewMode?: { step: Step } }) {
   const isPreview = !!previewMode;
 
   // parentOrigin stays null until we trust a referrer origin. We never fall back to '*'
@@ -367,61 +366,88 @@ export function EmbedConfigurator({ apiKey, tenant, previewMode }: { apiKey: str
 
   return (
     <div
-      className="max-w-2xl mx-auto px-5 py-8"
+      className="max-w-2xl mx-auto px-4 sm:px-5 py-8 min-h-[640px]"
       style={{ fontFamily: `${fontBody}, system-ui, sans-serif`, color: textColor } as React.CSSProperties}
     >
       {/* ── HEADER ── */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-3 mb-6 sm:mb-8">
+        <div className="flex items-center gap-3 min-w-0">
           {step !== 'boat' && step !== 'done' && (
             <button
               onClick={goBack}
-              className="w-9 h-9 rounded-2xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200"
+              aria-label="Atrás"
+              className="w-9 h-9 shrink-0 rounded-2xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M10 4L6 8L10 12" /></svg>
             </button>
           )}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
             {tenant.logoUrl && (
               <Image src={tenant.logoUrl} alt={tenant.name} width={112} height={28} unoptimized className="h-7 w-auto object-contain" />
             )}
-            <div>
-              <h1 className="text-lg font-bold tracking-tight" style={{ color: textColor, fontFamily: `${fontDisplay}, serif` }}>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold tracking-tight truncate" style={{ color: textColor, fontFamily: `${fontDisplay}, serif` }}>
                 Configurador de Velas
               </h1>
               <p className="text-xs -mt-0.5" style={{ color: `${textColor}60` }}>por {tenant.name}</p>
             </div>
           </div>
         </div>
-        {/* Stepper pills */}
-        {step !== 'done' && (
-          <div className="flex items-center gap-1 bg-gray-100/80 rounded-full p-1">
-            {STEPS.map((s, i) => {
-              const current = stepIndex(step);
-              const done = i < current;
-              const active = i === current;
-              return (
-                <button
-                  key={s.key}
-                  data-testid={`embed-step-${s.key}`}
-                  onClick={() => { if (!isPreview && done) setStep(s.key); }}
-                  disabled={isPreview || (!done && !active)}
-                  className="relative px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300"
-                  style={
-                    active
-                      ? { backgroundColor: accent, color: '#fff', boxShadow: `0 2px 8px ${accent}40` }
-                      : done
-                        ? { backgroundColor: 'white', color: accent, boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }
-                        : { color: '#9ca3af' }
-                  }
-                >
-                  {done ? `✓ ${s.label}` : s.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
+        {/* Stepper pills — hidden on mobile (replaced by progress bar below) */}
+        {step !== 'done' && (() => {
+          const current = stepIndex(step);
+          return (
+            <div className="hidden sm:flex items-center gap-1 bg-gray-100/80 rounded-full p-1 shrink-0">
+              {STEPS.map((s, i) => {
+                const done = i < current;
+                const active = i === current;
+                return (
+                  <button
+                    key={s.key}
+                    data-testid={`embed-step-${s.key}`}
+                    onClick={() => { if (!isPreview && done) setStep(s.key); }}
+                    disabled={isPreview || (!done && !active)}
+                    className="relative shrink-0 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-300"
+                    style={
+                      active
+                        ? { backgroundColor: accent, color: '#fff', boxShadow: `0 2px 8px ${accent}40` }
+                        : done
+                          ? { backgroundColor: 'white', color: accent, boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }
+                          : { color: '#9ca3af' }
+                    }
+                  >
+                    {done ? `✓ ${s.label}` : s.label}
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
+
+      {/* Mobile-only progress bar — thin, full-width, tied to the step */}
+      {step !== 'done' && (() => {
+        const current = stepIndex(step);
+        const percent = ((current + 1) / STEPS.length) * 100;
+        return (
+          <div className="sm:hidden mb-6">
+            <div className="flex items-baseline justify-between mb-1.5">
+              <span className="text-xs font-semibold" style={{ color: textColor }}>
+                {STEPS[current]?.label}
+              </span>
+              <span className="text-[11px] tabular-nums" style={{ color: `${textColor}70` }}>
+                Paso {current + 1} de {STEPS.length}
+              </span>
+            </div>
+            <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{ width: `${percent}%`, background: accent }}
+              />
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── CONTEXT PILLS ── */}
       {step !== 'boat' && step !== 'done' && selectedBoat && (
@@ -456,8 +482,14 @@ export function EmbedConfigurator({ apiKey, tenant, previewMode }: { apiKey: str
       {/* ═══════════════════════════════════════════════
           STEP 1: BOAT SEARCH
       ═══════════════════════════════════════════════ */}
-      {step === 'boat' && (
+      {step === 'boat' && (() => {
+        const boatCopy = resolveCopy(tenant.themeCopy, 'minimal', 'boat');
+        return (
         <div className="space-y-4">
+          <div className="mb-2">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ color: textColor, fontFamily: `${fontDisplay}, serif` }}>{boatCopy.title}</h2>
+            <p className="text-sm text-gray-500 mt-1">{boatCopy.subtitle}</p>
+          </div>
           {/* Search */}
           <div className="relative group">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-gray-500 transition-colors">
@@ -516,13 +548,20 @@ export function EmbedConfigurator({ apiKey, tenant, previewMode }: { apiKey: str
             </div>
           )}
         </div>
-      )}
+        );
+      })()}
 
       {/* ═══════════════════════════════════════════════
           STEP 2: PRODUCTS
       ═══════════════════════════════════════════════ */}
-      {step === 'products' && (
+      {step === 'products' && (() => {
+        const productsCopy = resolveCopy(tenant.themeCopy, 'minimal', 'products');
+        return (
         <div className="space-y-6">
+          <div className="mb-2">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ color: textColor, fontFamily: `${fontDisplay}, serif` }}>{productsCopy.title}</h2>
+            <p className="text-sm text-gray-500 mt-1">{productsCopy.subtitle}</p>
+          </div>
           {/* Expert mode toggle */}
           <div
             className="flex items-center justify-between gap-4 rounded-2xl border p-4"
@@ -662,13 +701,20 @@ export function EmbedConfigurator({ apiKey, tenant, previewMode }: { apiKey: str
             })
           )}
         </div>
-      )}
+        );
+      })()}
 
       {/* ═══════════════════════════════════════════════
           STEP 3: CONFIGURE
       ═══════════════════════════════════════════════ */}
-      {step === 'configure' && selectedProduct && (
+      {step === 'configure' && selectedProduct && (() => {
+        const configureCopy = resolveCopy(tenant.themeCopy, 'minimal', 'configure');
+        return (
         <div className="space-y-5">
+          <div className="mb-2">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ color: textColor, fontFamily: `${fontDisplay}, serif` }}>{configureCopy.title}</h2>
+            <p className="text-sm text-gray-500 mt-1">{configureCopy.subtitle}</p>
+          </div>
           <div className="rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
             {/* Card header */}
             <div className="px-6 py-4 border-b border-gray-50" style={{ background: `linear-gradient(135deg, ${accent}08, transparent)` }}>
@@ -760,13 +806,20 @@ export function EmbedConfigurator({ apiKey, tenant, previewMode }: { apiKey: str
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ═══════════════════════════════════════════════
           STEP 4: PREVIEW (sail visual + features)
       ═══════════════════════════════════════════════ */}
-      {step === 'preview' && selectedProduct && (
+      {step === 'preview' && selectedProduct && (() => {
+        const previewCopy = resolveCopy(tenant.themeCopy, 'minimal', 'preview');
+        return (
         <div className="space-y-4">
+          <div className="mb-2">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ color: textColor, fontFamily: `${fontDisplay}, serif` }}>{previewCopy.title}</h2>
+            <p className="text-sm text-gray-500 mt-1">{previewCopy.subtitle}</p>
+          </div>
           <div className="rounded-2xl border border-gray-100 overflow-hidden shadow-sm bg-white">
             <div className="px-5 py-3.5 border-b border-gray-50" style={{ background: `linear-gradient(135deg, ${accent}08, transparent)` }}>
               <div className="flex items-center justify-between gap-4">
@@ -875,17 +928,22 @@ export function EmbedConfigurator({ apiKey, tenant, previewMode }: { apiKey: str
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ═══════════════════════════════════════════════
           STEP 5: CONTACT
       ═══════════════════════════════════════════════ */}
-      {step === 'contact' && selectedProduct && (
+      {step === 'contact' && selectedProduct && (() => {
+        const contactCopy = resolveCopy(tenant.themeCopy, 'minimal', 'contact');
+        const contactTitle = tenant.themeContactTitle || contactCopy.title;
+        const contactSubtitle = tenant.themeContactSubtitle || contactCopy.subtitle;
+        return (
         <div className="space-y-5">
           <div className="rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
             <div className="px-6 py-4 border-b border-gray-50" style={{ background: `linear-gradient(135deg, ${accent}08, transparent)` }}>
-              <h3 className="font-bold" style={{ color: textColor }}>{tenant.themeContactTitle || 'Datos de contacto'}</h3>
-              <p className="text-xs text-gray-400 mt-0.5">{tenant.themeContactSubtitle || 'Para enviarte el presupuesto detallado.'}</p>
+              <h3 className="font-bold" style={{ color: textColor }}>{contactTitle}</h3>
+              <p className="text-xs text-gray-400 mt-0.5">{contactSubtitle}</p>
             </div>
 
             <div className="p-6 space-y-4">
@@ -1004,7 +1062,8 @@ export function EmbedConfigurator({ apiKey, tenant, previewMode }: { apiKey: str
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ═══════════════════════════════════════════════
           STEP 5: DONE

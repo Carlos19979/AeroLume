@@ -6,6 +6,7 @@ import { validateBody, updateThemeSchema } from '@/lib/validations';
 export const GET = withTenantAuth(async (_request, { tenant }) => {
   const [data] = await db
     .select({
+      themeTemplate: tenants.themeTemplate,
       themeAccent: tenants.themeAccent,
       themeAccentDim: tenants.themeAccentDim,
       themeNavy: tenants.themeNavy,
@@ -19,6 +20,7 @@ export const GET = withTenantAuth(async (_request, { tenant }) => {
       themeCtaLabel: tenants.themeCtaLabel,
       themeContactTitle: tenants.themeContactTitle,
       themeContactSubtitle: tenants.themeContactSubtitle,
+      themeCopy: tenants.themeCopy,
     })
     .from(tenants)
     .where(eq(tenants.id, tenant.id))
@@ -38,6 +40,7 @@ export const PUT = withTenantAuth(async (request, { tenant }) => {
   const [updated] = await db
     .update(tenants)
     .set({
+      ...(data.themeTemplate !== undefined ? { themeTemplate: data.themeTemplate } : {}),
       themeAccent: data.themeAccent,
       themeAccentDim: data.themeAccentDim,
       themeNavy: data.themeNavy,
@@ -51,10 +54,12 @@ export const PUT = withTenantAuth(async (request, { tenant }) => {
       ...(data.themeCtaLabel !== undefined ? { themeCtaLabel: data.themeCtaLabel } : {}),
       ...(data.themeContactTitle !== undefined ? { themeContactTitle: data.themeContactTitle } : {}),
       ...(data.themeContactSubtitle !== undefined ? { themeContactSubtitle: data.themeContactSubtitle } : {}),
+      ...(data.themeCopy !== undefined ? { themeCopy: data.themeCopy } : {}),
       updatedAt: new Date(),
     })
     .where(eq(tenants.id, tenant.id))
     .returning({
+      themeTemplate: tenants.themeTemplate,
       themeAccent: tenants.themeAccent,
       themeAccentDim: tenants.themeAccentDim,
       themeNavy: tenants.themeNavy,
@@ -68,6 +73,7 @@ export const PUT = withTenantAuth(async (request, { tenant }) => {
       themeCtaLabel: tenants.themeCtaLabel,
       themeContactTitle: tenants.themeContactTitle,
       themeContactSubtitle: tenants.themeContactSubtitle,
+      themeCopy: tenants.themeCopy,
     });
 
   return NextResponse.json({ data: updated });

@@ -423,7 +423,7 @@ function FunnelStage({
       <div className={`mt-1 text-2xl font-semibold tabular-nums ${t.value}`}>
         {value.toLocaleString('es')}
       </div>
-      {hint && <div className="mt-0.5 text-[10px] font-mono text-gray-400">{hint}</div>}
+      {hint && <div className="mt-0.5 text-[10px] text-gray-400 tabular-nums">{hint}</div>}
     </div>
   );
 }

@@ -229,16 +229,7 @@ export default function PricingPage() {
                             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                             className="relative border-b md:border-b-0 md:border-r border-[var(--color-rule-strong)] p-8 lg:p-12 group hover:bg-[var(--color-paper-2)]/40 transition-colors"
                         >
-                            <div className="flex items-baseline justify-between mb-10">
-                                <span
-                                    className="text-[5rem] lg:text-[6rem] leading-[0.85] text-[var(--color-ink)] group-hover:text-[var(--color-signal)] transition-colors"
-                                    style={{
-                                        fontFamily: 'var(--font-fraunces), Georgia, serif',
-                                        fontFeatureSettings: '"tnum"',
-                                    }}
-                                >
-                                    01
-                                </span>
+                            <div className="flex items-baseline justify-end mb-10">
                                 <span className="label-mono">Prueba</span>
                             </div>
 
@@ -316,16 +307,7 @@ export default function PricingPage() {
                             />
 
                             <div className="relative">
-                                <div className="flex items-baseline justify-between mb-10">
-                                    <span
-                                        className="text-[5rem] lg:text-[6rem] leading-[0.85] text-[var(--color-paper)]"
-                                        style={{
-                                            fontFamily: 'var(--font-fraunces), Georgia, serif',
-                                            fontFeatureSettings: '"tnum"',
-                                        }}
-                                    >
-                                        02
-                                    </span>
+                                <div className="flex items-baseline justify-end mb-10">
                                     <span className="font-mono text-[10.5px] tracking-[0.18em] uppercase text-[var(--color-signal)] font-medium">
                                         Recomendado
                                     </span>

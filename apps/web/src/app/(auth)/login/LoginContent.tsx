@@ -85,7 +85,7 @@ export default function LoginContent() {
                         htmlFor="password"
                         className="label-mono block mb-2"
                     >
-                        Contrasena
+                        Contraseña
                     </label>
                     <input
                         id="password"

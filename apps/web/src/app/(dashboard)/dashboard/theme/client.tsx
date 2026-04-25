@@ -1,9 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Image from 'next/image';
 import { SaveButton, useSaveState } from '@/components/ui/SaveButton';
 import { EmbedConfigurator } from '@/app/embed/configurator';
+import { TEMPLATE_PRESETS } from '@/app/embed/templates/presets';
+import { TEMPLATE_FIELD_LABELS } from '@/app/embed/templates/field-labels';
+import { TEMPLATE_COPY_DEFAULTS, type StepKey, type TemplateCopy } from '@/app/embed/templates/copy';
 
 type EmbedStep = 'boat' | 'products' | 'configure' | 'preview' | 'contact';
 
@@ -15,7 +17,10 @@ const STEP_MAP: Record<1 | 2 | 3 | 4 | 5, EmbedStep> = {
   5: 'contact',
 };
 
+type ThemeTemplate = 'minimal' | 'editorial' | 'premium' | 'marine';
+
 type ThemeData = {
+  themeTemplate: ThemeTemplate | null;
   themeAccent: string | null;
   themeAccentDim: string | null;
   themeNavy: string | null;
@@ -28,10 +33,12 @@ type ThemeData = {
   themeCtaLabel: string | null;
   themeContactTitle: string | null;
   themeContactSubtitle: string | null;
+  themeCopy: TemplateCopy | null;
   logoUrl: string | null;
 };
 
 const DEFAULTS: ThemeData = {
+  themeTemplate: 'minimal',
   themeAccent: '#0b5faa',
   themeAccentDim: '#1a7fd4',
   themeNavy: '#0a2540',
@@ -44,11 +51,27 @@ const DEFAULTS: ThemeData = {
   themeCtaLabel: 'Solicitar presupuesto',
   themeContactTitle: 'Datos de contacto',
   themeContactSubtitle: 'Para enviarte el presupuesto detallado.',
+  themeCopy: {},
   logoUrl: null,
 };
 
-const FONT_OPTIONS = ['Cormorant', 'Playfair Display', 'Libre Baskerville', 'Lora', 'Merriweather', 'Georgia'];
-const BODY_FONT_OPTIONS = ['Manrope', 'Inter', 'Open Sans', 'Roboto', 'Lato', 'Source Sans 3'];
+const STEP_KEYS: { key: StepKey; label: string }[] = [
+  { key: 'boat', label: '1 · Barco' },
+  { key: 'products', label: '2 · Vela' },
+  { key: 'configure', label: '3 · Opciones' },
+  { key: 'preview', label: '4 · Vista previa' },
+  { key: 'contact', label: '5 · Contacto' },
+];
+
+const TEMPLATES: { key: ThemeTemplate; label: string; mood: string; available: boolean }[] = [
+  { key: 'minimal', label: 'Minimal', mood: 'Limpio · sans · grid', available: true },
+  { key: 'editorial', label: 'Editorial náutico', mood: 'Serif · crema · hairline', available: true },
+  { key: 'premium', label: 'Premium oscuro', mood: 'Navy · dorado · glass', available: true },
+  { key: 'marine', label: 'Marine bold', mood: 'Color · redondeo · friendly', available: true },
+];
+
+const FONT_OPTIONS = ['Cormorant', 'Fraunces', 'Playfair Display', 'Libre Baskerville', 'Lora', 'Merriweather', 'Georgia', 'Inter', 'Manrope'];
+const BODY_FONT_OPTIONS = ['Inter', 'Manrope', 'Open Sans', 'Roboto', 'Lato', 'Source Sans 3'];
 
 export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
   const [theme, setTheme] = useState<ThemeData>(initialTheme);
@@ -60,22 +83,73 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
     setTheme((prev) => ({ ...prev, [key]: value }));
   }
 
-  function resetMainColors() {
+  function applyTemplatePreset(next: ThemeTemplate) {
+    const preset = TEMPLATE_PRESETS[next];
     setTheme((prev) => ({
       ...prev,
-      themeAccent: DEFAULTS.themeAccent,
-      themeAccentDim: DEFAULTS.themeAccentDim,
-      themeNavy: DEFAULTS.themeNavy,
-      themeText: DEFAULTS.themeText,
+      themeTemplate: next,
+      themeAccent: preset.themeAccent,
+      themeAccentDim: preset.themeAccentDim,
+      themeNavy: preset.themeNavy,
+      themeText: preset.themeText,
+      themeFontDisplay: preset.themeFontDisplay,
+      themeFontBody: preset.themeFontBody,
+      themeColorMain: preset.themeColorMain,
+      themeColorHead: preset.themeColorHead,
+      themeColorSpi: preset.themeColorSpi,
+      themeCopy: copyDefaultsFor(next),
+    }));
+  }
+
+  function copyDefaultsFor(t: ThemeTemplate): TemplateCopy {
+    // Clone defaults into the editable JSONB shape.
+    return Object.fromEntries(
+      (Object.keys(TEMPLATE_COPY_DEFAULTS[t]) as StepKey[]).map((step) => [step, { ...TEMPLATE_COPY_DEFAULTS[t][step] }]),
+    ) as TemplateCopy;
+  }
+
+  function updateStepCopy(step: StepKey, field: 'title' | 'subtitle', value: string) {
+    setTheme((prev) => ({
+      ...prev,
+      themeCopy: {
+        ...(prev.themeCopy ?? {}),
+        [step]: { ...(prev.themeCopy?.[step] ?? {}), [field]: value },
+      },
+    }));
+  }
+
+  function currentPreset() {
+    const key = (theme.themeTemplate || 'minimal') as ThemeTemplate;
+    return TEMPLATE_PRESETS[key];
+  }
+
+  function resetMainColors() {
+    const p = currentPreset();
+    setTheme((prev) => ({
+      ...prev,
+      themeAccent: p.themeAccent,
+      themeAccentDim: p.themeAccentDim,
+      themeNavy: p.themeNavy,
+      themeText: p.themeText,
     }));
   }
 
   function resetGroupColors() {
+    const p = currentPreset();
     setTheme((prev) => ({
       ...prev,
-      themeColorMain: DEFAULTS.themeColorMain,
-      themeColorHead: DEFAULTS.themeColorHead,
-      themeColorSpi: DEFAULTS.themeColorSpi,
+      themeColorMain: p.themeColorMain,
+      themeColorHead: p.themeColorHead,
+      themeColorSpi: p.themeColorSpi,
+    }));
+  }
+
+  function resetFonts() {
+    const p = currentPreset();
+    setTheme((prev) => ({
+      ...prev,
+      themeFontDisplay: p.themeFontDisplay,
+      themeFontBody: p.themeFontBody,
     }));
   }
 
@@ -85,6 +159,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
       themeCtaLabel: DEFAULTS.themeCtaLabel,
       themeContactTitle: DEFAULTS.themeContactTitle,
       themeContactSubtitle: DEFAULTS.themeContactSubtitle,
+      themeCopy: copyDefaultsFor((prev.themeTemplate || 'minimal') as ThemeTemplate),
     }));
   }
 
@@ -107,6 +182,8 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
     });
   }
 
+  const template = theme.themeTemplate || DEFAULTS.themeTemplate!;
+  const fieldLabels = TEMPLATE_FIELD_LABELS[template];
   const accent = theme.themeAccent || DEFAULTS.themeAccent!;
   const navy = theme.themeNavy || DEFAULTS.themeNavy!;
   const text = theme.themeText || DEFAULTS.themeText!;
@@ -126,6 +203,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
       id: 'preview',
       name: 'Tu Veleria',
       slug: 'preview',
+      themeTemplate: template,
       themeAccent: accent,
       themeAccentDim: theme.themeAccentDim || DEFAULTS.themeAccentDim!,
       themeNavy: navy,
@@ -138,11 +216,13 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
       themeCtaLabel: ctaLabel,
       themeContactTitle: contactTitle,
       themeContactSubtitle: contactSubtitle,
-      logoUrl: theme.logoUrl,
+      themeCopy: theme.themeCopy ?? {},
+      logoUrl: null,
       locale: 'es',
       currency: 'EUR',
     }),
     [
+      template,
       accent,
       theme.themeAccentDim,
       navy,
@@ -155,7 +235,7 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
       ctaLabel,
       contactTitle,
       contactSubtitle,
-      theme.logoUrl,
+      theme.themeCopy,
     ],
   );
 
@@ -169,19 +249,85 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
           </div>
         )}
 
+        {/* Template selector */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+          <div>
+            <h3 className="font-semibold text-gray-900">Plantilla</h3>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Elige la base visual. Los colores, textos y logo de abajo se aplican encima.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {TEMPLATES.map((t) => {
+              const isActive = template === t.key;
+              const isLocked = !t.available;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  data-testid={`theme-template-${t.key}`}
+                  disabled={isLocked}
+                  onClick={() => !isLocked && applyTemplatePreset(t.key)}
+                  aria-pressed={isActive}
+                  className={`relative text-left rounded-xl border p-3 transition-all ${
+                    isActive
+                      ? 'border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20 bg-[var(--color-accent)]/[0.03]'
+                      : isLocked
+                      ? 'border-gray-150 bg-gray-50 opacity-60 cursor-not-allowed'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <TemplateThumbnail template={t.key} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-semibold text-gray-900 truncate">{t.label}</span>
+                        {isLocked && (
+                          <span className="text-[9px] uppercase tracking-wider font-semibold text-amber-600 bg-amber-50 ring-1 ring-amber-100 px-1.5 py-0.5 rounded">
+                            Próx.
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-gray-500 mt-0.5 truncate">{t.mood}</p>
+                    </div>
+                    {isActive && (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5">
+                        <path d="M20 6L9 17l-5-5" />
+                      </svg>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Main colors */}
         <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">Colores principales</h3>
+            <div>
+              <h3 className="font-semibold text-gray-900">Colores principales</h3>
+              <p className="text-xs text-gray-500 mt-0.5">Los labels cambian según la plantilla activa.</p>
+            </div>
             <button onClick={resetMainColors} className="text-xs text-gray-500 hover:text-gray-600 transition-colors">
               Resetear
             </button>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div data-testid="theme-accent-picker"><ColorField label="Color principal" value={accent} onChange={(v) => updateField('themeAccent', v)} testid="theme-accent-hex" /></div>
-            <ColorField label="Color secundario" value={theme.themeAccentDim || DEFAULTS.themeAccentDim!} onChange={(v) => updateField('themeAccentDim', v)} />
-            <ColorField label="Navy (fondo)" value={navy} onChange={(v) => updateField('themeNavy', v)} />
-            <ColorField label="Texto" value={text} onChange={(v) => updateField('themeText', v)} />
+            {fieldLabels.mainColors.map((f) => (
+              <div
+                key={f.key}
+                data-testid={f.key === 'themeAccent' ? 'theme-accent-picker' : undefined}
+              >
+                <ColorField
+                  label={f.label}
+                  hint={f.hint}
+                  value={(theme[f.key] as string | null) || DEFAULTS[f.key] || '#000000'}
+                  onChange={(v) => updateField(f.key, v)}
+                  testid={f.key === 'themeAccent' ? 'theme-accent-hex' : undefined}
+                />
+              </div>
+            ))}
           </div>
         </div>
 
@@ -197,46 +343,44 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
             </button>
           </div>
           <div className="grid grid-cols-3 gap-4">
-            <ColorField label="Vela mayor" value={colorMain} onChange={(v) => updateField('themeColorMain', v)} />
-            <ColorField label="Vela de proa" value={colorHead} onChange={(v) => updateField('themeColorHead', v)} />
-            <ColorField label="Portantes" value={colorSpi} onChange={(v) => updateField('themeColorSpi', v)} />
+            {fieldLabels.groupColors.map((f) => (
+              <ColorField
+                key={f.key}
+                label={f.label}
+                hint={f.hint}
+                value={(theme[f.key] as string | null) || DEFAULTS[f.key] || '#000000'}
+                onChange={(v) => updateField(f.key, v)}
+              />
+            ))}
           </div>
         </div>
 
         {/* Fonts */}
         <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-          <h3 className="font-semibold text-gray-900">Fuentes</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-gray-500 mb-1.5">Titulos</label>
-              <select value={fontDisplay} onChange={(e) => updateField('themeFontDisplay', e.target.value)} className="w-full border rounded-xl px-3 py-2 text-sm">
-                {FONT_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1.5">Cuerpo</label>
-              <select value={fontBody} onChange={(e) => updateField('themeFontBody', e.target.value)} className="w-full border rounded-xl px-3 py-2 text-sm">
-                {BODY_FONT_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
-              </select>
-            </div>
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-gray-900">Fuentes</h3>
+            <button onClick={resetFonts} className="text-xs text-gray-500 hover:text-gray-600 transition-colors">
+              Resetear
+            </button>
           </div>
-        </div>
-
-        {/* Logo */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-          <h3 className="font-semibold text-gray-900">Logo</h3>
-          <input
-            type="url"
-            value={theme.logoUrl || ''}
-            onChange={(e) => updateField('logoUrl', e.target.value)}
-            className="w-full border rounded-xl px-3 py-2 text-sm"
-            placeholder="https://tu-web.com/logo.svg"
-          />
-          {theme.logoUrl && (
-            <div className="border rounded-xl p-4 bg-gray-50 flex items-center justify-center">
-              <Image src={theme.logoUrl} alt="Logo" width={192} height={48} unoptimized className="max-h-12 w-auto object-contain" />
-            </div>
-          )}
+          <div className="grid grid-cols-2 gap-4">
+            {fieldLabels.fonts.map((f) => {
+              const options = f.key === 'themeFontDisplay' ? FONT_OPTIONS : BODY_FONT_OPTIONS;
+              return (
+                <div key={f.key}>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">{f.label}</label>
+                  {f.hint && <p className="text-[11px] text-gray-400 mb-1.5 leading-tight">{f.hint}</p>}
+                  <select
+                    value={(theme[f.key] as string | null) || DEFAULTS[f.key] || ''}
+                    onChange={(e) => updateField(f.key, e.target.value)}
+                    className="w-full border rounded-xl px-3 py-2 text-sm"
+                  >
+                    {options.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Textos del configurador */}
@@ -290,6 +434,59 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
           </div>
         </div>
 
+        {/* Textos de los pasos */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-gray-900">Textos de los pasos</h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Titulo y subtitulo de cada paso del configurador. Cambian segun la plantilla elegida.
+              </p>
+            </div>
+            <button
+              onClick={() => setTheme((prev) => ({ ...prev, themeCopy: copyDefaultsFor(template) }))}
+              className="text-xs text-gray-500 hover:text-gray-600 transition-colors"
+            >
+              Resetear
+            </button>
+          </div>
+          <div className="space-y-5">
+            {STEP_KEYS.map((step) => {
+              const defaults = TEMPLATE_COPY_DEFAULTS[template][step.key];
+              const current = theme.themeCopy?.[step.key] ?? {};
+              return (
+                <div key={step.key} className="border border-gray-100 rounded-xl p-4 space-y-3 bg-gray-50/40">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">{step.label}</p>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1.5">Título</label>
+                    <input
+                      type="text"
+                      data-testid={`theme-copy-${step.key}-title`}
+                      value={current.title ?? ''}
+                      onChange={(e) => updateStepCopy(step.key, 'title', e.target.value)}
+                      maxLength={200}
+                      className="w-full border rounded-xl px-3 py-2 text-sm bg-white"
+                      placeholder={defaults.title}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1.5">Subtítulo</label>
+                    <textarea
+                      data-testid={`theme-copy-${step.key}-subtitle`}
+                      value={current.subtitle ?? ''}
+                      onChange={(e) => updateStepCopy(step.key, 'subtitle', e.target.value)}
+                      maxLength={500}
+                      rows={2}
+                      className="w-full border rounded-xl px-3 py-2 text-sm bg-white resize-none"
+                      placeholder={defaults.subtitle}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Save */}
         <div data-testid="theme-save">
           <SaveButton
@@ -307,8 +504,8 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
           <h3 className="font-semibold text-gray-900">Vista previa</h3>
           <div className="flex bg-gray-100 rounded-lg p-0.5 flex-wrap">
             {([
-              { n: 1 as const, label: 'Paso 1' },
-              { n: 2 as const, label: 'Paso 2' },
+              { n: 1 as const, label: 'Barco' },
+              { n: 2 as const, label: 'Vela' },
               { n: 3 as const, label: 'Opciones' },
               { n: 4 as const, label: 'Vista previa' },
               { n: 5 as const, label: 'Contacto' },
@@ -358,10 +555,35 @@ export function ThemeClient({ initialTheme }: { initialTheme: ThemeData }) {
   );
 }
 
-function ColorField({ label, value, onChange, testid }: { label: string; value: string; onChange: (v: string) => void; testid?: string }) {
+function TemplateThumbnail({ template }: { template: ThemeTemplate }) {
+  const STYLES: Record<ThemeTemplate, { bg: string; bar: string; block: string }> = {
+    minimal: { bg: '#ffffff', bar: '#111827', block: '#f3f4f6' },
+    editorial: { bg: '#f5f1e8', bar: '#0d1f2d', block: '#e6dfce' },
+    premium: { bg: '#0a1e3d', bar: '#d4b168', block: '#1a3360' },
+    marine: { bg: '#e8f1fb', bar: '#0b5faa', block: '#ffffff' },
+  };
+  const s = STYLES[template];
+  return (
+    <div
+      className="shrink-0 w-12 h-12 rounded-lg flex flex-col gap-1 p-1.5 ring-1 ring-black/5"
+      style={{ background: s.bg }}
+      aria-hidden
+    >
+      <div className="h-1 rounded-full" style={{ background: s.bar, width: '80%' }} />
+      <div className="flex-1 flex flex-col gap-0.5">
+        <div className="h-1 rounded-full" style={{ background: s.block }} />
+        <div className="h-1 rounded-full w-3/4" style={{ background: s.block }} />
+      </div>
+      <div className="h-1.5 rounded" style={{ background: s.bar, width: '50%' }} />
+    </div>
+  );
+}
+
+function ColorField({ label, hint, value, onChange, testid }: { label: string; hint?: string; value: string; onChange: (v: string) => void; testid?: string }) {
   return (
     <div>
-      <label className="block text-xs text-gray-500 mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
+      {hint && <p className="text-[11px] text-gray-400 mb-1.5 leading-tight">{hint}</p>}
       <div className="flex items-center gap-2">
         <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="w-9 h-9 rounded-lg border cursor-pointer" />
         <input type="text" data-testid={testid} value={value} onChange={(e) => onChange(e.target.value)} className="flex-1 border rounded-lg px-2.5 py-1.5 text-xs font-mono" placeholder="#000000" />

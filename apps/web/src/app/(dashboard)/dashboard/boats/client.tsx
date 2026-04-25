@@ -59,15 +59,36 @@ const SAIL_AREA_LABELS: Record<string, string> = {
   furling: 'Code S',
 };
 
-const RIG_LABELS: Record<string, string> = {
-  i: 'I (Altura proa)',
-  j: 'J (Base proa)',
-  p: 'P (Gratil mayor)',
-  e: 'E (Base mayor)',
-  gg: 'GG',
-  lp: 'LP',
-  sl: 'SL',
-  smw: 'SMW',
+const SAIL_GROUPS: Record<string, { label: string; keys: string[]; color: string; chip: string }> = {
+  main: {
+    label: 'Mayor',
+    keys: ['gvstd', 'gvfull', 'gve'],
+    color: 'bg-[var(--color-accent)]',
+    chip: 'bg-blue-50 text-blue-700 ring-1 ring-blue-100',
+  },
+  head: {
+    label: 'Proa',
+    keys: ['gse', 'gn'],
+    color: 'bg-emerald-500',
+    chip: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100',
+  },
+  downwind: {
+    label: 'Empopada',
+    keys: ['gen', 'spisym', 'spiasy', 'furling'],
+    color: 'bg-violet-500',
+    chip: 'bg-violet-50 text-violet-700 ring-1 ring-violet-100',
+  },
+};
+
+const RIG_LABELS: Record<string, { short: string; full: string }> = {
+  i: { short: 'I', full: 'Altura proa' },
+  j: { short: 'J', full: 'Base proa' },
+  p: { short: 'P', full: 'Gratil mayor' },
+  e: { short: 'E', full: 'Base mayor' },
+  gg: { short: 'GG', full: 'Grátil génova' },
+  lp: { short: 'LP', full: 'Perpendicular larga' },
+  sl: { short: 'SL', full: 'Gratil spinnaker' },
+  smw: { short: 'SMW', full: 'Amplitud spinnaker' },
 };
 
 export function BoatsClient() {
@@ -226,94 +247,294 @@ export function BoatsClient() {
       {(selectedBoat || detailLoading) && (
         <>
           <div
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-[var(--color-navy)]/30 backdrop-blur-sm z-40 transition-opacity"
             onClick={() => setSelectedBoat(null)}
           />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <div className="pointer-events-auto bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[88vh] overflow-hidden flex flex-col ring-1 ring-gray-200">
               {detailLoading ? (
-                <div className="p-12 text-center text-gray-500">Cargando...</div>
+                <div className="p-16 text-center text-gray-500">Cargando...</div>
               ) : selectedBoat && (
-                <>
-                  {/* Header */}
-                  <div className="sticky top-0 bg-gradient-to-br from-[var(--color-navy)] to-[var(--color-accent)] text-white p-6 rounded-t-2xl">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-xl font-semibold">{selectedBoat.model}</h3>
-                        <div className="flex items-center gap-3 mt-2 text-sm text-white/70">
-                          {selectedBoat.length && (
-                            <span className="flex items-center gap-1">
-                              <span className="text-white/50">Eslora:</span> {selectedBoat.length}m
-                            </span>
-                          )}
-                          <span className="px-2 py-0.5 rounded-full bg-white/15 text-xs">
-                            {selectedBoat.isMultihull ? 'Multicasco' : 'Monocasco'}
-                          </span>
-                          <span className="px-2 py-0.5 rounded-full bg-white/15 text-xs">
-                            {selectedBoat.tenantId ? 'Personalizado' : 'Global'}
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setSelectedBoat(null)}
-                        className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors"
-                      >
-                        <span className="text-lg leading-none">&times;</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Body */}
-                  <div className="p-6 space-y-6">
-                    {/* Rig dimensions */}
-                    <div>
-                      <h4 className="text-xs uppercase tracking-wider text-gray-500 font-medium mb-3">Medidas del aparejo</h4>
-                      <div className="grid grid-cols-4 gap-3">
-                        {Object.entries(RIG_LABELS).map(([key, label]) => {
-                          const val = selectedBoat[key];
-                          if (!val || val === '0.00') return null;
-                          return (
-                            <div key={key} className="bg-gray-50 rounded-xl p-3 text-center">
-                              <p className="text-lg font-semibold text-gray-900 font-mono">{Number(val).toFixed(2)}</p>
-                              <p className="text-xs text-gray-500 mt-0.5">{label}</p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Sail areas */}
-                    <div>
-                      <h4 className="text-xs uppercase tracking-wider text-gray-500 font-medium mb-3">Areas de vela</h4>
-                      <div className="space-y-2">
-                        {(() => {
-                          const areas = Object.entries(SAIL_AREA_LABELS)
-                            .map(([key, label]) => ({ key, label, val: Number(selectedBoat[key]) || 0 }))
-                            .filter((a) => a.val > 0);
-                          const maxArea = Math.max(...areas.map((a) => a.val), 1);
-                          return areas.map(({ key, label, val }) => (
-                            <div key={key} className="flex items-center gap-3">
-                              <span className="text-sm text-gray-600 w-40 shrink-0">{label}</span>
-                              <div className="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden">
-                                <div
-                                  className="h-full rounded-full bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-dim,#1a7fd4)]"
-                                  style={{ width: `${(val / maxArea) * 100}%` }}
-                                />
-                              </div>
-                              <span className="text-sm font-mono font-medium text-gray-900 w-20 text-right">{val.toFixed(2)} m²</span>
-                            </div>
-                          ));
-                        })()}
-                      </div>
-                    </div>
-
-                  </div>
-                </>
+                <BoatDetailModal boat={selectedBoat} onClose={() => setSelectedBoat(null)} />
               )}
             </div>
           </div>
         </>
       )}
     </>
+  );
+}
+
+function BoatDetailModal({ boat, onClose }: { boat: BoatDetail; onClose: () => void }) {
+  const areas = Object.entries(SAIL_AREA_LABELS)
+    .map(([key, label]) => ({ key, label, val: Number(boat[key]) || 0 }))
+    .filter((a) => a.val > 0);
+  const totalArea = areas.reduce((sum, a) => sum + a.val, 0);
+  const maxArea = Math.max(...areas.map((a) => a.val), 1);
+
+  const rigEntries = Object.entries(RIG_LABELS)
+    .map(([key, label]) => ({ key, ...label, val: Number(boat[key]) || 0 }))
+    .filter((r) => r.val > 0);
+
+  const iVal = Number(boat.i) || 0;
+  const jVal = Number(boat.j) || 0;
+  const pVal = Number(boat.p) || 0;
+  const eVal = Number(boat.e) || 0;
+  const hasMain = pVal > 0 && eVal > 0;
+  const hasHead = iVal > 0 && jVal > 0;
+  const hasDiagram = hasMain || hasHead;
+
+  const groupColor = (key: string) => {
+    for (const g of Object.values(SAIL_GROUPS)) {
+      if (g.keys.includes(key)) return g.color;
+    }
+    return 'bg-gray-400';
+  };
+  const groupChip = (key: string) => {
+    for (const g of Object.values(SAIL_GROUPS)) {
+      if (g.keys.includes(key)) return g.chip;
+    }
+    return 'bg-gray-100 text-gray-600 ring-1 ring-gray-200';
+  };
+  const groupLabel = (key: string) => {
+    for (const g of Object.values(SAIL_GROUPS)) {
+      if (g.keys.includes(key)) return g.label;
+    }
+    return '';
+  };
+
+  return (
+    <>
+      {/* Header */}
+      <div className="px-8 py-6 border-b border-gray-100 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-gray-500">
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
+            <span>{boat.tenantId ? 'Personalizado' : 'Catálogo global'}</span>
+            <span className="text-gray-300">·</span>
+            <span>{boat.isMultihull ? 'Multicasco' : 'Monocasco'}</span>
+          </div>
+          <h3 className="mt-2 text-2xl font-semibold text-gray-900 truncate">{boat.model}</h3>
+          <p className="text-sm text-gray-500 mt-1">
+            {boat.length ? (
+              <>Eslora <span className="font-semibold text-gray-700 tabular-nums">{boat.length} m</span></>
+            ) : (
+              'Eslora no disponible'
+            )}
+            {totalArea > 0 && (
+              <>
+                <span className="mx-2 text-gray-300">·</span>
+                Superficie total <span className="font-semibold text-gray-700 tabular-nums">{totalArea.toFixed(1)} m²</span>
+              </>
+            )}
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          aria-label="Cerrar"
+          className="shrink-0 w-9 h-9 rounded-full border border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50 flex items-center justify-center transition-colors"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <path d="M3 3l8 8M11 3l-8 8" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Scrollable body */}
+      <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
+
+        {/* Rig section */}
+        {rigEntries.length > 0 && (
+          <section>
+            <div className="flex items-baseline justify-between mb-4">
+              <h4 className="text-[11px] uppercase tracking-[0.14em] text-gray-500 font-semibold">Aparejo</h4>
+              <span className="text-[11px] text-gray-400">medidas en metros</span>
+            </div>
+
+            <div className="grid grid-cols-12 gap-6">
+              {/* Diagram */}
+              {hasDiagram && (
+                <div className="col-span-12 md:col-span-5">
+                  <RigDiagram
+                    i={iVal}
+                    j={jVal}
+                    p={pVal}
+                    e={eVal}
+                    hasMain={hasMain}
+                    hasHead={hasHead}
+                  />
+                </div>
+              )}
+
+              {/* Values */}
+              <div className={hasDiagram ? 'col-span-12 md:col-span-7' : 'col-span-12'}>
+                <dl className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-gray-100 rounded-xl overflow-hidden ring-1 ring-gray-100">
+                  {rigEntries.map((r) => (
+                    <div key={r.key} className="bg-white px-3 py-3">
+                      <dt className="text-[10px] uppercase tracking-[0.14em] text-gray-400 font-semibold">{r.short}</dt>
+                      <dd className="mt-1 text-lg font-semibold text-gray-900 tabular-nums">
+                        {r.val.toFixed(2)}
+                        <span className="text-xs font-medium text-gray-400 ml-0.5">m</span>
+                      </dd>
+                      <div className="text-[11px] text-gray-500 mt-0.5 truncate">{r.full}</div>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Sail areas */}
+        {areas.length > 0 && (
+          <section>
+            <div className="flex items-baseline justify-between mb-4">
+              <h4 className="text-[11px] uppercase tracking-[0.14em] text-gray-500 font-semibold">Superficies de vela</h4>
+              <div className="flex items-center gap-3 text-[11px] text-gray-400">
+                {Object.entries(SAIL_GROUPS).map(([key, g]) => (
+                  <span key={key} className="flex items-center gap-1.5">
+                    <span className={`w-2 h-2 rounded-full ${g.color}`} /> {g.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              {areas
+                .sort((a, b) => b.val - a.val)
+                .map(({ key, label, val }) => {
+                  const pct = (val / maxArea) * 100;
+                  return (
+                    <div key={key} className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
+                      <div className="min-w-[11rem] flex items-center gap-2">
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${groupChip(key)}`}>
+                          {groupLabel(key)}
+                        </span>
+                        <span className="text-sm text-gray-700 truncate">{label}</span>
+                      </div>
+                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${groupColor(key)} transition-[width] duration-500`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900 tabular-nums w-20 text-right">
+                        {val.toFixed(2)}
+                        <span className="text-xs font-medium text-gray-400 ml-0.5">m²</span>
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
+
+            {/* Group totals */}
+            <div className="mt-5 pt-4 border-t border-gray-100 grid grid-cols-3 gap-3">
+              {Object.entries(SAIL_GROUPS).map(([key, g]) => {
+                const total = g.keys.reduce((sum, k) => sum + (Number(boat[k]) || 0), 0);
+                return (
+                  <div key={key} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-1.5 h-8 rounded-full ${g.color}`} />
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.14em] text-gray-500 font-semibold">{g.label}</p>
+                        <p className="text-[11px] text-gray-400">{g.keys.filter((k) => Number(boat[k]) > 0).length} velas</p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                      {total > 0 ? total.toFixed(1) : '—'}
+                      {total > 0 && <span className="text-xs font-medium text-gray-400 ml-0.5">m²</span>}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {areas.length === 0 && rigEntries.length === 0 && (
+          <p className="text-sm text-gray-500 text-center py-8">Sin datos técnicos disponibles para este barco.</p>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="px-8 py-4 border-t border-gray-100 bg-gray-50/60 flex items-center justify-between">
+        <p className="text-[11px] text-gray-400 font-mono truncate">ID {boat.id.slice(0, 8)}</p>
+        <button
+          onClick={onClose}
+          className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-white border border-transparent hover:border-gray-200 transition-colors"
+        >
+          Cerrar
+        </button>
+      </div>
+    </>
+  );
+}
+
+function RigDiagram({ i, j, p, e, hasMain, hasHead }: { i: number; j: number; p: number; e: number; hasMain: boolean; hasHead: boolean }) {
+  // Viewbox: 200 x 240, bottom = deck line at y=210, mast at x=100.
+  const maxH = Math.max(i, p, 1);
+  const maxW = Math.max(j, e, 1);
+  const scale = Math.min(180 / maxH, 90 / maxW);
+  const hI = i * scale;
+  const wJ = j * scale;
+  const hP = p * scale;
+  const wE = e * scale;
+
+  const mastX = 100;
+  const deckY = 210;
+  const mastTop = deckY - hP;
+  const headTop = deckY - hI;
+  const boomEnd = mastX + wE;
+  const headFoot = mastX + wJ;
+  const mastReach = hasMain ? mastTop : hasHead ? headTop : deckY - 120;
+
+  return (
+    <div className="rounded-xl bg-gradient-to-br from-blue-50/60 to-white ring-1 ring-blue-100 p-4 h-full flex flex-col">
+      <div className="flex items-baseline justify-between mb-2">
+        <p className="text-[10px] uppercase tracking-[0.14em] text-gray-500 font-semibold">Plano vélico</p>
+        {!(hasMain && hasHead) && (
+          <span className="text-[9px] uppercase tracking-wider text-amber-600 font-semibold">
+            {!hasHead ? 'Sin foretriangle' : 'Sin mayor'}
+          </span>
+        )}
+      </div>
+      <svg viewBox="0 0 200 240" className="w-full flex-1" preserveAspectRatio="xMidYMax meet">
+        {/* Waterline / deck */}
+        <line x1="6" y1={deckY} x2="194" y2={deckY} stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 3" />
+        <line x1="30" y1={deckY + 8} x2="170" y2={deckY + 8} stroke="#cbd5e1" strokeWidth="1" />
+
+        {/* Mainsail */}
+        {hasMain && (
+          <>
+            <polygon
+              points={`${mastX},${mastTop} ${mastX},${deckY} ${boomEnd},${deckY}`}
+              fill="rgba(11,95,170,0.12)"
+              stroke="#0b5faa"
+              strokeWidth="1.25"
+              strokeLinejoin="round"
+            />
+            <line x1={mastX} y1={deckY} x2={boomEnd} y2={deckY} stroke="#0a2540" strokeWidth="2" strokeLinecap="round" />
+            <text x={mastX - 6} y={(mastTop + deckY) / 2} textAnchor="end" fontSize="10" fill="#0a2540" fontWeight="600">P</text>
+            <text x={(mastX + boomEnd) / 2} y={deckY + 18} textAnchor="middle" fontSize="10" fill="#0a2540" fontWeight="600">E</text>
+          </>
+        )}
+        {/* Headsail / foretriangle */}
+        {hasHead && (
+          <>
+            <polygon
+              points={`${mastX},${headTop} ${mastX},${deckY} ${headFoot},${deckY}`}
+              fill="rgba(16,185,129,0.10)"
+              stroke="#10b981"
+              strokeWidth="1.25"
+              strokeLinejoin="round"
+            />
+            <text x={mastX + 4} y={(headTop + deckY) / 2} textAnchor="start" fontSize="10" fill="#10b981" fontWeight="600">I</text>
+            <text x={(mastX + headFoot) / 2} y={deckY - 4} textAnchor="middle" fontSize="10" fill="#10b981" fontWeight="600">J</text>
+          </>
+        )}
+        {/* Mast */}
+        <line x1={mastX} y1={mastReach - 4} x2={mastX} y2={deckY} stroke="#0a2540" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    </div>
   );
 }

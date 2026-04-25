@@ -85,6 +85,7 @@ export const updateTenantSettingsSchema = z.object({
 });
 
 export const updateThemeSchema = z.object({
+  themeTemplate: z.enum(['minimal', 'editorial', 'premium', 'marine']).optional(),
   themeAccent: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   themeAccentDim: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   themeNavy: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
@@ -102,6 +103,25 @@ export const updateThemeSchema = z.object({
   themeCtaLabel: z.string().max(100).optional().nullable(),
   themeContactTitle: z.string().max(150).optional().nullable(),
   themeContactSubtitle: z.string().max(300).optional().nullable(),
+  themeCopy: z
+    .object({
+      boat: z
+        .object({ title: z.string().max(200).optional(), subtitle: z.string().max(500).optional() })
+        .optional(),
+      products: z
+        .object({ title: z.string().max(200).optional(), subtitle: z.string().max(500).optional() })
+        .optional(),
+      configure: z
+        .object({ title: z.string().max(200).optional(), subtitle: z.string().max(500).optional() })
+        .optional(),
+      preview: z
+        .object({ title: z.string().max(200).optional(), subtitle: z.string().max(500).optional() })
+        .optional(),
+      contact: z
+        .object({ title: z.string().max(200).optional(), subtitle: z.string().max(500).optional() })
+        .optional(),
+    })
+    .optional(),
 });
 
 export const createConfigFieldSchema = z.object({
